@@ -52,6 +52,11 @@ const RAW_ICONS = {
   arrowRight: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3.3328 7.99996H12.6672M8 12.6672L12.6672 7.99996L8 3.33276" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   circleX: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_2_578)"> <path d="M12.5002 7.49978L7.49982 12.5002M7.49982 7.49978L12.5002 12.5002M18.334 9.99998C18.334 14.6027 14.6028 18.334 10 18.334C5.39727 18.334 1.66602 14.6027 1.66602 9.99998C1.66602 5.39724 5.39727 1.66599 10 1.66599C14.6028 1.66599 18.334 5.39724 18.334 9.99998Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </g> </svg>`,
   lockKeyhole: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.33333 13.333V9.33273C9.33333 7.56448 10.0357 5.86865 11.286 4.61831C12.5362 3.36796 14.2319 2.66553 16 2.66553C17.7681 2.66553 19.4638 3.36796 20.714 4.61831C21.9643 5.86865 22.6667 7.56448 22.6667 9.33273V13.333M17.3333 21.3337C17.3333 22.0701 16.7364 22.6671 16 22.6671C15.2636 22.6671 14.6667 22.0701 14.6667 21.3337C14.6667 20.5972 15.2636 20.0002 16 20.0002C16.7364 20.0002 17.3333 20.5972 17.3333 21.3337ZM6.66667 13.333H25.3333C26.8061 13.333 28 14.5271 28 15.9999V26.6674C28 28.1403 26.8061 29.3343 25.3333 29.3343H6.66667C5.19391 29.3343 4 28.1403 4 26.6674V15.9999C4 14.5271 5.19391 13.333 6.66667 13.333Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  shieldCheck: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M7.50025 9.99962L9.16675 11.6663L12.4997 8.3329M16.666 10.8334C16.666 15.0002 13.7496 17.0836 10.2833 18.2919C10.1018 18.3534 9.90462 18.3505 9.72503 18.2836C6.25037 17.0836 3.334 15.0002 3.334 10.8334V4.99983C3.334 4.77881 3.42179 4.56684 3.57805 4.41056C3.73432 4.25427 3.94626 4.16647 4.16725 4.16647C5.83375 4.16647 7.91687 3.16644 9.36673 1.89973C9.54326 1.74889 9.76782 1.66602 10 1.66602C10.2322 1.66602 10.4567 1.74889 10.6333 1.89973C12.0915 3.17477 14.1662 4.16647 15.8327 4.16647C16.0537 4.16647 16.2657 4.25427 16.4219 4.41056C16.5782 4.56684 16.666 4.77881 16.666 4.99983V10.8334Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  binoculars: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.99985 10H14.0002M19.0006 7V4C19.0006 3.73478 18.8952 3.48043 18.7077 3.29289C18.5201 3.10536 18.2657 3 18.0005 3H16.0003C15.7351 3 15.4807 3.10536 15.2932 3.29289C15.1056 3.48043 15.0002 3.73478 15.0002 4V7M19.0006 7C19.2658 7 19.5202 7.10536 19.7077 7.29289C19.8953 7.48043 20.0006 7.73478 20.0006 8V10.32C20.0006 12.187 22.0008 13.759 22.0008 15.149V19C22.0008 19.5304 21.7901 20.0391 21.415 20.4142C21.0399 20.7893 20.5311 21 20.0006 21H16.0003C15.4699 21 14.9611 20.7893 14.586 20.4142C14.2109 20.0391 14.0002 19.5304 14.0002 19V8C14.0002 7.73478 14.1055 7.48043 14.2931 7.29289C14.4806 7.10536 14.735 7 15.0002 7M19.0006 7H15.0002M22.0008 16H1.99921M8.99977 7H4.99945C4.73421 7 4.47983 7.10536 4.29228 7.29289C4.10473 7.48043 3.99937 7.73478 3.99937 8V10.32C3.99937 12.187 1.99921 13.759 1.99921 15.149V19C1.99921 19.5304 2.20994 20.0391 2.58504 20.4142C2.96014 20.7893 3.46889 21 3.99937 21H7.99969C8.53016 21 9.03891 20.7893 9.41401 20.4142C9.78912 20.0391 9.99985 19.5304 9.99985 19V8C9.99985 7.73478 9.89448 7.48043 9.70693 7.29289C9.51938 7.10536 9.265 7 8.99977 7ZM4.99945 7V4C4.99945 3.73478 5.10481 3.48043 5.29236 3.29289C5.47991 3.10536 5.73429 3 5.99953 3H7.99969C8.26492 3 8.5193 3.10536 8.70685 3.29289C8.8944 3.48043 8.99977 3.73478 8.99977 4V7" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  flame: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M16.0005 9.50027C14.0002 7.83354 12.6667 5.66678 12 3C10.3331 4.33339 9.49972 5.66678 9.49972 7.00017C9.49972 9.00025 10.9999 10.0003 10.9999 12.0004C10.9999 12.6634 10.7365 13.2994 10.2676 13.7682C9.79868 14.2371 9.16272 14.5005 8.49961 14.5005C7.83649 14.5005 7.20053 14.2371 6.73164 13.7682C6.26274 13.2994 5.99932 12.6634 5.99932 12.0004C5.35014 12.8659 4.99921 13.9186 4.99921 15.0005C4.99921 16.8571 5.73679 18.6377 7.04969 19.9505C8.3626 21.2633 10.1433 22.0008 12 22.0008C13.8567 22.0008 15.6374 21.2633 16.9503 19.9505C18.2632 18.6377 19.0008 16.8571 19.0008 15.0005C19.0008 13.0004 18.0007 11.167 16.0005 9.50027Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  compass: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0007C17.5233 22.0007 22.0008 17.5232 22.0008 11.9999C22.0008 6.47666 17.5233 1.99915 12 1.99915C6.47672 1.99915 1.99921 6.47666 1.99921 11.9999C1.99921 17.5232 6.47672 22.0007 12 22.0007Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  chevronDown: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M4 6L8 10L12 6" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
 };
 
 function Icon({ name, size, color }) {
@@ -171,9 +176,27 @@ function LandingPage({ onStart }) {
     { n: "03", title: "Viaje Sem Surpresas", body: "Garantimos acesso a ingressos reais, reservas de hotéis estratégicos e guias locais para você só focar no jogo." },
   ];
   const stats = [["450+", "Estádios Mapeados"], ["1.2k+", "Jogos por Temporada"], ["32", "Países Cobertos"], ["98.7%", "De Ingressos Entregues"]];
+  const diffs = [
+    ["Curadoria de Atmosfera", "Não indicamos apenas jogos grandes. Te levamos para jogos com as torcidas mais insanas, mosaicos históricos e pirotecnia."],
+    ["Garantia de Assento Local", "Esqueça assentos neutros e frios. Nossos pacotes incluem acessos seguros a setores onde o futebol é cantado durante os 90 minutos."],
+    ["Logística Inteligente de Rodada", "Nosso algoritmo otimiza o deslocamento de trem e voos para você conseguir assistir até 3 jogos num mesmo final de semana europeu."],
+  ];
+  const profiles = [
+    { icon: "binoculars", title: "Groundhopper", body: "Seu objetivo é colecionar estádios. Quanto mais bizarro, antigo ou tradicional o campo, melhor." },
+    { icon: "flame", title: "Fanático", body: "Segue o time do coração nas glórias e tragédias. Prioriza clássicos monumentais e ingressos disputados." },
+    { icon: "compass", title: "Explorador", body: "Une futebol com gastronomia local, visitas guiadas a museus e noites de cerveja pré-jogo com locais." },
+  ];
+  const faqs = [
+    ["Como garantem que os ingressos são legítimos?", "Nós trabalhamos apenas com revendedores oficiais de clubes e operadoras parceiras certificadas com seguro contra cancelamentos."],
+    ["E se a data do jogo mudar por causa da TV?", "As ligas europeias costumam fixar datas de 3 a 5 semanas antes. Nossa equipe monitora os calendários e monta o roteiro prevendo janelas de segurança nas datas de voos e hotéis."],
+    ["Posso viajar com crianças ou grupos?", "Sim! Adaptamos o perfil da viagem para roteiros mais familiares, com setores calmos e acessíveis nos estádios."],
+  ];
+
   return (
     <div style={{ background: BG, width: "100%" }}>
       <TopNavPublic onStart={onStart} active="Como Funciona" />
+
+      {/* hero */}
       <div style={{ position: "relative", display: "flex", gap: 64, alignItems: "center", padding: "100px 80px", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_HERO} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -189,6 +212,8 @@ function LandingPage({ onStart }) {
           <img src={PHOTO_RECTANGLE} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
       </div>
+
+      {/* como funciona */}
       <div style={{ background: BG_ALT, padding: "100px 80px", display: "flex", flexDirection: "column", gap: 64 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
           <Badge>O Caminho até a Arquibancada</Badge>
@@ -204,6 +229,8 @@ function LandingPage({ onStart }) {
           ))}
         </div>
       </div>
+
+      {/* stats */}
       <div style={{ background: BG, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, display: "flex", padding: "48px 80px" }}>
         {stats.map(([n, label]) => (
           <div key={label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
@@ -212,6 +239,69 @@ function LandingPage({ onStart }) {
           </div>
         ))}
       </div>
+
+      {/* diferenciais */}
+      <div style={{ background: BG_ALT, display: "flex", gap: 80, padding: "100px 80px" }}>
+        <div style={{ width: 500, display: "flex", flexDirection: "column", gap: 24, flexShrink: 0 }}>
+          <Badge>Alma de Torcedor</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, color: TEXT, margin: 0 }}>Por que não somos uma agência de turismo comum?</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 18, lineHeight: 1.6, color: BODY, margin: 0 }}>Turismo de futebol não é apenas comprar uma passagem de avião e sentar na ala VIP. Nós vivemos a arquibancada. Nossos roteiros capturam a história, a rivalidade e o verdadeiro espírito da cultura ultras e torcedora de cada cidade.</p>
+          <div style={{ paddingTop: 16 }}><Button variant="outline">Descobrir Diferenciais</Button></div>
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          {diffs.map(([title, body]) => (
+            <div key={title} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 24, display: "flex", gap: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 20, background: GREEN_BUTTON, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="shieldCheck" size={20} color={TEXT} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{title}</p>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.5, color: BODY, margin: 0 }}>{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* perfis-viajante */}
+      <div style={{ background: BG, padding: "100px 80px", display: "flex", flexDirection: "column", gap: 48 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+          <Badge gold>Qual é o seu Perfil?</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, color: TEXT, textAlign: "center", margin: 0 }}>Para cada tipo de apaixonado</p>
+        </div>
+        <div style={{ display: "flex", gap: 20 }}>
+          {profiles.map((p) => (
+            <div key={p.title} style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 8, background: BG_ALT, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name={p.icon} size={24} color={TEXT} />
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>{p.title}</p>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.5, color: BODY, margin: 0 }}>{p.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* faq */}
+      <div style={{ background: BG_ALT, padding: "100px 80px", display: "flex", flexDirection: "column", gap: 48 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+          <Badge>Dúvidas Frequentes</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 40, color: TEXT, textAlign: "center", margin: 0 }}>Perguntas na Linha de Fundo</p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {faqs.map(([q, a]) => (
+            <div key={q} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{q}</p>
+                <Icon name="chevronDown" size={16} color={MUTED} />
+              </div>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.5, color: BODY, margin: 0 }}>{a}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* cta final */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24, padding: "100px 80px" }}>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0, textAlign: "center" }}>Pronto para ouvir o rugido da torcida?</p>
         <Button onClick={onStart} icon={<Icon name="arrowRight" size={16} color={TEXT} />}>Montar minha viagem</Button>
@@ -219,7 +309,6 @@ function LandingPage({ onStart }) {
     </div>
   );
 }
-
 /* ============================================================
    2. CRIAR CONTA (node 95:489)
    ============================================================ */
@@ -358,8 +447,8 @@ const COUNTRIES_BY_CONTINENT = {
 };
 
 function StepDestino({ answers, setAnswers, onNext, onBack }) {
-  const continents = answers.continents || ["eu"];
-  const countries = answers.countries || ["Inglaterra"];
+  const continents = answers.continents || [];
+  const countries = answers.countries || [];
   const toggleContinent = (id) => setAnswers((a) => ({ ...a, continents: continents.includes(id) ? continents.filter((x) => x !== id) : [...continents, id] }));
   const toggleCountry = (c) => setAnswers((a) => ({ ...a, countries: countries.includes(c) ? countries.filter((x) => x !== c) : [...countries, c] }));
   const availableCountries = continents.flatMap((id) => COUNTRIES_BY_CONTINENT[id] || []);
@@ -418,17 +507,33 @@ function StepDatas({ answers, setAnswers, onNext, onBack }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Datas de viagem</p>
           <div style={{ display: "flex", gap: 12, width: 800 }}>
-            {["dateStart", "dateEnd"].map((k) => (
-              <div key={k} style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "16px 24px", borderRadius: 8 }}>
-                <Calendar size={20} color={TEXT} />
-                <input
-                  type="date"
-                  value={answers[k] || ""}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [k]: e.target.value }))}
-                  style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
-                />
-              </div>
-            ))}
+            <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "16px 24px", borderRadius: 8 }}>
+              <Calendar size={20} color={TEXT} />
+              <input
+                type="date"
+                value={answers.dateStart || ""}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => {
+                  const newStart = e.target.value;
+                  setAnswers((a) => ({
+                    ...a,
+                    dateStart: newStart,
+                    dateEnd: a.dateEnd && a.dateEnd < newStart ? "" : a.dateEnd,
+                  }));
+                }}
+                style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
+              />
+            </div>
+            <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "16px 24px", borderRadius: 8 }}>
+              <Calendar size={20} color={TEXT} />
+              <input
+                type="date"
+                value={answers.dateEnd || ""}
+                min={answers.dateStart || new Date().toISOString().split("T")[0]}
+                onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
+                style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
+              />
+            </div>
           </div>
         </div>
         <div style={{ height: 1, background: BORDER, width: 800 }} />
@@ -495,6 +600,13 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
         <div style={{ height: 1, background: BORDER, width: 800 }} />
         <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "center" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Orçamento total da viagem</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", width: 800 }}>
+            {budgetOpts.map((o) => (
+              <div key={o} onClick={() => setAnswers((a) => ({ ...a, budget: o, budgetCustom: "" }))} style={{ background: "#fff", border: `1px solid ${budget === o ? GREEN : BORDER}`, padding: "12px 16px", borderRadius: 999, cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: budget === o ? GREEN : TEXT, margin: 0 }}>{o}</p>
+              </div>
+            ))}
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 800 }}>
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Outro valor total</p>
             <div style={{ background: "#fff", border: `1.5px solid ${BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "12px 16px", borderRadius: 8 }}>
@@ -506,13 +618,6 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
                 style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: TEXT }}
               />
             </div>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", width: 800 }}>
-            {budgetOpts.map((o) => (
-              <div key={o} onClick={() => setAnswers((a) => ({ ...a, budget: o, budgetCustom: "" }))} style={{ background: "#fff", border: `1px solid ${budget === o ? GREEN : BORDER}`, padding: "12px 16px", borderRadius: 999, cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: budget === o ? GREEN : TEXT, margin: 0 }}>{o}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>
