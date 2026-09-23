@@ -60,6 +60,7 @@ const RAW_ICONS = {
   pen: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M22.0008 4.81839C22.0007 5.56599 21.7036 6.28294 21.1749 6.8115L7.82666 20.1603C7.59481 20.3914 7.30978 20.562 6.99659 20.6573L2.6432 21.9772C2.55675 22.0032 2.46488 22.0053 2.37733 21.9833C2.28979 21.9613 2.20983 21.916 2.14595 21.8522C2.08207 21.7885 2.03664 21.7086 2.01449 21.6211C1.99234 21.5336 1.9943 21.4417 2.02014 21.3553L3.34126 17.0033C3.43738 16.6899 3.6091 16.4048 3.84131 16.1733L17.1885 2.82457C17.7173 2.29601 18.4343 1.99911 19.182 1.99921C19.9297 1.9993 20.6467 2.29637 21.1754 2.82507C21.704 3.35377 22.0009 4.07079 22.0008 4.81839Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   fileText: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M13.9998 1.99921H6.00059C5.47021 1.99921 4.96156 2.20994 4.58652 2.58504C4.21149 2.96015 4.00079 3.46889 4.00079 3.99937V20.0006C4.00079 20.5311 4.21149 21.0399 4.58652 21.415C4.96156 21.7901 5.47021 22.0008 6.00059 22.0008H17.9994C18.5298 22.0008 19.0384 21.7901 19.4135 21.415C19.7885 21.0399 19.9992 20.5311 19.9992 20.0006V7.99969M13.9998 1.99921C14.3163 1.9987 14.6298 2.06082 14.9222 2.18199C15.2146 2.30317 15.4802 2.48101 15.7036 2.70527L19.2913 6.29355C19.5161 6.51708 19.6944 6.78294 19.8159 7.07578C19.9374 7.36862 19.9997 7.68263 19.9992 7.99969M13.9998 1.99921V6.99961C13.9998 7.26484 14.1051 7.51922 14.2927 7.70677C14.4802 7.89432 14.7345 7.99969 14.9997 7.99969L19.9992 7.99969M10.0002 8.99977H8.00039M15.9996 13.0001H8.00039M15.9996 17.0004H8.00039" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   planeTakeoff: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M1.99921 22.0001H21.9992M6.35921 17.4002L3.99921 17.0002L1.99921 13.0002L3.09921 12.4502C3.37836 12.3095 3.68661 12.2362 3.99921 12.2362C4.3118 12.2362 4.62005 12.3095 4.89921 12.4502L5.06921 12.5502C5.34836 12.6909 5.65661 12.7641 5.96921 12.7641C6.2818 12.7641 6.59005 12.6909 6.86921 12.5502L7.99921 12.0002L4.99921 6.00019L5.89921 5.55019C6.23188 5.38653 6.6035 5.31857 6.97256 5.35388C7.34162 5.3892 7.69361 5.52641 7.98921 5.75019L12.0092 8.75019C12.3058 8.9759 12.6596 9.11423 13.0307 9.14957C13.4018 9.18491 13.7753 9.11585 14.1092 8.95019L18.2992 6.89019C18.8346 6.62028 19.4515 6.55966 20.0292 6.72019L20.9992 7.00019C21.1996 7.05584 21.3851 7.15546 21.5422 7.29179C21.6993 7.42812 21.824 7.59774 21.9074 7.78833C21.9907 7.97891 22.0305 8.18567 22.0239 8.39356C22.0173 8.60146 21.9644 8.80527 21.8692 8.99019L21.4892 9.75019C21.2592 10.2102 20.8892 10.5902 20.4192 10.8302L7.57921 17.2002C7.20165 17.3872 6.77468 17.4502 6.35921 17.3802V17.4002Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  google: `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>`,
 };
 
 function Icon({ name, size, color }) {
@@ -491,10 +492,12 @@ function StepAccount({ answers, setAnswers, onNext, onBack }) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24, alignItems: "center", width: 800 }}>
           <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
-            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon name="circleX" size={18} color={TEXT} />
-            </div>
+            <Icon name="google" size={20} color={TEXT} />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Entrar com Google</p>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Já tem conta?</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Entrar</p>
           </div>
           {error && (
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{error}</p>
@@ -607,10 +610,6 @@ function StepAccount({ answers, setAnswers, onNext, onBack }) {
             <div onClick={handleCreateAccount} style={{ background: GREEN_BUTTON2, opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: loading ? "default" : "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{loading ? "Criando conta..." : "Criar conta"}</p>
             </div>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Já tem conta?</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Entrar</p>
           </div>
         </div>
       </div>
@@ -1319,14 +1318,57 @@ export default function App() {
   const [screen, setScreen] = useState("landing");
   const [answers, setAnswers] = useState({});
   const trip = useMemo(() => buildTrip(answers), [screen]);
-  const restart = () => { setAnswers({}); setScreen("landing"); };
+  const restart = () => {
+    setAnswers({});
+    setScreen("landing");
+    localStorage.removeItem("tripsz_state");
+  };
 
-  // Se a pessoa acabou de voltar do Mercado Pago com sucesso, pula direto
-  // pro resultado desbloqueado (ver nota no README sobre completar esta parte
-  // recuperando o roteiro salvo, em vez de recalculá-lo do zero).
+  // Guarda o passo atual e as respostas no localStorage sempre que mudam.
+  // É essencial porque o login com Google recarrega a página inteira (o
+  // navegador sai do site, vai pro Google e volta), e sem isso a pessoa
+  // perderia tudo que já tinha preenchido e voltaria pro início.
+  useEffect(() => {
+    if (screen !== "landing") {
+      localStorage.setItem("tripsz_state", JSON.stringify({ screen, answers }));
+    }
+  }, [screen, answers]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("status") === "paid") setScreen("unlocked");
+
+    // Se a pessoa acabou de voltar do Mercado Pago com sucesso, pula direto
+    // pro resultado desbloqueado (ver nota no README sobre completar esta
+    // parte recuperando o roteiro salvo, em vez de recalculá-lo do zero).
+    if (params.get("status") === "paid") {
+      setScreen("unlocked");
+      return;
+    }
+
+    // Restaura o passo em que a pessoa estava antes de sair pro Google.
+    const saved = localStorage.getItem("tripsz_state");
+    if (saved) {
+      try {
+        const { screen: savedScreen, answers: savedAnswers } = JSON.parse(saved);
+        setAnswers(savedAnswers || {});
+        setScreen(savedScreen || "landing");
+      } catch (e) {
+        console.error("Não foi possível restaurar o progresso salvo:", e);
+      }
+    }
+
+    // Detecta quando o login com Google (ou e-mail/senha) termina e uma
+    // sessão passa a existir. Se a pessoa estava parada na tela de conta
+    // esperando login, avança sozinho pro próximo passo do questionário.
+    const supabase = supabaseBrowser();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        setAnswers((a) => ({ ...a, userId: session.user.id }));
+        setScreen((current) => (current === "account" || current === "landing" ? "destino" : current));
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   // Antes de ir pro checkout, grava as respostas do questionário no Supabase
