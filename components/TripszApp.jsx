@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 
 const GREEN = "#00c853";
@@ -368,6 +368,32 @@ function StepAccount({ answers, setAnswers, onNext, onBack }) {
   const set = (k, v) => setAnswers((a) => ({ ...a, [k]: v }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [touched, setTouched] = useState({});
+
+  const touch = (k) => setTouched((t) => ({ ...t, [k]: true }));
+
+  const formatWhatsapp = (raw) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits.replace(/^(\d*)/, "($1");
+    if (digits.length <= 7) return digits.replace(/^(\d{2})(\d*)/, "($1) $2");
+    return digits.replace(/^(\d{2})(\d{5})(\d*)/, "($1) $2-$3");
+  };
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(answers.email || "");
+  const password = answers.password || "";
+  const passChecks = {
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    len: password.length >= 8,
+  };
+  const passwordValid = passChecks.upper && passChecks.lower && passChecks.len;
+  const confirmValid = (answers.passwordConfirm || "") === password && password.length > 0;
+  const nameValid = (answers.name || "").trim().length > 1;
+  const whatsappDigits = (answers.whatsapp || "").replace(/\D/g, "");
+  const whatsappValid = whatsappDigits.length === 10 || whatsappDigits.length === 11;
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -383,25 +409,55 @@ function StepAccount({ answers, setAnswers, onNext, onBack }) {
 
   const handleCreateAccount = async () => {
     setError(null);
-    if (!answers.email || !answers.password || !answers.name) {
-      setError("Preencha nome, e-mail e senha para continuar.");
-      return;
-    }
+    setTouched({ name: true, email: true, whatsapp: true, password: true, passwordConfirm: true });
+
+    if (!nameValid) return setError("Preencha seu nome completo.");
+    if (!emailValid) return setError("Digite um e-mail válido.");
+    if (!whatsappValid) return setError("Digite um WhatsApp válido, com DDD.");
+    if (!passwordValid) return setError("A senha precisa atender aos critérios abaixo.");
+    if (!confirmValid) return setError("As senhas não coincidem.");
+
     setLoading(true);
-    const supabase = supabaseBrowser();
-    const { data, error } = await supabase.auth.signUp({
-      email: answers.email,
-      password: answers.password,
-      options: { data: { name: answers.name, whatsapp: answers.whatsapp } },
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const supabase = supabaseBrowser();
+      const { data, error } = await supabase.auth.signUp({
+        email: answers.email,
+        password: answers.password,
+        options: { data: { name: answers.name, whatsapp: answers.whatsapp } },
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      setAnswers((a) => ({ ...a, userId: data.user?.id }));
+      onNext();
+    } catch (e) {
+      setError("Não foi possível conectar com o servidor de contas. Tente novamente.");
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    setAnswers((a) => ({ ...a, userId: data.user?.id }));
-    onNext();
   };
+
+  const fieldStyle = (invalid) => ({
+    width: "100%",
+    background: "#fff",
+    border: `1px solid ${invalid ? "#dc2626" : BORDER}`,
+    borderRadius: 12,
+    height: 56,
+    padding: "0 16px",
+    fontFamily: FONT_BODY,
+    fontSize: 16,
+    color: TEXT,
+    outline: "none",
+  });
+
+  const CriteriaDot = ({ ok, label }) => (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", width: "100%" }}>
+      <div style={{ width: 6, height: 6, borderRadius: 3, background: ok ? GREEN : BORDER, flexShrink: 0 }} />
+      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: ok ? GREEN : MUTED, margin: 0 }}>{label}</p>
+    </div>
+  );
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -450,18 +506,104 @@ function StepAccount({ answers, setAnswers, onNext, onBack }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "flex-start", width: "100%" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Criar conta</p>
-            {[["name", "Nome", "Seu nome completo", "text"], ["email", "E-mail", "nome@exemplo.com", "email"], ["whatsapp", "WhatsApp", "(99) 99999-9999", "tel"], ["password", "Senha", "Crie uma senha segura", "password"]].map(([key, label, placeholder, type]) => (
-              <div key={key} style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{label}</p>
+
+            {/* Nome */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Nome</p>
+              <input
+                type="text"
+                value={answers.name || ""}
+                onChange={(e) => set("name", e.target.value)}
+                onBlur={() => touch("name")}
+                placeholder="Seu nome completo"
+                style={fieldStyle(touched.name && !nameValid)}
+              />
+              {touched.name && !nameValid && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>Digite seu nome completo.</p>
+              )}
+            </div>
+
+            {/* E-mail */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>E-mail</p>
+              <input
+                type="email"
+                value={answers.email || ""}
+                onChange={(e) => set("email", e.target.value)}
+                onBlur={() => touch("email")}
+                placeholder="nome@exemplo.com"
+                style={fieldStyle(touched.email && !emailValid)}
+              />
+              {touched.email && !emailValid && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>Digite um e-mail válido.</p>
+              )}
+            </div>
+
+            {/* WhatsApp */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>WhatsApp</p>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={answers.whatsapp || ""}
+                onChange={(e) => set("whatsapp", formatWhatsapp(e.target.value))}
+                onBlur={() => touch("whatsapp")}
+                placeholder="(99) 99999-9999"
+                maxLength={15}
+                style={fieldStyle(touched.whatsapp && !whatsappValid)}
+              />
+              {touched.whatsapp && !whatsappValid && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>Digite um WhatsApp válido, com DDD.</p>
+              )}
+            </div>
+
+            {/* Senha */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Senha</p>
+              <div style={{ position: "relative" }}>
                 <input
-                  type={type}
-                  value={answers[key] || ""}
-                  onChange={(e) => set(key, e.target.value)}
-                  placeholder={placeholder}
-                  style={{ width: "100%", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, height: 56, padding: "0 16px", fontFamily: FONT_BODY, fontSize: 16, color: TEXT, outline: "none" }}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => set("password", e.target.value)}
+                  onBlur={() => touch("password")}
+                  placeholder="Crie uma senha segura"
+                  style={{ ...fieldStyle(touched.password && !passwordValid), paddingRight: 48 }}
                 />
+                <div onClick={() => setShowPassword((v) => !v)} style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: MUTED, display: "flex" }}>
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Confirmar senha */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Confirmar senha</p>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={answers.passwordConfirm || ""}
+                  onChange={(e) => set("passwordConfirm", e.target.value)}
+                  onBlur={() => touch("passwordConfirm")}
+                  placeholder="Repita a senha"
+                  style={{ ...fieldStyle(touched.passwordConfirm && !confirmValid), paddingRight: 48 }}
+                />
+                <div onClick={() => setShowConfirm((v) => !v)} style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: MUTED, display: "flex" }}>
+                  {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                </div>
+              </div>
+              {touched.passwordConfirm && !confirmValid && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>As senhas não coincidem.</p>
+              )}
+            </div>
+
+            {/* Critérios da senha */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: BODY, margin: 0 }}>Critérios da senha</p>
+              <CriteriaDot ok={passChecks.upper} label="Pelo menos 1 letra maiúscula" />
+              <CriteriaDot ok={passChecks.lower} label="Pelo menos 1 letra minúscula" />
+              <CriteriaDot ok={passChecks.len} label="No mínimo 8 caracteres" />
+            </div>
+
             <div onClick={handleCreateAccount} style={{ background: GREEN_BUTTON2, opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: loading ? "default" : "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{loading ? "Criando conta..." : "Criar conta"}</p>
             </div>
