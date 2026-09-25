@@ -1088,6 +1088,44 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack }) {
    Business model differs: this flow has a FIXED unlock price
    (R$ 49,90), not a dynamically-computed consultancy quote.
    ============================================================ */
+// IDs de time na API-Football, usados só para montar a URL do escudo no
+// CDN público deles (media.api-sports.io/football/teams/{id}.png) — não
+// precisa de chave de API pra isso, é só uma imagem estática. Times que
+// não estão aqui (ou cujo ID estiver errado) caem automaticamente no
+// fallback de iniciais dentro de <TeamBadge>, então nunca aparece um
+// ícone quebrado na tela.
+const TEAM_LOGO_IDS = {
+  Arsenal: 42, Chelsea: 49, Liverpool: 40, "Manchester City": 50, Tottenham: 47,
+  "Real Madrid": 541, Barcelona: 529, "Atlético Madrid": 530, Sevilla: 536,
+  "Bayern München": 157, "Borussia Dortmund": 165, PSG: 85, Marseille: 81,
+  Porto: 212, Benfica: 211, Ajax: 194, Feyenoord: 209, PSV: 197,
+  Galatasaray: 645, Fenerbahçe: 611, "Boca Juniors": 451, "River Plate": 435,
+  Flamengo: 127, Fluminense: 124, Corinthians: 131, Palmeiras: 126,
+  Inter: 505, Milan: 489, Napoli: 492, Roma: 497, Lazio: 487,
+};
+
+function TeamBadge({ name, size = 32 }) {
+  const [broken, setBroken] = useState(false);
+  const id = TEAM_LOGO_IDS[name];
+  if (!id || broken) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: "50%", background: BG_ALT, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: size * 0.38, color: MUTED, margin: 0 }}>{initials(name)}</p>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={`https://media.api-sports.io/football/teams/${id}.png`}
+      alt={name}
+      width={size}
+      height={size}
+      onError={() => setBroken(true)}
+      style={{ objectFit: "contain", flexShrink: 0 }}
+    />
+  );
+}
+
 const FIXTURES_BY_COUNTRY = {
   "Itália": [
     { home: "Inter", away: "Milan", city: "Milão", stadium: "San Siro", tag: "Derby della Madonnina", rivalry: "derby", vibe: 9.5, dayOffset: 20 },
@@ -1330,9 +1368,11 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
                     <Badge gold={f.rivalry === "title"}>{f.tag}</Badge>
                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Atmosfera: {f.vibe}/10</p>
                   </div>
-                  <div style={{ display: "flex", gap: 12, alignItems: "center", height: 44 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", height: 44, flexWrap: "wrap" }}>
+                    <TeamBadge name={f.home} size={28} />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.home}</p>
                     <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>VS</p>
+                    <TeamBadge name={f.away} size={28} />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.away}</p>
                   </div>
                 </div>
@@ -1592,8 +1632,12 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                   <div style={{ background: BG_ALT, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, margin: 0 }}>PARTIDAS SUGERIDAS</p>
                     {preview.games.slice(0, 2).map((g, i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <TeamBadge name={g.home} size={18} />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                          <TeamBadge name={g.away} size={18} />
+                        </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
                       </div>
                     ))}
@@ -2237,7 +2281,11 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Atmosfera: {f.vibe}/10</p>
                   </div>
                   <div>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 22, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                      <TeamBadge name={f.home} size={isMobile ? 24 : 32} />
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 22, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
+                      <TeamBadge name={f.away} size={isMobile ? 24 : 32} />
+                    </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{f.stadium}</p>
                       <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "4px 10px" }}>
