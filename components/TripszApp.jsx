@@ -1485,7 +1485,28 @@ function initials(name) {
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
 }
 
-function AuthedNav({ active, userName, onNavigate, onLogout }) {
+function AvatarCircle({ url, name, size = 36, fontSize }) {
+  const [broken, setBroken] = useState(false);
+  if (url && !broken) {
+    return (
+      <img
+        src={url}
+        alt={name || "avatar"}
+        width={size}
+        height={size}
+        onError={() => setBroken(true)}
+        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+      />
+    );
+  }
+  return (
+    <div style={{ background: GREEN_BUTTON2, width: size, height: size, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: fontSize || size * 0.4, color: "#fff", margin: 0 }}>{initials(name)}</p>
+    </div>
+  );
+}
+
+function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const items = [
@@ -1505,9 +1526,7 @@ function AuthedNav({ active, userName, onNavigate, onLogout }) {
       )}
       <div style={{ position: "relative" }}>
         <div onClick={() => setMenuOpen((v) => !v)} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
-          <div style={{ background: GREEN_BUTTON2, width: 36, height: 36, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{initials(userName)}</p>
-          </div>
+          <AvatarCircle url={userAvatar} name={userName} size={36} fontSize={14} />
           {!isMobile && (
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{userName || "Minha conta"}</p>
@@ -1613,6 +1632,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
   const isMobile = useIsMobile();
   const [trips, setTrips] = useState(null); // null = carregando
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [error, setError] = useState(null);
@@ -1621,6 +1641,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
     const supabase = supabaseBrowser();
     const { data: userData } = await supabase.auth.getUser();
     setUserName(userData.user?.user_metadata?.name || userData.user?.email || "");
+    setUserAvatar(userData.user?.user_metadata?.avatar_url || null);
 
     // RLS já garante que só voltam as viagens do próprio usuário — não
     // precisa (nem pode) filtrar por user_id manualmente aqui.
@@ -1690,7 +1711,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="roteiros" userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
@@ -1813,6 +1834,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
 function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const isMobile = useIsMobile();
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
   const [userId, setUserId] = useState("");
   const [stats, setStats] = useState(null);
 
@@ -1822,6 +1844,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       setUserName(user?.user_metadata?.name || user?.email || "");
+      setUserAvatar(user?.user_metadata?.avatar_url || null);
       setUserId(user?.id || "");
 
       const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
@@ -1872,7 +1895,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="conquistas" userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="conquistas" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
@@ -1891,8 +1914,12 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
             <Icon name="shieldCheck" size={24} color={GREEN} />
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: "#fff", margin: 0 }}>{initials(userName)}</p>
+            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: "#fff", margin: 0 }}>{initials(userName)}</p>
+              )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
@@ -1966,6 +1993,9 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [prefs, setPrefs] = useState([]);
   const [original, setOriginal] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState(null);
 
   const loadProfile = async () => {
     const supabase = supabaseBrowser();
@@ -1982,6 +2012,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
     setEmail(loaded.email);
     setWhatsapp(loaded.whatsapp);
     setPrefs(loaded.prefs);
+    setAvatarUrl(user.user_metadata?.avatar_url || null);
     setOriginal(loaded);
     setLoading(false);
   };
@@ -1991,6 +2022,52 @@ function MeuPerfil({ onNavigate, onLogout }) {
   }, []);
 
   const togglePref = (id) => setPrefs((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois
+    if (!file) return;
+    setAvatarError(null);
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setAvatarError("Envie um arquivo JPG ou PNG.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setAvatarError("A imagem precisa ter no máximo 1MB.");
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Entre novamente.");
+
+      const ext = file.type === "image/png" ? "png" : "jpg";
+      const path = `${userId}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      // Acrescenta um carimbo de tempo pra forçar o navegador a buscar a
+      // imagem nova, já que o caminho do arquivo é sempre o mesmo.
+      const freshUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase.auth.updateUser({ data: { avatar_url: freshUrl } });
+      if (updateError) throw updateError;
+
+      setAvatarUrl(freshUrl);
+    } catch (err) {
+      setAvatarError(err.message || "Não foi possível enviar a foto.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleDiscard = () => {
     if (!original) return;
@@ -2050,7 +2127,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="perfil" userName={name} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="perfil" userName={name} userAvatar={avatarUrl} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ position: "relative", display: "flex", alignItems: "center", padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
@@ -2072,14 +2149,16 @@ function MeuPerfil({ onNavigate, onLogout }) {
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: TEXT, margin: 0 }}>Dados Cadastrais</p>
 
             <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-              <div style={{ width: 100, height: 100, borderRadius: 50, border: `2px solid ${GREEN}`, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: "#fff", margin: 0 }}>{initials(name)}</p>
+              <div style={{ width: 100, height: 100, borderRadius: 50, border: `2px solid ${GREEN}`, overflow: "hidden", flexShrink: 0 }}>
+                <AvatarCircle url={avatarUrl} name={name} size={100} fontSize={32} />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div onClick={() => alert("Upload de foto ainda não está disponível — falta configurar um bucket de armazenamento no Supabase.")} style={{ background: GREEN_BUTTON, padding: "8px 16px", borderRadius: 6, cursor: "pointer", display: "inline-block" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>Alterar foto</p>
-                </div>
+                <label style={{ background: GREEN_BUTTON, opacity: avatarUploading ? 0.6 : 1, padding: "8px 16px", borderRadius: 6, cursor: avatarUploading ? "default" : "pointer", display: "inline-block" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{avatarUploading ? "Enviando..." : "Alterar foto"}</p>
+                  <input type="file" accept="image/jpeg,image/png" onChange={handleAvatarChange} disabled={avatarUploading} style={{ display: "none" }} />
+                </label>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>JPG ou PNG. Máximo de 1MB</p>
+                {avatarError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>{avatarError}</p>}
               </div>
             </div>
 
@@ -2380,18 +2459,20 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
 
   useEffect(() => {
     (async () => {
       const supabase = supabaseBrowser();
       const { data } = await supabase.auth.getUser();
       setUserName(data.user?.user_metadata?.name || data.user?.email || "");
+      setUserAvatar(data.user?.user_metadata?.avatar_url || null);
     })();
   }, []);
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="roteiros" userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? "16px" : `24px ${px}` }}>
         <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
