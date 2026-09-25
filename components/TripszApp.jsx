@@ -2567,8 +2567,13 @@ export default function App() {
   // página inteira (sai do site, vai pro Google, volta), e qualquer coisa
   // guardada só em memória (como um useRef) se perderia nesse meio-tempo.
   const setPostLoginTarget = (target) => localStorage.setItem("tripsz_post_login_target", target);
+  // Devolve null se não tiver nenhuma intenção salva — importante não
+  // inventar um destino padrão aqui, senão qualquer aviso do Supabase de
+  // que já existe uma sessão (o que acontece toda vez que a pessoa volta
+  // ao site já logada, não só depois de um login de verdade) empurraria
+  // ela pro questionário sem que ela tivesse pedido isso.
   const readAndClearPostLoginTarget = () => {
-    const target = localStorage.getItem("tripsz_post_login_target") || "destino";
+    const target = localStorage.getItem("tripsz_post_login_target");
     localStorage.removeItem("tripsz_post_login_target");
     return target;
   };
@@ -2666,7 +2671,8 @@ export default function App() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         setAnswers((a) => ({ ...a, userId: session.user.id }));
-        setScreen((current) => (current === "account" || current === "landing" ? readAndClearPostLoginTarget() : current));
+        const target = readAndClearPostLoginTarget();
+        if (target) setScreen((current) => (current === "account" || current === "landing" ? target : current));
       }
     });
 
@@ -2718,7 +2724,7 @@ export default function App() {
     <div style={{ width: "100%", minHeight: "100vh" }}>
       <FontImports />
       {screen === "landing" && <LandingPage onStart={() => { setPostLoginTarget("destino"); setScreen("account"); }} onLogin={() => { setPostLoginTarget("roteiros"); setOpenLoginModal(true); setScreen("account"); }} />}
-      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget())} onBack={restart} openLogin={openLoginModal} />}
+      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} openLogin={openLoginModal} />}
       {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("account")} />}
       {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("destino")} />}
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} />}
