@@ -1324,6 +1324,13 @@ function scoreFixture(f, answers) {
   // "maxgames" e "stadiums" não dão peso extra por rivalidade — a seleção
   // deles acontece depois, no buildTrip, priorizando quantidade/variedade
   // de estádios em vez de reordenar por score.
+
+  // Jogos dos times favoritos escolhidos no questionário sobem bastante
+  // no ranking — a pessoa disse explicitamente que quer acompanhar esses
+  // times, então isso pesa mais que qualquer prioridade de estilo.
+  const favorites = answers.favoriteTeams || [];
+  if (favorites.includes(f.home) || favorites.includes(f.away)) score += 10;
+
   return score;
 }
 
