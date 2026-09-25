@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 
 const GREEN = "#00c853";
@@ -97,6 +97,10 @@ const RAW_ICONS = {
   google: `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>`,
   search: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.16667 16.6667C13.3088 16.6667 16.6667 13.3088 16.6667 9.16667C16.6667 5.02453 13.3088 1.66667 9.16667 1.66667C5.02453 1.66667 1.66667 5.02453 1.66667 9.16667C1.66667 13.3088 5.02453 16.6667 9.16667 16.6667Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18.3333 18.3333L14.1667 14.1667" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0008C17.5228 22.0008 22 17.5236 22 12.0008C22 6.47792 17.5228 2.00076 12 2.00076C6.47715 2.00076 2 6.47792 2 12.0008C2 17.5236 6.47715 22.0008 12 22.0008Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12.0008H22" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 2.00076C14.5013 4.73866 15.9228 8.29331 16 12.0008C15.9228 15.7082 14.5013 19.2629 12 22.0008C9.49872 19.2629 8.07725 15.7082 8 12.0008C8.07725 8.29331 9.49872 4.73866 12 2.00076Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  trophy: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6 9H4.5A2.5 2.5 0 012 6.5V5a1 1 0 011-1h3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18 9h1.5A2.5 2.5 0 0022 6.5V5a1 1 0 00-1-1h-3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M6 4h12v6a6 6 0 01-12 0V4z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 16v4M8 22h8" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  crown: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 18h18M4 18l-1-10 5 4 4-7 4 7 5-4-1 10" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  ticket: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M13 5v2M13 11v2M13 17v2" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  sofa: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M4 14v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12v-1a2 2 0 012-2 2 2 0 012 2v1M22 12v-1a2 2 0 00-2-2 2 2 0 00-2 2v1" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M6 12h12v3a1 1 0 01-1 1H7a1 1 0 01-1-1v-3z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M6 9a1 1 0 011-1h10a1 1 0 011 1v3H6V9z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
 };
 
 function Icon({ name, size, color }) {
@@ -1511,6 +1515,8 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const items = [
     ["Meus roteiros", "roteiros"],
+    ["Meus jogos", "jogos"],
+    ["Meu nível", "nivel"],
     ["Minhas conquistas", "conquistas"],
     ["Meu perfil", "perfil"],
   ];
@@ -1837,48 +1843,77 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const [userAvatar, setUserAvatar] = useState(null);
   const [userId, setUserId] = useState("");
   const [stats, setStats] = useState(null);
+  const [attendedGames, setAttendedGames] = useState([]);
+  const [showAddGame, setShowAddGame] = useState(false);
+
+  const looksLikeChampions = (name) => /champions league/i.test(name || "");
+
+  const loadData = async () => {
+    const supabase = supabaseBrowser();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    setUserName(user?.user_metadata?.name || user?.email || "");
+    setUserAvatar(user?.user_metadata?.avatar_url || null);
+    setUserId(user?.id || "");
+
+    const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
+    const trips = rows || [];
+
+    // Só contam pra estatística os roteiros de fato pagos/desbloqueados —
+    // um rascunho não gerado ainda não é uma "conquista".
+    const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
+    const source = unlocked.length ? unlocked : trips; // fallback pra não ficar tudo zerado em conta nova
+
+    const plannedGames = source.flatMap((row) => buildTrip({
+      countries: row.countries || [],
+      dateStart: row.date_start,
+      dateEnd: row.date_end,
+      flexLevel: row.flex_level,
+      priority: row.priority,
+      pace: row.pace,
+    }).games);
+
+    const { data: attendedRows } = await supabase
+      .from("attended_games")
+      .select("*")
+      .order("match_date", { ascending: false });
+    const attended = attendedRows || [];
+    setAttendedGames(attended);
+
+    // Jogos do roteiro planejado (mock) e jogos do passado que a pessoa
+    // registrou (reais, vindos da API ou preenchidos à mão) contam juntos
+    // pras mesmas estatísticas — os dois são partidas que ela viveu ou
+    // vai viver de verdade.
+    const stadiums = new Set([...plannedGames.map((g) => g.stadium), ...attended.map((g) => g.stadium)].filter(Boolean));
+    const countries = new Set([...source.flatMap((r) => r.countries || []), ...attended.map((g) => g.country)].filter(Boolean));
+    const competitions = new Set([
+      ...plannedGames.map((g) => g.competition || "domestica"),
+      ...attended.map((g) => g.competition || "domestica"),
+    ]);
+    const hasChampions =
+      plannedGames.some((g) => g.competition === "champions") ||
+      attended.some((g) => looksLikeChampions(g.competition));
+
+    setStats({
+      stadiums: stadiums.size,
+      countries: countries.size,
+      games: plannedGames.length + attended.length,
+      competitions: competitions.size,
+      hasChampions,
+      tripsCount: source.length,
+    });
+  };
 
   useEffect(() => {
-    (async () => {
-      const supabase = supabaseBrowser();
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
-      setUserName(user?.user_metadata?.name || user?.email || "");
-      setUserAvatar(user?.user_metadata?.avatar_url || null);
-      setUserId(user?.id || "");
-
-      const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
-      const trips = rows || [];
-
-      // Só contam pra estatística os roteiros de fato pagos/desbloqueados —
-      // um rascunho não gerado ainda não é uma "conquista".
-      const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
-      const source = unlocked.length ? unlocked : trips; // fallback pra não ficar tudo zerado em conta nova
-
-      const allGames = source.flatMap((row) => buildTrip({
-        countries: row.countries || [],
-        dateStart: row.date_start,
-        dateEnd: row.date_end,
-        flexLevel: row.flex_level,
-        priority: row.priority,
-        pace: row.pace,
-      }).games);
-
-      const stadiums = new Set(allGames.map((g) => g.stadium));
-      const countries = new Set(source.flatMap((r) => r.countries || []));
-      const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
-      const hasChampions = allGames.some((g) => g.competition === "champions");
-
-      setStats({
-        stadiums: stadiums.size,
-        countries: countries.size,
-        games: allGames.length,
-        competitions: competitions.size,
-        hasChampions,
-        tripsCount: source.length,
-      });
-    })();
+    loadData();
   }, []);
+
+  const handleDeleteAttended = async (id) => {
+    if (!window.confirm("Remover este jogo da sua lista de conquistas?")) return;
+    const supabase = supabaseBrowser();
+    await supabase.from("attended_games").delete().eq("id", id);
+    loadData();
+  };
 
   const px = isMobile ? "16px" : "80px";
   const level = stats && stats.countries >= 5 ? "VIP GROUNDHOPPER" : stats && stats.countries >= 1 ? "GROUNDHOPPER" : "NOVATO";
@@ -1971,7 +2006,412 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   );
 }
 
-/* --- Meu Perfil: dados reais do Supabase Auth, editáveis --- */
+
+/* --- Meus Jogos: histórico real dos jogos registrados, agrupado por temporada --- */
+function seasonLabel(dateStr) {
+  const d = new Date(dateStr);
+  const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1; // temporada europeia: jul-jun
+  return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
+}
+
+function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+  const [games, setGames] = useState(null);
+  const [tab, setTab] = useState("todos");
+  const [search, setSearch] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("todas");
+
+  const loadGames = async () => {
+    const supabase = supabaseBrowser();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+    setUserName(user?.user_metadata?.name || user?.email || "");
+    setUserAvatar(user?.user_metadata?.avatar_url || null);
+
+    const { data } = await supabase.from("attended_games").select("*").order("match_date", { ascending: false });
+    setGames(data || []);
+  };
+
+  useEffect(() => {
+    loadGames();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Remover este jogo do seu histórico?")) return;
+    const supabase = supabaseBrowser();
+    await supabase.from("attended_games").delete().eq("id", id);
+    loadGames();
+  };
+
+  const all = games || [];
+  const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
+  const countries = new Set(all.map((g) => g.country).filter(Boolean));
+  const seasons = Array.from(new Set(all.map((g) => seasonLabel(g.match_date)))).sort().reverse();
+
+  const filtered = all.filter((g) => {
+    if (tab === "tripsz" && g.source !== "api") return false;
+    if (tab === "manuais" && g.source !== "manual") return false;
+    if (seasonFilter !== "todas" && seasonLabel(g.match_date) !== seasonFilter) return false;
+    if (search && !(g.stadium || "").toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const grouped = {};
+  filtered.forEach((g) => {
+    const s = seasonLabel(g.match_date);
+    if (!grouped[s]) grouped[s] = [];
+    grouped[s].push(g);
+  });
+  const orderedSeasons = Object.keys(grouped).sort().reverse();
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <Badge>Histórico Completo</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Meus Jogos</p>
+        <div style={{ display: "flex", gap: isMobile ? 12 : 24, alignItems: "center", flexWrap: "wrap" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: GREEN, margin: 0 }}>{all.length} jogos</p>
+          <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{stadiums.size} estádios</p>
+          <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{countries.size} países</p>
+        </div>
+      </div>
+
+      <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: 16 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[["todos", "Todos"], ["tripsz", "Via Tripsz"], ["manuais", "Manuais"]].map(([id, label]) => (
+              <div key={id} onClick={() => setTab(id)} style={{ background: tab === id ? GREEN_BG : "#fff", border: `1px solid ${tab === id ? GREEN : BORDER}`, padding: "8px 16px", borderRadius: 999, cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: tab === id ? 700 : 500, fontSize: 14, color: tab === id ? GREEN : BODY, margin: 0 }}>{label}</p>
+              </div>
+            ))}
+          </div>
+          <div onClick={onRegisterNew} style={{ background: GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "12px 20px", borderRadius: 8, cursor: "pointer" }}>
+            <Icon name="pen" size={16} color={TEXT} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, textTransform: "uppercase", margin: 0 }}>Registrar Novo Jogo</p>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16 }}>
+          <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
+            <Icon name="search" size={18} color={MUTED} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por estádio..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+          </div>
+          <select value={seasonFilter} onChange={(e) => setSeasonFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: TEXT, width: isMobile ? "100%" : 240 }}>
+            <option value="todas">Todas as temporadas</option>
+            {seasons.map((s) => <option key={s} value={s}>Temporada {s}</option>)}
+          </select>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0 }}>Histórico de Partidas</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Filtrado por: {tab === "todos" ? "Todos" : tab === "tripsz" ? "Via Tripsz" : "Manuais"}</p>
+        </div>
+
+        {games === null && <p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando...</p>}
+        {games !== null && filtered.length === 0 && (
+          <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 40, textAlign: "center" }}>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Football Passport.</p>
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {orderedSeasons.map((season) => (
+            <div key={season} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: TEXT, margin: 0 }}>Temporada {season}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>{grouped[season].length} jogo(s)</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {grouped[season].map((g) => (
+                  <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                      <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
+                        <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                      </div>
+                      <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}{g.competition ? ` · ${g.competition}` : ""}</p>
+                      <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
+/* --- Registrar Jogo: fluxo guiado, busca por estádio na API-Football --- */
+function RegistrarJogo({ onNavigate, onLogout, onDone }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+
+  const [stadiumQuery, setStadiumQuery] = useState("");
+  const [season, setSeason] = useState(2024);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [venue, setVenue] = useState(null);
+  const [games, setGames] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [saving, setSaving] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+  const [manual, setManual] = useState({ home: "", away: "", date: "", stadium: "", city: "", country: "", competition: "" });
+
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase.auth.getUser();
+      setUserName(data.user?.user_metadata?.name || data.user?.email || "");
+      setUserAvatar(data.user?.user_metadata?.avatar_url || null);
+    })();
+  }, []);
+
+  const handleSearch = async () => {
+    if (!stadiumQuery.trim()) return setError("Digite o nome de um estádio.");
+    setError(null);
+    setLoading(true);
+    setVenue(null);
+    setGames([]);
+    setSelectedIds(new Set());
+    try {
+      const res = await fetch(`/api/attended-games/search-stadium?stadium=${encodeURIComponent(stadiumQuery)}&season=${season}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro na busca.");
+      if (!data.found) {
+        setShowManual(true);
+        return;
+      }
+      setVenue(data.venue);
+      setGames(data.games);
+      setShowManual(false);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleGame = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleAddToTrip = async () => {
+    if (selectedIds.size === 0) return setError("Selecione ao menos um jogo.");
+    setSaving(true);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Entre novamente.");
+
+      const rows = games
+        .filter((g) => selectedIds.has(g.apiFixtureId))
+        .map((g) => ({
+          user_id: userId,
+          source: "api",
+          api_fixture_id: g.apiFixtureId,
+          home_team: g.home,
+          away_team: g.away,
+          match_date: g.date.split("T")[0],
+          stadium: venue.name,
+          city: venue.city,
+          country: venue.country,
+          competition: g.competition,
+        }));
+
+      const { error: insertError } = await supabase.from("attended_games").insert(rows);
+      if (insertError) throw insertError;
+      onDone();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleManualSave = async () => {
+    if (!manual.home || !manual.away || !manual.date || !manual.country) {
+      return setError("Preencha pelo menos os times, a data e o país.");
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Entre novamente.");
+      const { error: insertError } = await supabase.from("attended_games").insert({
+        user_id: userId,
+        source: "manual",
+        home_team: manual.home,
+        away_team: manual.away,
+        match_date: manual.date,
+        stadium: manual.stadium || null,
+        city: manual.city || null,
+        country: manual.country,
+        competition: manual.competition || null,
+      });
+      if (insertError) throw insertError;
+      onDone();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" };
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <Badge>Novo Registro Manual</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Registre um Jogo</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Adicione jogos que você já esteve para completar seu Football Passport e subir seu nível de torcedor.</p>
+      </div>
+
+      <div style={{ background: BG_ALT, display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? `24px ${px}` : `80px ${px}` }}>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 40, width: "100%", maxWidth: 960, display: "flex", flexDirection: "column", gap: 32 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
+            <div>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 1 · Estádio</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque o estádio onde o jogo aconteceu</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: "100%" }}>
+              <div style={{ flex: 1, background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 12 }}>
+                <Icon name="search" size={18} color={MUTED} />
+                <input value={stadiumQuery} onChange={(e) => setStadiumQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="Buscar estádio..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+              </div>
+              <select value={season} onChange={(e) => setSeason(parseInt(e.target.value, 10))} style={{ ...fieldStyle, width: isMobile ? "100%" : 140 }}>
+                <option value={2024}>2024/25</option>
+                <option value={2023}>2023/24</option>
+                <option value={2022}>2022/23</option>
+              </select>
+              <div onClick={loading ? undefined : handleSearch} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
+              </div>
+            </div>
+            {venue && (
+              <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
+                <div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.name}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{venue.city}, {venue.country}{venue.capacity ? ` • Capacidade: ${venue.capacity.toLocaleString("pt-BR")}` : ""}</p>
+                </div>
+                <div style={{ background: GREEN_BG, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
+                  <Check size={14} color={GREEN} />
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Selecionado</p>
+                </div>
+              </div>
+            )}
+            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+          </div>
+
+          {games.length > 0 && (
+            <>
+              <div style={{ height: 1, background: BORDER, width: "100%" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+                <div>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 2 · Lista de jogos</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Jogos disponíveis</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{games.length} jogo(s) encontrado(s)</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {games.map((g) => {
+                    const selected = selectedIds.has(g.apiFixtureId);
+                    return (
+                      <div key={g.apiFixtureId} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
+                        <div>
+                          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{new Date(g.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "2px 0" }}>{g.home} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {g.away}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
+                        </div>
+                        <div onClick={() => toggleGame(g.apiFixtureId)} style={{ background: selected ? BORDER : GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: "pointer", flexShrink: 0 }}>
+                          {selected && <Check size={14} color={MUTED} />}
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{selected ? "Adicionado ✓" : "+ Adicionar"}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ height: 1, background: BORDER, width: "100%" }} />
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: 16, width: "100%" }}>
+                <div>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 3 · Adicionar à viagem</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>Pronto para adicionar ao seu Football Passport</p>
+                </div>
+                <div onClick={saving ? undefined : handleAddToTrip} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: saving ? "default" : "pointer", whiteSpace: "nowrap" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : `Adicionar ${selectedIds.size || ""} à viagem →`}</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {showManual && (
+            <>
+              <div style={{ height: 1, background: BORDER, width: "100%" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Não encontramos esse estádio na nossa base. Preencha os dados manualmente — só entram nas suas estatísticas, sem verificação automática.</p>
+                <div style={{ display: "flex", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
+                  <input value={manual.home} onChange={(e) => setManual((m) => ({ ...m, home: e.target.value }))} placeholder="Time da casa" style={fieldStyle} />
+                  <input value={manual.away} onChange={(e) => setManual((m) => ({ ...m, away: e.target.value }))} placeholder="Time visitante" style={fieldStyle} />
+                </div>
+                <input type="date" value={manual.date} max={new Date().toISOString().split("T")[0]} onChange={(e) => setManual((m) => ({ ...m, date: e.target.value }))} style={fieldStyle} />
+                <div style={{ display: "flex", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
+                  <input value={manual.stadium} onChange={(e) => setManual((m) => ({ ...m, stadium: e.target.value }))} placeholder="Estádio" style={fieldStyle} />
+                  <input value={manual.city} onChange={(e) => setManual((m) => ({ ...m, city: e.target.value }))} placeholder="Cidade" style={fieldStyle} />
+                </div>
+                <div style={{ display: "flex", gap: 12, flexDirection: isMobile ? "column" : "row" }}>
+                  <input value={manual.country} onChange={(e) => setManual((m) => ({ ...m, country: e.target.value }))} placeholder="País" style={fieldStyle} />
+                  <input value={manual.competition} onChange={(e) => setManual((m) => ({ ...m, competition: e.target.value }))} placeholder="Competição" style={fieldStyle} />
+                </div>
+                <div onClick={saving ? undefined : handleManualSave} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: saving ? "default" : "pointer" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>{saving ? "Salvando..." : "Salvar jogo"}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
 function MeuPerfil({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const PREFS = [
@@ -2406,43 +2846,44 @@ function Checkout({ answers, onBack, onDone, onHome }) {
           </div>
 
           <div style={{ width: isMobile ? "100%" : 480, flexShrink: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 24 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Pagamento Seguro</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome no cartão</p>
-                <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14 }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>GABRIEL N. SILVA</p>
-                </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Resumo do Pedido</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Consultoria humana - tripsz</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>R$ 149,90</p>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Número do cartão</p>
-                <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>•••• •••• •••• 4242</p>
-                  <CreditCard size={20} color={MUTED} />
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 16 }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Validade</p>
-                  <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14 }}>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>12/29</p>
+              <div style={{ height: 1, background: BORDER, width: "100%" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Formas de pagamento</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
+                    <CreditCard size={14} color={TEXT} />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Cartão de crédito</p>
+                  </div>
+                  <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
+                    <QrCode size={14} color={TEXT} />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Pix</p>
+                  </div>
+                  <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
+                    <Receipt size={14} color={TEXT} />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Boleto</p>
                   </div>
                 </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>CVC</p>
-                  <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14 }}>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>•••</p>
-                  </div>
+              </div>
+              <div style={{ background: BG_ALT, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 12, width: "100%" }}>
+                <div style={{ background: "#fff", border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon name="arrowRight" size={16} color={TEXT} />
                 </div>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>Você será redirecionado ao ambiente seguro do Mercado Pago para concluir o pagamento com Pix, cartão ou boleto.</p>
               </div>
             </div>
-            <div style={{ background: BG_ALT, borderRadius: 8, padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ background: BG_ALT, borderRadius: 12, padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
               <Lock size={16} color={MUTED} />
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Seus dados de pagamento estão 100% criptografados.</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Pagamento processado com segurança pelo Mercado Pago</p>
             </div>
             {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
             <div onClick={loading ? undefined : handlePayConsultoria} style={{ background: GREEN, opacity: loading ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "16px 24px", borderRadius: 8, cursor: loading ? "default" : "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase", margin: 0 }}>{loading ? "Redirecionando..." : "Confirmar pagamento e agendamento"}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase", margin: 0 }}>{loading ? "Redirecionando..." : "Confirmar e ir para o Mercado Pago"}</p>
               {!loading && <Icon name="arrowRight" size={16} color="#fff" />}
             </div>
           </div>
@@ -2633,6 +3074,9 @@ const SCREEN_TO_PATH = {
   checkout: "/checkout",
   roteiros: "/conta/roteiros",
   roteiro: "/conta/roteiros/detalhe",
+  jogos: "/conta/jogos",
+  "registrar-jogo": "/conta/jogos/registrar",
+  nivel: "/conta/nivel",
   conquistas: "/conta/conquistas",
   perfil: "/conta/perfil",
 };
@@ -2839,6 +3283,27 @@ export default function App() {
       )}
       {screen === "conquistas" && (
         <MinhasConquistas
+          onNavigate={(key) => setScreen(key)}
+          onLogout={handleLogout}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+        />
+      )}
+      {screen === "jogos" && (
+        <MeusJogosHistorico
+          onNavigate={(key) => setScreen(key)}
+          onLogout={handleLogout}
+          onRegisterNew={() => setScreen("registrar-jogo")}
+        />
+      )}
+      {screen === "registrar-jogo" && (
+        <RegistrarJogo
+          onNavigate={(key) => setScreen(key)}
+          onLogout={handleLogout}
+          onDone={() => setScreen("jogos")}
+        />
+      )}
+      {screen === "nivel" && (
+        <MeuNivel
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
