@@ -740,6 +740,15 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+              <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
+                <Icon name="google" size={20} color={TEXT} />
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Entrar com Google</p>
+              </div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", width: "100%" }}>
+                <div style={{ flex: 1, height: 1, background: BORDER }} />
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>ou</p>
+                <div style={{ flex: 1, height: 1, background: BORDER }} />
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>E-mail</p>
                 <input
