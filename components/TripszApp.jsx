@@ -2095,7 +2095,7 @@ function Checkout({ answers, onBack, onDone, onHome }) {
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>Valor total da consultoria</p>
             </div>
 
-            <div style={{ background: BG_ALT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: BG_ALT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : 20, display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Agendamento da consultoria</p>
                 <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: "4px 0 0" }}>Escolha uma data disponível e o horário para a conversa com o especialista.</p>
@@ -2106,7 +2106,7 @@ function Checkout({ answers, onBack, onDone, onHome }) {
                   {availableDays.map((d, i) => {
                     const active = i === selectedDayIdx;
                     return (
-                      <div key={i} onClick={() => setSelectedDayIdx(i)} style={{ background: active ? GREEN_BUTTON2 : "#fff", border: `1px solid ${active ? GREEN_BUTTON2 : BORDER}`, borderRadius: 10, padding: 12, width: 96, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                      <div key={i} onClick={() => setSelectedDayIdx(i)} style={{ background: active ? GREEN_BUTTON2 : "#fff", border: `1px solid ${active ? GREEN_BUTTON2 : BORDER}`, borderRadius: 10, padding: isMobile ? 8 : 12, width: isMobile ? "calc(25% - 9px)" : 96, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer" }}>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: active ? "#fff" : MUTED, margin: 0, textTransform: "capitalize" }}>{d.label}</p>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: active ? "#fff" : TEXT, margin: 0 }}>{d.day}</p>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: active ? "rgba(255,255,255,0.8)" : MUTED, margin: 0 }}>{d.slots} vagas</p>
@@ -2275,7 +2275,7 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
         <div style={{ width: isMobile ? "100%" : 420, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Roteiro Completo</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 32, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
             <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>Você já tem acesso ao roteiro completo com partidas possíveis, datas, cidades e planejamento dia a dia para planejar sua viagem.</p>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 13 }}>
@@ -2292,7 +2292,7 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Já incluso</p>
             </div>
           </div>
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <Lightbulb size={16} color={TEXT} />
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Consultoria humana opcional</p>
@@ -2313,7 +2313,7 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
           <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Consultoria Opcional</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: "4px 0" }}>R$ 149,90</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 32, color: TEXT, margin: "4px 0" }}>R$ 149,90</p>
               <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>Acompanhamento humano para completar voos, hotéis, ingressos e outros detalhes da viagem.</p>
             </div>
             <div style={{ height: 1, background: BORDER }} />
