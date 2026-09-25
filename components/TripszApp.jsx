@@ -1126,10 +1126,11 @@ const TEAM_LOGO_IDS = {
   Inter: 505, Milan: 489, Napoli: 492, Roma: 497, Lazio: 487,
 };
 
-function TeamBadge({ name, size = 32 }) {
+function TeamBadge({ name, url, size = 32 }) {
   const [broken, setBroken] = useState(false);
   const id = TEAM_LOGO_IDS[name];
-  if (!id || broken) {
+  const src = url || (id ? `https://media.api-sports.io/football/teams/${id}.png` : null);
+  if (!src || broken) {
     return (
       <div style={{ width: size, height: size, borderRadius: "50%", background: BG_ALT, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: size * 0.38, color: MUTED, margin: 0 }}>{initials(name)}</p>
@@ -1138,7 +1139,7 @@ function TeamBadge({ name, size = 32 }) {
   }
   return (
     <img
-      src={`https://media.api-sports.io/football/teams/${id}.png`}
+      src={src}
       alt={name}
       width={size}
       height={size}
@@ -2014,6 +2015,264 @@ function seasonLabel(dateStr) {
   return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
+/* --- Acesso ao Passport: usuários de antes do lançamento da assinatura
+   continuam com acesso livre ("legado"); usuários novos precisam
+   assinar (R$19,90/mês ou R$200/ano) pra ver Meu Nível, Meus Jogos e
+   Registrar Jogo. --- */
+const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
+
+async function checkPassportAccess() {
+  const supabase = supabaseBrowser();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+  if (!user) return { hasAccess: false, legacy: false, userId: null, userEmail: null };
+  if (new Date(user.created_at) < PASSPORT_LAUNCH_DATE) {
+    return { hasAccess: true, legacy: true, userId: user.id, userEmail: user.email };
+  }
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return { hasAccess: !!sub, legacy: false, subscription: sub, userId: user.id, userEmail: user.email };
+}
+
+function PassportPaywall({ userId, userEmail }) {
+  const isMobile = useIsMobile();
+  const [loadingPlan, setLoadingPlan] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleSubscribe = async (plan) => {
+    setError(null);
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, email: userEmail, plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Não foi possível iniciar a assinatura.");
+      window.location.href = data.checkoutUrl;
+    } catch (e) {
+      setError(e.message);
+      setLoadingPlan(null);
+    }
+  };
+
+  return (
+    <div style={{ background: BG_ALT, padding: isMobile ? "32px 16px" : "80px", display: "flex", flexDirection: "column", gap: 32, alignItems: "center" }}>
+      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 12, maxWidth: 600 }}>
+        <Badge gold>Recurso do Passport</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Assine o Passport Tripsz</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 16, color: BODY, margin: 0 }}>Desbloqueie o Football Passport com sistema de níveis, registro ilimitado de jogos e histórico completo.</p>
+      </div>
+      {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 20, width: "100%", maxWidth: 720 }}>
+        <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>Plano Mensal</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0 }}>R$ 19,90<span style={{ fontSize: 14, color: MUTED, fontWeight: 500 }}>/mês</span></p>
+          <div onClick={loadingPlan ? undefined : () => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{loadingPlan === "monthly" ? "Redirecionando..." : "Assinar Mensal"}</p>
+          </div>
+        </div>
+        <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
+          <div style={{ position: "absolute", top: -12, right: 20, background: GREEN, padding: "4px 12px", borderRadius: 999 }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>ECONOMIZE 17%</p>
+          </div>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Plano Anual</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0 }}>R$ 200<span style={{ fontSize: 14, color: MUTED, fontWeight: 500 }}>/ano</span></p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 38,80/ano</p>
+          <div onClick={loadingPlan ? undefined : () => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loadingPlan === "annual" ? "Redirecionando..." : "Assinar Anual"}</p>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 600, width: "100%" }}>
+        {["Sistema de níveis e XP", "Registro ilimitado de jogos", "Histórico completo de partidas", "15% de desconto em consultorias"].map((l) => (
+          <div key={l} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <Check size={16} color={GREEN} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{l}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* --- Meu Nível: sistema de XP calculado de verdade a partir dos dados do usuário --- */
+const XP_TIERS = [
+  { level: 1, name: "Torcedor de Sofá", min: 0, max: 99, icon: "sofa", perk: "Cadastro inicial e rastreamento de estádios" },
+  { level: 2, name: "Estreante", min: 100, max: 499, icon: "ticket", perk: "Acesso à galeria e badges de conquistas" },
+  { level: 3, name: "Groundhopper", min: 500, max: 1499, icon: "circleX", perk: "Desconto de 10% em qualquer roteiro oficial" },
+  { level: 4, name: "Veterano", min: 1500, max: 3999, icon: "trophy", perk: "Acesso prioritário a caravanas e grupos de viagem" },
+  { level: 5, name: "Lenda", min: 4000, max: Infinity, icon: "crown", perk: "Sorteio de ingressos & Consultoria premium grátis" },
+];
+
+function computeTier(xp) {
+  return XP_TIERS.find((t) => xp >= t.min && xp <= t.max) || XP_TIERS[0];
+}
+
+function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [access, setAccess] = useState(null); // null = carregando
+
+  useEffect(() => {
+    (async () => {
+      const acc = await checkPassportAccess();
+      setAccess(acc);
+      if (!acc.hasAccess) return;
+
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      setUserName(user?.user_metadata?.name || user?.email || "");
+      setUserAvatar(user?.user_metadata?.avatar_url || null);
+
+      const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
+      const trips = rows || [];
+      const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
+      const source = unlocked.length ? unlocked : trips;
+      const plannedGames = source.flatMap((row) => buildTrip({
+        countries: row.countries || [],
+        dateStart: row.date_start,
+        dateEnd: row.date_end,
+        flexLevel: row.flex_level,
+        priority: row.priority,
+        pace: row.pace,
+      }).games);
+
+      const { data: attendedRows } = await supabase.from("attended_games").select("*");
+      const attended = attendedRows || [];
+
+      const stadiums = new Set([...plannedGames.map((g) => g.stadium), ...attended.map((g) => g.stadium)].filter(Boolean));
+      const countries = new Set([...source.flatMap((r) => r.countries || []), ...attended.map((g) => g.country)].filter(Boolean));
+      const totalGames = plannedGames.length + attended.length;
+      const hasChampions =
+        plannedGames.some((g) => g.competition === "champions") ||
+        attended.some((g) => /champions league/i.test(g.competition || ""));
+      // "Badges completadas" — mesmos critérios usados em Minhas Conquistas
+      // (5+ estádios, 3+ países, alguma partida de Champions).
+      const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
+
+      const xp = totalGames * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
+      setProgress({ xp, totalGames, stadiums: stadiums.size, countries: countries.size });
+    })();
+  }, []);
+
+  if (access === null) {
+    return (
+      <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+        <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+      </div>
+    );
+  }
+  if (!access.hasAccess) {
+    return (
+      <div style={{ background: BG, width: "100%" }}>
+        <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <AuthedFooter />
+      </div>
+    );
+  }
+
+  const xp = progress?.xp ?? 0;
+  const tier = computeTier(xp);
+  const nextTier = XP_TIERS[tier.level] || null;
+  const tierSpan = tier.max === Infinity ? xp - tier.min || 1 : tier.max - tier.min + 1;
+  const xpIntoTier = xp - tier.min;
+  const pct = tier.max === Infinity ? 100 : Math.min(100, Math.round((xpIntoTier / tierSpan) * 100));
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          <Badge>Seu Progresso Atual</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Nível do Torcedor</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Sua jornada como caçador de estádios. Acumule XP para subir de categoria e garantir benefícios exclusivos na arquibancada.</p>
+        </div>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PROGRESSO DO PASSPORT</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{xp} / {tier.max === Infinity ? xp : tier.max + 1} XP</p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0 }}>Nível {tier.level} — {tier.name}</p>
+            <div style={{ background: BORDER, height: 8, borderRadius: 4, width: "100%", overflow: "hidden" }}>
+              <div style={{ background: GREEN, height: "100%", width: `${pct}%` }} />
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>
+              {nextTier ? `Mais ${nextTier.min - xp} XP para atingir o nível ${nextTier.name}` : "Nível máximo atingido!"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: BG_ALT, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 40, padding: isMobile ? `24px ${px}` : `80px ${px}` }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Categorias de Torcedor</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {[...XP_TIERS].reverse().map((t) => {
+              const isCurrent = t.level === tier.level;
+              const isLocked = t.level > tier.level;
+              return (
+                <div key={t.level} style={{ background: "#fff", border: isCurrent ? `2px solid ${GREEN}` : `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", gap: 16, alignItems: "center", opacity: isLocked ? 0.6 : 1 }}>
+                  <div style={{ background: isCurrent ? GREEN_BG : BG_ALT, width: 44, height: 44, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name={t.icon} size={20} color={isCurrent ? GREEN : MUTED} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{t.name}</p>
+                      <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>Nível {t.level} • {t.max === Infinity ? `${t.min}+ XP` : `${t.min}-${t.max} XP`}</p>
+                    </div>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: "2px 0 0" }}>{t.perk}</p>
+                  </div>
+                  {isCurrent && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>ATUAL</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ width: isMobile ? "100%" : 460, display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Como ganhar XP</p>
+            {[["Comparecer a um jogo", "+50 XP"], ["Visitar um novo estádio", "+100 XP"], ["Conhecer um novo país", "+200 XP"], ["Completar uma Badge de conquista", "+150 XP"]].map(([l, v], i, arr) => (
+              <div key={l} style={{ display: "flex", justifyContent: "space-between", paddingBottom: i < arr.length - 1 ? 12 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{l}</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{v}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: "#0f172a", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: "#fff", margin: 0 }}>Pronto para planejar sua próxima arquibancada?</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#e2e8f0", margin: 0 }}>Gere um roteiro inteligente personalizado com os melhores clássicos, derbies e sequências possíveis de jogos.</p>
+            <div onClick={onCreateNew} style={{ background: GREEN_BUTTON, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Montar meu roteiro →</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
 function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
@@ -2023,8 +2282,13 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [tab, setTab] = useState("todos");
   const [search, setSearch] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("todas");
+  const [access, setAccess] = useState(null);
 
   const loadGames = async () => {
+    const acc = await checkPassportAccess();
+    setAccess(acc);
+    if (!acc.hasAccess) return;
+
     const supabase = supabaseBrowser();
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
@@ -2066,6 +2330,24 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     grouped[s].push(g);
   });
   const orderedSeasons = Object.keys(grouped).sort().reverse();
+
+  if (access === null) {
+    return (
+      <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+      </div>
+    );
+  }
+  if (!access.hasAccess) {
+    return (
+      <div style={{ background: BG, width: "100%" }}>
+        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <AuthedFooter />
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: BG, width: "100%" }}>
@@ -2137,7 +2419,11 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                       <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
                         <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <TeamBadge name={g.home_team} url={g.home_logo} size={22} />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                          <TeamBadge name={g.away_team} url={g.away_logo} size={22} />
+                        </div>
                       </div>
                       <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
@@ -2177,9 +2463,14 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [saving, setSaving] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ home: "", away: "", date: "", stadium: "", city: "", country: "", competition: "" });
+  const [access, setAccess] = useState(null);
 
   useEffect(() => {
     (async () => {
+      const acc = await checkPassportAccess();
+      setAccess(acc);
+      if (!acc.hasAccess) return;
+
       const supabase = supabaseBrowser();
       const { data } = await supabase.auth.getUser();
       setUserName(data.user?.user_metadata?.name || data.user?.email || "");
@@ -2200,9 +2491,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       if (!res.ok) throw new Error(data.error || "Erro na busca.");
       if (!data.found) {
         setShowManual(true);
-        if (data.reason === "pais_nao_suportado") {
-          setManual((m) => ({ ...m, country: data.venue?.country || "", stadium: data.venue?.name || stadiumQuery, city: data.venue?.city || "" }));
-          setError(`Encontramos o estádio, mas ainda não temos os jogos de ${data.venue?.country} cadastrados — preencha manualmente.`);
+        if (data.reason === "sem_jogos_no_periodo") {
+          setManual((m) => ({ ...m, stadium: data.venue?.name || stadiumQuery, city: data.venue?.city || "", country: data.venue?.country || "" }));
+          setError(`Encontramos o estádio, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.`);
         } else {
           setError("Não encontramos esse estádio na nossa base — preencha manualmente.");
         }
@@ -2245,6 +2536,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
           api_fixture_id: g.apiFixtureId,
           home_team: g.home,
           away_team: g.away,
+          home_logo: g.homeLogo,
+          away_logo: g.awayLogo,
           match_date: g.date.split("T")[0],
           stadium: venue.name,
           city: venue.city,
@@ -2294,6 +2587,24 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   };
 
   const fieldStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" };
+
+  if (access === null) {
+    return (
+      <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+      </div>
+    );
+  }
+  if (!access.hasAccess) {
+    return (
+      <div style={{ background: BG, width: "100%" }}>
+        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <AuthedFooter />
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: BG, width: "100%" }}>
@@ -2361,7 +2672,11 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                       <div key={g.apiFixtureId} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
                         <div>
                           <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{new Date(g.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "2px 0" }}>{g.home} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {g.away}</p>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "4px 0", flexWrap: "wrap" }}>
+                            <TeamBadge name={g.home} url={g.homeLogo} size={24} />
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {g.away}</p>
+                            <TeamBadge name={g.away} url={g.awayLogo} size={24} />
+                          </div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
                         </div>
                         <div onClick={() => toggleGame(g.apiFixtureId)} style={{ background: selected ? BORDER : GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: "pointer", flexShrink: 0 }}>
@@ -2413,6 +2728,97 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         </div>
       </div>
 
+      <AuthedFooter />
+    </div>
+  );
+}
+
+/* --- Minha Assinatura: gerenciar plano, ver status, cancelar --- */
+function MinhaAssinatura({ onNavigate, onLogout }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+  const [access, setAccess] = useState(null);
+  const [canceling, setCanceling] = useState(false);
+  const [error, setError] = useState(null);
+
+  const load = async () => {
+    const acc = await checkPassportAccess();
+    setAccess(acc);
+    const supabase = supabaseBrowser();
+    const { data: userData } = await supabase.auth.getUser();
+    setUserName(userData.user?.user_metadata?.name || userData.user?.email || "");
+    setUserAvatar(userData.user?.user_metadata?.avatar_url || null);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleCancel = async () => {
+    if (!window.confirm("Cancelar sua assinatura? Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar.")) return;
+    setCanceling(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/subscribe/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: access.userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Não foi possível cancelar.");
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCanceling(false);
+    }
+  };
+
+  if (access === null) {
+    return (
+      <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+        <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+      </div>
+    );
+  }
+
+  const sub = access.subscription;
+  const planLabel = sub?.plan === "annual" ? "Anual (R$ 200,00/ano)" : sub?.plan === "monthly" ? "Mensal (R$ 19,90/mês)" : null;
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+      <div style={{ padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24, maxWidth: 720, margin: "0 auto", width: "100%" }}>
+        <Badge>Configurações de Conta</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Minha Assinatura</p>
+
+        {access.legacy ? (
+          <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Acesso liberado (conta antiga)</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Sua conta foi criada antes do lançamento da assinatura do Passport, então você continua com acesso livre ao Football Passport, sem precisar pagar nada.</p>
+          </div>
+        ) : sub?.status === "active" ? (
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Plano Atual</p>
+              <div style={{ background: GREEN_BG, padding: "4px 10px", borderRadius: 4 }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>ATIVO</p>
+              </div>
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: BODY, margin: 0 }}>{planLabel}</p>
+            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+            <div onClick={canceling ? undefined : handleCancel} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: canceling ? "default" : "pointer", width: isMobile ? "100%" : 220 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#ef4444", margin: 0 }}>{canceling ? "Cancelando..." : "Cancelar assinatura"}</p>
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar.</p>
+          </div>
+        ) : (
+          <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        )}
+      </div>
       <AuthedFooter />
     </div>
   );
@@ -2684,6 +3090,9 @@ function MeuPerfil({ onNavigate, onLogout }) {
                 </div>
               </div>
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Desbloqueie roteiros para acumular conquistas e destravar o nível VIP Groundhopper no seu Football Passport.</p>
+              <div onClick={() => onNavigate("assinatura")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ver Minha Assinatura</p>
+              </div>
             </div>
           </div>
         </div>
@@ -3085,6 +3494,7 @@ const SCREEN_TO_PATH = {
   nivel: "/conta/nivel",
   conquistas: "/conta/conquistas",
   perfil: "/conta/perfil",
+  assinatura: "/conta/assinatura",
 };
 const PATH_TO_SCREEN = Object.fromEntries(Object.entries(SCREEN_TO_PATH).map(([k, v]) => [v, k]));
 
@@ -3316,6 +3726,7 @@ export default function App() {
         />
       )}
       {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
     </div>
   );
 }
