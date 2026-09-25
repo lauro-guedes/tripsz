@@ -95,6 +95,8 @@ const RAW_ICONS = {
   fileText: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M13.9998 1.99921H6.00059C5.47021 1.99921 4.96156 2.20994 4.58652 2.58504C4.21149 2.96015 4.00079 3.46889 4.00079 3.99937V20.0006C4.00079 20.5311 4.21149 21.0399 4.58652 21.415C4.96156 21.7901 5.47021 22.0008 6.00059 22.0008H17.9994C18.5298 22.0008 19.0384 21.7901 19.4135 21.415C19.7885 21.0399 19.9992 20.5311 19.9992 20.0006V7.99969M13.9998 1.99921C14.3163 1.9987 14.6298 2.06082 14.9222 2.18199C15.2146 2.30317 15.4802 2.48101 15.7036 2.70527L19.2913 6.29355C19.5161 6.51708 19.6944 6.78294 19.8159 7.07578C19.9374 7.36862 19.9997 7.68263 19.9992 7.99969M13.9998 1.99921V6.99961C13.9998 7.26484 14.1051 7.51922 14.2927 7.70677C14.4802 7.89432 14.7345 7.99969 14.9997 7.99969L19.9992 7.99969M10.0002 8.99977H8.00039M15.9996 13.0001H8.00039M15.9996 17.0004H8.00039" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   planeTakeoff: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M1.99921 22.0001H21.9992M6.35921 17.4002L3.99921 17.0002L1.99921 13.0002L3.09921 12.4502C3.37836 12.3095 3.68661 12.2362 3.99921 12.2362C4.3118 12.2362 4.62005 12.3095 4.89921 12.4502L5.06921 12.5502C5.34836 12.6909 5.65661 12.7641 5.96921 12.7641C6.2818 12.7641 6.59005 12.6909 6.86921 12.5502L7.99921 12.0002L4.99921 6.00019L5.89921 5.55019C6.23188 5.38653 6.6035 5.31857 6.97256 5.35388C7.34162 5.3892 7.69361 5.52641 7.98921 5.75019L12.0092 8.75019C12.3058 8.9759 12.6596 9.11423 13.0307 9.14957C13.4018 9.18491 13.7753 9.11585 14.1092 8.95019L18.2992 6.89019C18.8346 6.62028 19.4515 6.55966 20.0292 6.72019L20.9992 7.00019C21.1996 7.05584 21.3851 7.15546 21.5422 7.29179C21.6993 7.42812 21.824 7.59774 21.9074 7.78833C21.9907 7.97891 22.0305 8.18567 22.0239 8.39356C22.0173 8.60146 21.9644 8.80527 21.8692 8.99019L21.4892 9.75019C21.2592 10.2102 20.8892 10.5902 20.4192 10.8302L7.57921 17.2002C7.20165 17.3872 6.77468 17.4502 6.35921 17.3802V17.4002Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   google: `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>`,
+  search: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.16667 16.6667C13.3088 16.6667 16.6667 13.3088 16.6667 9.16667C16.6667 5.02453 13.3088 1.66667 9.16667 1.66667C5.02453 1.66667 1.66667 5.02453 1.66667 9.16667C1.66667 13.3088 5.02453 16.6667 9.16667 16.6667Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18.3333 18.3333L14.1667 14.1667" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0008C17.5228 22.0008 22 17.5236 22 12.0008C22 6.47792 17.5228 2.00076 12 2.00076C6.47715 2.00076 2 6.47792 2 12.0008C2 17.5236 6.47715 22.0008 12 22.0008Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12.0008H22" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 2.00076C14.5013 4.73866 15.9228 8.29331 16 12.0008C15.9228 15.7082 14.5013 19.2629 12 22.0008C9.49872 19.2629 8.07725 15.7082 8 12.0008C8.07725 8.29331 9.49872 4.73866 12 2.00076Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
 };
 
 function Icon({ name, size, color }) {
@@ -1064,22 +1066,30 @@ const FIXTURES_BY_COUNTRY = {
     { home: "Inter", away: "Milan", city: "Milão", stadium: "San Siro", tag: "Derby della Madonnina", rivalry: "derby", vibe: 9.5, dayOffset: 20 },
     { home: "Napoli", away: "Bologna", city: "Nápoles", stadium: "Diego Armando Maradona", tag: "Confronto direto pela liderança", rivalry: "title", vibe: 9.2, dayOffset: 27 },
     { home: "Roma", away: "Lazio", city: "Roma", stadium: "Stadio Olimpico", tag: "Derby histórico de paixão", rivalry: "derby", vibe: 8.8, dayOffset: 35 },
+    { home: "Inter", away: "Arsenal", city: "Milão", stadium: "San Siro", tag: "Champions League", rivalry: null, competition: "champions", vibe: 8.7, dayOffset: 16 },
   ],
   "Inglaterra": [
     { home: "Arsenal", away: "Chelsea", city: "Londres", stadium: "Emirates Stadium", tag: "Grande clássico de Londres", rivalry: "derby", vibe: 9.0, dayOffset: 18 },
     { home: "Liverpool", away: "Manchester City", city: "Liverpool", stadium: "Anfield", tag: "A maior atmosfera atual", rivalry: "title", vibe: 10.0, dayOffset: 25 },
     { home: "Tottenham", away: "Newcastle", city: "Londres", stadium: "Tottenham Hotspur Stadium", tag: "Estádio ultramoderno", rivalry: null, vibe: 8.0, dayOffset: 32 },
+    { home: "Manchester City", away: "Real Madrid", city: "Manchester", stadium: "Etihad Stadium", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.3, dayOffset: 14 },
   ],
   "Espanha": [
     { home: "Real Madrid", away: "Barcelona", city: "Madri", stadium: "Santiago Bernabéu", tag: "El Clásico", rivalry: "derby", vibe: 10.0, dayOffset: 22 },
     { home: "Atlético Madrid", away: "Sevilla", city: "Madri", stadium: "Metropolitano", tag: "Força da torcida colchonera", rivalry: null, vibe: 8.0, dayOffset: 30 },
+    { home: "Barcelona", away: "Bayern München", city: "Barcelona", stadium: "Camp Nou", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.1, dayOffset: 17 },
   ],
   "Alemanha": [
     { home: "Bayern München", away: "Borussia Dortmund", city: "Munique", stadium: "Allianz Arena", tag: "Der Klassiker", rivalry: "derby", vibe: 10.0, dayOffset: 24 },
+    { home: "Bayern München", away: "PSG", city: "Munique", stadium: "Allianz Arena", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.0, dayOffset: 15 },
   ],
   "França": [{ home: "PSG", away: "Marseille", city: "Paris", stadium: "Parc des Princes", tag: "Le Classique", rivalry: "derby", vibe: 9.0, dayOffset: 26 }],
   "Portugal": [{ home: "Porto", away: "Benfica", city: "Porto", stadium: "Estádio do Dragão", tag: "O Clássico português", rivalry: "derby", vibe: 9.0, dayOffset: 28 }],
-  "Holanda": [{ home: "Ajax", away: "Feyenoord", city: "Amsterdã", stadium: "Johan Cruyff Arena", tag: "De Klassieker", rivalry: "derby", vibe: 9.0, dayOffset: 29 }],
+  "Holanda": [
+    { home: "Ajax", away: "Feyenoord", city: "Amsterdã", stadium: "Johan Cruyff Arena", tag: "De Klassieker", rivalry: "derby", vibe: 9.0, dayOffset: 29 },
+    { home: "PSV", away: "AZ Alkmaar", city: "Eindhoven", stadium: "Philips Stadion", tag: "Disputa pelo topo da Eredivisie", rivalry: "title", vibe: 8.0, dayOffset: 21 },
+    { home: "Ajax", away: "Inter", city: "Amsterdã", stadium: "Johan Cruyff Arena", tag: "Champions League", rivalry: null, competition: "champions", vibe: 8.5, dayOffset: 13 },
+  ],
   "Turquia": [{ home: "Galatasaray", away: "Fenerbahçe", city: "Istambul", stadium: "Ali Sami Yen", tag: "Derby intercontinental", rivalry: "derby", vibe: 10.0, dayOffset: 33 }],
   "Argentina": [{ home: "Boca Juniors", away: "River Plate", city: "Buenos Aires", stadium: "La Bombonera", tag: "El Superclásico", rivalry: "derby", vibe: 10.0, dayOffset: 21 }],
   "Brasil": [
@@ -1095,8 +1105,12 @@ const TICKET_RANGE = { derby: "£65–£140", title: "£80–£210", null: "£45
 
 function scoreFixture(f, answers) {
   let score = f.vibe;
-  if (answers.priority === "classics" && f.rivalry === "derby") score += 3;
-  if (answers.priority === "international" && f.rivalry) score += 2;
+  const priority = answers.priority || "classics";
+  if (priority === "classics" && (f.rivalry === "derby" || f.rivalry === "title")) score += 3;
+  if (priority === "international" && f.competition === "champions") score += 4;
+  // "maxgames" e "stadiums" não dão peso extra por rivalidade — a seleção
+  // deles acontece depois, no buildTrip, priorizando quantidade/variedade
+  // de estádios em vez de reordenar por score.
   return score;
 }
 
@@ -1113,12 +1127,46 @@ function buildTrip(answers) {
     if (filtered.length) candidates = filtered;
   }
 
-  // pace affects how many games we try to fit
-  const maxGames = { compact: 4, balanced: 3, spaced: 2, relaxed: 2 }[answers.pace || "spaced"] ?? 3;
-  const ranked = candidates
-    .map((f) => ({ ...f, score: scoreFixture(f, answers) }))
-    .sort((a, b) => b.score - a.score || a.date - b.date)
-    .slice(0, Math.min(maxGames, candidates.length));
+  const priority = answers.priority || "classics";
+
+  // "Competições internacionais": mostra só jogos de competições
+  // internacionais (Champions League etc). Se não sobrar nenhum jogo
+  // assim no recorte de países/datas escolhido, volta pros jogos normais
+  // em vez de devolver um roteiro vazio.
+  if (priority === "international") {
+    const intl = candidates.filter((f) => f.competition === "champions");
+    if (intl.length) candidates = intl;
+  }
+
+  // O "ritmo da viagem" (pace) define um teto confortável de jogos por
+  // padrão. Mas quando a prioridade é "Máximo de jogos", esse teto é
+  // ignorado — a pessoa pediu pra ver o máximo possível de partidas no
+  // período, então tentamos encaixar todos os candidatos disponíveis
+  // (com um limite de segurança de 10, pra não virar uma maratona
+  // impossível de cumprir numa única viagem).
+  const paceCap = { compact: 4, balanced: 3, spaced: 2, relaxed: 2 }[answers.pace || "spaced"] ?? 3;
+  const maxGames = priority === "maxgames" ? Math.min(candidates.length, 10) : Math.min(paceCap, candidates.length);
+
+  let ranked;
+  if (priority === "stadiums") {
+    // "Mais estádios": prioriza variedade de estádios/cidades em vez de
+    // repetir a mesma cidade — pega o melhor jogo de cada cidade antes
+    // de considerar um segundo jogo na mesma cidade.
+    const bestByCity = {};
+    candidates.forEach((f) => {
+      const current = bestByCity[f.city];
+      if (!current || scoreFixture(f, answers) > scoreFixture(current, answers)) bestByCity[f.city] = f;
+    });
+    ranked = Object.values(bestByCity)
+      .map((f) => ({ ...f, score: scoreFixture(f, answers) }))
+      .sort((a, b) => b.score - a.score || a.date - b.date)
+      .slice(0, maxGames);
+  } else {
+    ranked = candidates
+      .map((f) => ({ ...f, score: scoreFixture(f, answers) }))
+      .sort((a, b) => b.score - a.score || a.date - b.date)
+      .slice(0, maxGames);
+  }
   ranked.sort((a, b) => a.date - b.date);
 
   const cities = [...new Set(ranked.map((f) => f.city))];
@@ -1283,7 +1331,637 @@ function BlockedResult({ trip, onUnlock, onRestart }) {
 }
 
 /* ============================================================
-   9. CHECKOUT (node 95:877)
+   9. ÁREA LOGADA — nav compartilhada + Meus Roteiros, Conquistas, Perfil
+   ============================================================ */
+function initials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
+}
+
+function AuthedNav({ active, userName, onNavigate, onLogout }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const items = [
+    ["Meus roteiros", "roteiros"],
+    ["Minhas conquistas", "conquistas"],
+    ["Meu perfil", "perfil"],
+  ];
+  return (
+    <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", position: "relative" }}>
+      <div style={{ cursor: "pointer" }} onClick={() => onNavigate("roteiros")}><Wordmark /></div>
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 40, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
+          {items.map(([label, key]) => (
+            <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer" }}>{label}</p>
+          ))}
+        </div>
+      )}
+      <div style={{ position: "relative" }}>
+        <div onClick={() => setMenuOpen((v) => !v)} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
+          <div style={{ background: GREEN_BUTTON2, width: 36, height: 36, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{initials(userName)}</p>
+          </div>
+          {!isMobile && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{userName || "Minha conta"}</p>
+              <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>Área do usuário</p>
+            </div>
+          )}
+          <Icon name="chevronDown" size={16} color={MUTED} />
+        </div>
+        {menuOpen && (
+          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 180, overflow: "hidden", zIndex: 20 }}>
+            {isMobile && items.map(([label, key]) => (
+              <div key={key} onClick={() => { setMenuOpen(false); onNavigate(key); }} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
+              </div>
+            ))}
+            <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#dc2626", fontWeight: 700, margin: 0 }}>Sair</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AuthedFooter() {
+  const isMobile = useIsMobile();
+  return (
+    <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: isMobile ? "40px 16px 24px" : "80px 80px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64 }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 0, alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, width: isMobile ? "100%" : 360 }}>
+          <Wordmark />
+          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Criamos jornadas esportivas ricas em cultura, atmosfera e emoção genuína. O verdadeiro turismo para amantes da arquibancada.</p>
+        </div>
+      </div>
+      <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0, justifyContent: "space-between" }}>
+        <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>© 2026 tripsz. Todos os direitos reservados.</p>
+        <div style={{ display: "flex", gap: 24 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Privacidade</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Termos</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Contato</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- Meus Roteiros: lista de verdade, lida do Supabase --- */
+function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNew }) {
+  const isMobile = useIsMobile();
+  const [trips, setTrips] = useState(null); // null = carregando
+  const [userName, setUserName] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [error, setError] = useState(null);
+
+  const loadTrips = async () => {
+    const supabase = supabaseBrowser();
+    const { data: userData } = await supabase.auth.getUser();
+    setUserName(userData.user?.user_metadata?.name || userData.user?.email || "");
+
+    // RLS já garante que só voltam as viagens do próprio usuário — não
+    // precisa (nem pode) filtrar por user_id manualmente aqui.
+    const { data, error: fetchError } = await supabase
+      .from("trip_answers")
+      .select("*, orders(status, paid_at)")
+      .order("created_at", { ascending: false });
+
+    if (fetchError) {
+      setError(fetchError.message);
+      setTrips([]);
+      return;
+    }
+    setTrips(data || []);
+  };
+
+  useEffect(() => {
+    loadTrips();
+  }, []);
+
+  const deriveStatus = (row) => {
+    const paidOrder = row.orders?.find((o) => o.status === "paid");
+    if (paidOrder) {
+      const isPast = row.date_end && new Date(row.date_end) < new Date();
+      return isPast ? "Concluído" : "Ativo";
+    }
+    if (row.orders?.length) return "Aguardando pagamento";
+    return "Rascunho";
+  };
+
+  const rowToAnswers = (row) => ({
+    tripAnswersId: row.id,
+    countries: row.countries || [],
+    dateStart: row.date_start,
+    dateEnd: row.date_end,
+    flexLevel: row.flex_level,
+    adults: row.adults,
+    kids: row.kids,
+    budget: row.budget,
+    priority: row.priority,
+    pace: row.pace,
+  });
+
+  const handleDelete = async (row) => {
+    if (!window.confirm(`Excluir o roteiro de ${row.countries?.join(" & ") || "viagem"}? Essa ação não pode ser desfeita.`)) return;
+    const supabase = supabaseBrowser();
+    const { error: delError } = await supabase.from("trip_answers").delete().eq("id", row.id);
+    if (delError) {
+      alert("Não foi possível excluir: " + delError.message);
+      return;
+    }
+    setTrips((t) => t.filter((r) => r.id !== row.id));
+  };
+
+  const filtered = (trips || []).filter((row) => {
+    const status = deriveStatus(row);
+    if (statusFilter !== "all" && status !== statusFilter) return false;
+    if (search) {
+      const haystack = (row.countries || []).join(" ").toLowerCase();
+      if (!haystack.includes(search.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const px = isMobile ? "16px" : "80px";
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="roteiros" userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <Badge>Planejamento Ativo</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0, position: "relative" }}>Biblioteca de Roteiros</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0, position: "relative", maxWidth: 700 }}>Acompanhe, duplique ou crie variações de trajetos para assistir aos melhores espetáculos de arquibancada do mundo.</p>
+        <div style={{ position: "relative" }}>
+          <Button onClick={onCreateNew}>Criar Novo Roteiro</Button>
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: isMobile ? `20px ${px}` : `40px ${px}` }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, width: "100%" }}>
+          <div style={{ flex: 1, background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
+            <Icon name="search" size={18} color={MUTED} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar roteiro por destino..."
+              style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }}
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: TEXT }}
+          >
+            <option value="all">Status: Todos</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Concluído">Concluído</option>
+            <option value="Aguardando pagamento">Aguardando pagamento</option>
+            <option value="Rascunho">Rascunho</option>
+          </select>
+        </div>
+      </div>
+
+      <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `48px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
+        {trips === null && <p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando seus roteiros...</p>}
+        {error && <p style={{ fontFamily: FONT_DISPLAY, color: "#dc2626" }}>Erro ao carregar: {error}</p>}
+        {trips !== null && filtered.length === 0 && (
+          <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 48, textAlign: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Nenhum roteiro por aqui ainda</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: "8px 0 20px" }}>Preencha o questionário pra gerar seu primeiro roteiro de futebol.</p>
+            <Button onClick={onCreateNew}>Criar Novo Roteiro</Button>
+          </div>
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: 24 }}>
+          {filtered.map((row) => {
+            const status = deriveStatus(row);
+            const preview = buildTrip(rowToAnswers(row));
+            const days = row.date_start && row.date_end ? Math.max(1, Math.round((new Date(row.date_end) - new Date(row.date_start)) / 86400000)) : preview.days;
+            const statusColor = status === "Ativo" ? GREEN : status === "Concluído" ? MUTED : status === "Aguardando pagamento" ? GOLD : MUTED;
+            return (
+              <div key={row.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>{(row.countries || []).join(" & ").toUpperCase() || "SEM PAÍS"} // {days} DIAS</p>
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{new Date(row.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).toUpperCase()}</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>{(row.countries || []).join(" & ") || "Roteiro sem destino"}</p>
+                    <div style={{ background: statusColor === GREEN ? GREEN_BG : BG_ALT, padding: "4px 8px", borderRadius: 4 }}>
+                      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: statusColor, margin: 0 }}>{status.toUpperCase()}</p>
+                    </div>
+                  </div>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{preview.games.length} partida(s) possível(is), sequência por {preview.cities.join(", ") || "definir"}.</p>
+                </div>
+                {preview.games.length > 0 && (
+                  <div style={{ background: BG_ALT, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, margin: 0 }}>PARTIDAS SUGERIDAS</p>
+                    {preview.games.slice(0, 2).map((g, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    <p onClick={() => onOpenTrip(rowToAnswers(row), status)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Abrir Roteiro</p>
+                    <p onClick={() => onEditTrip(rowToAnswers(row))} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: MUTED, margin: 0, cursor: "pointer" }}>Editar</p>
+                    <p onClick={() => handleDelete(row)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: "#ef4444", margin: 0, cursor: "pointer" }}>Excluir</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {trips !== null && (
+            <div onClick={onCreateNew} style={{ background: "#fff", border: `2px dashed ${BORDER}`, borderRadius: 12, display: "flex", flexDirection: "column", gap: 16, alignItems: "center", justifyContent: "center", padding: 32, cursor: "pointer", minHeight: 220 }}>
+              <div style={{ background: GREEN_BG, width: 48, height: 48, borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="arrowRight" size={20} color={GREEN} />
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Criar uma nova alternativa</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Gere um novo Football Passport com destinos diferentes.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
+/* --- Minhas Conquistas: Football Passport com estatísticas reais --- */
+function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
+  const isMobile = useIsMobile();
+  const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState("");
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      setUserName(user?.user_metadata?.name || user?.email || "");
+      setUserId(user?.id || "");
+
+      const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
+      const trips = rows || [];
+
+      // Só contam pra estatística os roteiros de fato pagos/desbloqueados —
+      // um rascunho não gerado ainda não é uma "conquista".
+      const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
+      const source = unlocked.length ? unlocked : trips; // fallback pra não ficar tudo zerado em conta nova
+
+      const allGames = source.flatMap((row) => buildTrip({
+        countries: row.countries || [],
+        dateStart: row.date_start,
+        dateEnd: row.date_end,
+        flexLevel: row.flex_level,
+        priority: row.priority,
+        pace: row.pace,
+      }).games);
+
+      const stadiums = new Set(allGames.map((g) => g.stadium));
+      const countries = new Set(source.flatMap((r) => r.countries || []));
+      const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
+      const hasChampions = allGames.some((g) => g.competition === "champions");
+
+      setStats({
+        stadiums: stadiums.size,
+        countries: countries.size,
+        games: allGames.length,
+        competitions: competitions.size,
+        hasChampions,
+        tripsCount: source.length,
+      });
+    })();
+  }, []);
+
+  const px = isMobile ? "16px" : "80px";
+  const level = stats && stats.countries >= 5 ? "VIP GROUNDHOPPER" : stats && stats.countries >= 1 ? "GROUNDHOPPER" : "NOVATO";
+
+  const badges = stats
+    ? [
+        { title: `${stats.stadiums} Estádio${stats.stadiums === 1 ? "" : "s"}`, subtitle: "Veterano de Arena", unlocked: stats.stadiums >= 5, icon: "shieldCheck" },
+        { title: `${stats.countries} Paí${stats.countries === 1 ? "s" : "ses"}`, subtitle: "Viajante Global", unlocked: stats.countries >= 3, icon: "compass" },
+        { title: "Champions League", subtitle: "Noites de Glória", unlocked: stats.hasChampions, icon: "flame" },
+        { title: "World Cup", subtitle: "Bloqueado", unlocked: false, icon: "globe" },
+        { title: "Premier League", subtitle: "Bloqueado", unlocked: false, icon: "shieldCheck" },
+      ]
+    : [];
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="conquistas" userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          <Badge>Documento Oficial do Torcedor</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Football Passport</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
+          <div><Button onClick={onCreateNew}>Montar Outra Viagem</Button></div>
+        </div>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <Icon name="shieldCheck" size={24} color={GREEN} />
+          </div>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: "#fff", margin: 0 }}>{initials(userName)}</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Titular</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{userName || "—"}</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nível de Acesso</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>{level}</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>ID: #{userId ? userId.slice(0, 4).toUpperCase() : "----"}-MD</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: {new Date().getFullYear()}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, display: "flex", flexWrap: "wrap", padding: isMobile ? `24px ${px}` : `48px ${px}` }}>
+        {[["stadiums", "Estádios Visitados"], ["countries", "Países Conquistados"], ["games", "Jogos Assistidos"], ["competitions", "Competições Diferentes"]].map(([key, label]) => (
+          <div key={key} style={{ flex: isMobile ? "1 0 45%" : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginBottom: isMobile ? 16 : 0 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 40, color: GREEN, margin: 0 }}>{stats ? stats[key] : "—"}</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, textTransform: "uppercase", textAlign: "center", margin: 0 }}>{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: BG_ALT, padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
+        <Badge gold>Galeria de Conquistas</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Badges de Viagem</p>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
+          {badges.map((b) => (
+            <div key={b.title} style={{ background: "#fff", border: `1.5px solid ${b.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: b.unlocked ? 1 : 0.6 }}>
+              <div style={{ background: b.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name={b.icon} size={20} color={b.unlocked ? GREEN : MUTED} />
+              </div>
+              <div>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: b.unlocked ? TEXT : MUTED, margin: 0 }}>{b.title}</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: b.unlocked ? GREEN : MUTED, textTransform: "uppercase", margin: 0 }}>{b.unlocked ? b.subtitle : "Bloqueado"}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
+/* --- Meu Perfil: dados reais do Supabase Auth, editáveis --- */
+function MeuPerfil({ onNavigate, onLogout }) {
+  const isMobile = useIsMobile();
+  const PREFS = [
+    ["derbies", "Derbies Locais & Clássicos Extremos"],
+    ["estadios", "Estádios Históricos / Museus"],
+    ["grandes", "Ligas Grandes (Premier / Champions)"],
+    ["alternativo", "Futebol Alternativo / Ligas Menores"],
+  ];
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [prefs, setPrefs] = useState([]);
+  const [original, setOriginal] = useState(null);
+
+  const loadProfile = async () => {
+    const supabase = supabaseBrowser();
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    if (!user) return;
+    const loaded = {
+      name: user.user_metadata?.name || "",
+      email: user.email || "",
+      whatsapp: user.user_metadata?.whatsapp || "",
+      prefs: user.user_metadata?.preferences || [],
+    };
+    setName(loaded.name);
+    setEmail(loaded.email);
+    setWhatsapp(loaded.whatsapp);
+    setPrefs(loaded.prefs);
+    setOriginal(loaded);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const togglePref = (id) => setPrefs((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const handleDiscard = () => {
+    if (!original) return;
+    setName(original.name);
+    setEmail(original.email);
+    setWhatsapp(original.whatsapp);
+    setPrefs(original.prefs);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setError(null);
+    setSuccess(false);
+  };
+
+  const handleSave = async () => {
+    setError(null);
+    setSuccess(false);
+
+    if (newPassword || confirmPassword) {
+      if (!currentPassword) return setError("Digite sua senha atual para definir uma nova senha.");
+      if (newPassword.length < 8) return setError("A nova senha precisa ter no mínimo 8 caracteres.");
+      if (newPassword !== confirmPassword) return setError("As senhas não coincidem.");
+    }
+
+    setSaving(true);
+    try {
+      const supabase = supabaseBrowser();
+
+      // Trocar de senha exige confirmar a senha atual primeiro — o Supabase
+      // não faz essa checagem sozinho, então reautenticamos antes de aplicar.
+      if (newPassword) {
+        const { error: reauthError } = await supabase.auth.signInWithPassword({ email: original.email, password: currentPassword });
+        if (reauthError) throw new Error("Senha atual incorreta.");
+      }
+
+      const updates = { data: { name, whatsapp, preferences: prefs } };
+      if (email !== original.email) updates.email = email;
+      if (newPassword) updates.password = newPassword;
+
+      const { error: updateError } = await supabase.auth.updateUser(updates);
+      if (updateError) throw updateError;
+
+      setOriginal({ name, email, whatsapp, prefs });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setSuccess(true);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14, fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" };
+  const px = isMobile ? "16px" : "80px";
+
+  return (
+    <div style={{ background: BG, width: "100%" }}>
+      <AuthedNav active="perfil" userName={name} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ position: "relative", display: "flex", alignItems: "center", padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16 }}>
+          <Badge>Configurações de Conta</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 48, color: TEXT, margin: 0 }}>Seu Perfil de Viajante</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0, maxWidth: 700 }}>Gerencie suas informações cadastrais, canais de contato, preferências de torcedor e segurança de acesso à sua conta Tripsz.</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: 48 }}><p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando seu perfil...</p></div>
+      ) : (
+        <div style={{ background: BG_ALT, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 48, padding: isMobile ? `0 ${px} 32px` : `0 ${px} 48px` }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 32, flex: 1 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: TEXT, margin: 0 }}>Dados Cadastrais</p>
+
+            <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+              <div style={{ width: 100, height: 100, borderRadius: 50, border: `2px solid ${GREEN}`, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: "#fff", margin: 0 }}>{initials(name)}</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div onClick={() => alert("Upload de foto ainda não está disponível — falta configurar um bucket de armazenamento no Supabase.")} style={{ background: GREEN_BUTTON, padding: "8px 16px", borderRadius: 6, cursor: "pointer", display: "inline-block" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>Alterar foto</p>
+                </div>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>JPG ou PNG. Máximo de 1MB</p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome Completo</p>
+                <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} />
+              </div>
+              <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>E-mail</p>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} />
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>WhatsApp</p>
+                  <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={fieldStyle} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: BORDER, width: "100%" }} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Segurança</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Senha Atual</p>
+                <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Preencha só se for trocar a senha" style={fieldStyle} />
+              </div>
+              <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nova Senha</p>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres" style={fieldStyle} />
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Confirmar Nova Senha</p>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" style={fieldStyle} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: BORDER, width: "100%" }} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Preferências de Viagem</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Estilo de Roteiro Favorito</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                {PREFS.map(([id, label]) => {
+                  const active = prefs.includes(id);
+                  return (
+                    <div key={id} onClick={() => togglePref(id)} style={{ background: active ? GREEN_BG : BG_ALT, border: active ? `1.5px solid ${GREEN}` : "1.5px solid transparent", padding: "8px 16px", borderRadius: 999, cursor: "pointer" }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active ? 700 : 400, fontSize: 13, color: active ? GREEN : BODY, margin: 0 }}>{label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+            {success && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GREEN, margin: 0 }}>Alterações salvas com sucesso!</p>}
+
+            <div style={{ display: "flex", gap: 16, justifyContent: "flex-end", width: "100%" }}>
+              <div onClick={handleDiscard} style={{ background: BG_ALT, padding: "14px 24px", borderRadius: 8, cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>Descartar</p>
+              </div>
+              <div onClick={saving ? undefined : handleSave} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 28px", borderRadius: 8, cursor: saving ? "default" : "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : "Salvar Alterações"}</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ width: isMobile ? "100%" : 380 }}>
+            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Status da Conta</p>
+              <div style={{ background: "#fff9e6", border: "1px solid #b78103", borderRadius: 8, padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
+                <AlertTriangle size={20} color="#b78103" />
+                <div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#b78103", margin: 0 }}>Membro Tripsz</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#b78103", margin: 0 }}>Conta ativa</p>
+                </div>
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Desbloqueie roteiros para acumular conquistas e destravar o nível VIP Groundhopper no seu Football Passport.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AuthedFooter />
+    </div>
+  );
+}
+/* ============================================================
+   10. CHECKOUT (node 95:877)
    ============================================================ */
 function Checkout({ answers, onBack, onDone }) {
   const [wantsSupport, setWantsSupport] = useState(false);
@@ -1299,7 +1977,12 @@ function Checkout({ answers, onBack, onDone }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: answers.userId, tripAnswersId: answers.tripAnswersId }),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("O servidor não respondeu corretamente. Tente novamente em instantes.");
+      }
       if (!res.ok) throw new Error(data.error || "Não foi possível iniciar o pagamento.");
       // Manda o usuário pro checkout de verdade do Mercado Pago
       window.location.href = data.checkoutUrl;
@@ -1522,6 +2205,12 @@ export default function App() {
     localStorage.removeItem("tripsz_state");
   };
 
+  const handleLogout = async () => {
+    const supabase = supabaseBrowser();
+    await supabase.auth.signOut();
+    restart();
+  };
+
   // Guarda o passo atual e as respostas no localStorage sempre que mudam.
   // É essencial porque o login com Google recarrega a página inteira (o
   // navegador sai do site, vai pro Google e volta), e sem isso a pessoa
@@ -1615,7 +2304,30 @@ export default function App() {
       {screen === "loading" && <LoadingScreen onDone={() => setScreen("blocked")} />}
       {screen === "blocked" && <BlockedResult trip={trip} onUnlock={handleUnlockRequest} onRestart={restart} />}
       {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("blocked")} onDone={() => setScreen("unlocked")} />}
-      {screen === "unlocked" && <UnlockedResult trip={trip} onPassport={restart} onStart={restart} />}
+      {screen === "unlocked" && <UnlockedResult trip={trip} onPassport={() => setScreen("conquistas")} onStart={restart} />}
+      {screen === "roteiros" && (
+        <MeusRoteiros
+          onNavigate={(key) => setScreen(key)}
+          onLogout={handleLogout}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+          onOpenTrip={(tripAnswers, status) => {
+            setAnswers((a) => ({ ...a, ...tripAnswers }));
+            setScreen(status === "Ativo" || status === "Concluído" ? "unlocked" : "blocked");
+          }}
+          onEditTrip={(tripAnswers) => {
+            setAnswers((a) => ({ ...a, ...tripAnswers }));
+            setScreen("destino");
+          }}
+        />
+      )}
+      {screen === "conquistas" && (
+        <MinhasConquistas
+          onNavigate={(key) => setScreen(key)}
+          onLogout={handleLogout}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+        />
+      )}
+      {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
     </div>
   );
 }
