@@ -13,7 +13,7 @@ import { searchTeams } from "@/lib/footballApi";
 // Times já confirmados na rodada anterior (IDs batem com o que já está
 // no app) — não precisa gastar cota buscando eles de novo.
 const TEAM_NAMES = [
-  "Bayern München", "Borussia Dortmund", "Paris Saint Germain", "Marseille",
+  "Bayern", "Borussia Dortmund", "Paris Saint Germain", "Marseille",
   "Porto", "Benfica", "Ajax", "Feyenoord",
   "PSV", "Galatasaray", "Fenerbahce", "Boca Juniors",
   "River Plate", "Flamengo", "Fluminense", "Corinthians",
