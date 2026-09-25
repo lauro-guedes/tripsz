@@ -2200,6 +2200,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       if (!res.ok) throw new Error(data.error || "Erro na busca.");
       if (!data.found) {
         setShowManual(true);
+        if (data.reason === "pais_nao_suportado") {
+          setManual((m) => ({ ...m, country: data.venue?.country || "", stadium: data.venue?.name || stadiumQuery, city: data.venue?.city || "" }));
+          setError(`Encontramos o estádio, mas ainda não temos os jogos de ${data.venue?.country} cadastrados — preencha manualmente.`);
+        } else {
+          setError("Não encontramos esse estádio na nossa base — preencha manualmente.");
+        }
         return;
       }
       setVenue(data.venue);
