@@ -208,7 +208,7 @@ function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
 }
 
 /* Shared wizard chrome */
-const WIZARD_TOTAL = 5;
+const WIZARD_TOTAL = 6;
 
 function WizardTopBar({ step, onExit }) {
   const isMobile = useIsMobile();
@@ -909,6 +909,90 @@ function StepDestino({ answers, setAnswers, onNext, onBack }) {
   );
 }
 
+// Times por liga/país — usa os mesmos nomes de time que já têm escudo
+// mapeado (TEAM_LOGO_IDS), pra garantir que os logos apareçam certinho.
+const TEAMS_BY_LEAGUE = [
+  { country: "Inglaterra", league: "Premier League", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", teams: ["Arsenal", "Chelsea", "Liverpool", "Manchester City"] },
+  { country: "Espanha", league: "La Liga", flag: "🇪🇸", teams: ["Real Madrid", "Barcelona", "Atlético Madrid", "Sevilla"] },
+  { country: "Itália", league: "Serie A", flag: "🇮🇹", teams: ["Inter", "Milan", "Napoli", "Roma", "Lazio"] },
+  { country: "Alemanha", league: "Bundesliga", flag: "🇩🇪", teams: ["Bayern München", "Borussia Dortmund"] },
+  { country: "França", league: "Ligue 1", flag: "🇫🇷", teams: ["PSG", "Marseille"] },
+  { country: "Portugal", league: "Primeira Liga", flag: "🇵🇹", teams: ["Porto", "Benfica"] },
+  { country: "Holanda", league: "Eredivisie", flag: "🇳🇱", teams: ["Ajax", "Feyenoord", "PSV"] },
+  { country: "Turquia", league: "Süper Lig", flag: "🇹🇷", teams: ["Galatasaray", "Fenerbahçe"] },
+  { country: "Argentina", league: "Liga Profesional", flag: "🇦🇷", teams: ["Boca Juniors", "River Plate"] },
+  { country: "Brasil", league: "Brasileirão", flag: "🇧🇷", teams: ["Flamengo", "Fluminense", "Corinthians", "Palmeiras"] },
+  { country: "Uruguai", league: "Primera División", flag: "🇺🇾", teams: ["Peñarol", "Nacional"] },
+  { country: "Chile", league: "Primera División", flag: "🇨🇱", teams: ["Colo-Colo", "Universidad de Chile"] },
+  { country: "Colômbia", league: "Primera A", flag: "🇨🇴", teams: ["Millonarios", "Santa Fe"] },
+];
+
+/* ============================================================
+   3.5 TIMES FAVORITOS (node 225:9126) — novo passo, entre Destino e Datas
+   ============================================================ */
+function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
+  const isMobile = useIsMobile();
+  const favoriteTeams = answers.favoriteTeams || [];
+  const [search, setSearch] = useState("");
+
+  const toggleTeam = (team) =>
+    setAnswers((a) => ({
+      ...a,
+      favoriteTeams: favoriteTeams.includes(team) ? favoriteTeams.filter((t) => t !== team) : [...favoriteTeams, team],
+    }));
+
+  const selectedCountries = answers.countries || [];
+  const groups = TEAMS_BY_LEAGUE.filter((g) => selectedCountries.length === 0 || selectedCountries.includes(g.country))
+    .map((g) => ({ ...g, teams: g.teams.filter((t) => t.toLowerCase().includes(search.toLowerCase())) }))
+    .filter((g) => g.teams.length > 0);
+
+  return (
+    <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <WizardTopBar step={3} onExit={onBack} />
+      <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 32, alignItems: "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: "center", textAlign: "center", width: "100%" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quais são seus times favoritos?</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 720, margin: 0 }}>Selecione os clubes que você quer acompanhar — montaremos roteiros personalizados para os jogos deles.</p>
+        </div>
+        {isMobile && <MobileProgress step={3} />}
+        <div style={{ width: isMobile ? "100%" : 600 }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar time..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+            <Icon name="search" size={18} color={MUTED} />
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 40, width: isMobile ? "100%" : 900 }}>
+          {groups.length === 0 && (
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textAlign: "center" }}>Nenhum time encontrado. Isso é opcional — pode pular pra frente sem escolher nenhum.</p>
+          )}
+          {groups.map((g) => (
+            <div key={g.league} style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 16 }}>{g.flag}</span>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.league}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>({g.country})</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+                {g.teams.map((team) => {
+                  const active = favoriteTeams.includes(team);
+                  return (
+                    <div key={team} onClick={() => toggleTeam(team)} style={{ background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "16px 20px", borderRadius: 8, cursor: "pointer" }}>
+                      <TeamBadge name={team} size={24} />
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active ? 700 : 500, fontSize: 14, color: active ? GREEN : TEXT, margin: 0, flex: 1 }}>{team}</p>
+                      {active && <Check size={16} color={GREEN} />}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <WizardBottomBar onBack={onBack} onNext={onNext} />
+    </div>
+  );
+}
+
 /* ============================================================
    4. DATAS (node 95:546)
    ============================================================ */
@@ -919,13 +1003,13 @@ function StepDatas({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={3} onExit={onBack} />
+      <WizardTopBar step={4} onExit={onBack} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 56, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quando você quer viajar?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Escolha as datas e diga o quanto pode flexibilizar</p>
         </div>
-        {isMobile && <MobileProgress step={3} />}
+        {isMobile && <MobileProgress step={4} />}
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Datas de viagem</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: isMobile ? "100%" : 800 }}>
@@ -1007,13 +1091,13 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={4} onExit={onBack} />
+      <WizardTopBar step={5} onExit={onBack} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quem vai e qual o orçamento total da viagem?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Informe o número de viajantes e o orçamento total estimado para a viagem</p>
         </div>
-        {isMobile && <MobileProgress step={4} />}
+        {isMobile && <MobileProgress step={5} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : 800 }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Viajantes</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 24 }}>
@@ -1062,13 +1146,13 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={5} onExit={onBack} />
+      <WizardTopBar step={6} onExit={onBack} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Como quer cruzar as partidas?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Último passo - nos conte suas prioridades para cruzar partidas possíveis nos países e datas selecionados</p>
         </div>
-        {isMobile && <MobileProgress step={5} />}
+        {isMobile && <MobileProgress step={6} />}
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Prioridade do roteiro</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isMobile ? 8 : 12, justifyContent: isMobile ? "flex-start" : "center", width: isMobile ? "100%" : 800 }}>
@@ -3481,6 +3565,7 @@ const SCREEN_TO_PATH = {
   landing: "/",
   account: "/comecar",
   destino: "/roteiro/destino",
+  times: "/roteiro/times",
   datas: "/roteiro/datas",
   pessoas: "/roteiro/pessoas",
   preferencias: "/roteiro/preferencias",
@@ -3666,8 +3751,9 @@ export default function App() {
       <FontImports />
       {screen === "landing" && <LandingPage onStart={() => { setPostLoginTarget("destino"); setScreen("account"); }} onLogin={() => { setPostLoginTarget("roteiros"); setOpenLoginModal(true); setScreen("account"); }} />}
       {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} openLogin={openLoginModal} />}
-      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("account")} />}
-      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("destino")} />}
+      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} />}
+      {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} />}
+      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} />}
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} />}
       {screen === "loading" && <LoadingScreen onDone={handleSaveTrip} />}
