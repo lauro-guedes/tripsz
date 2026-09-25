@@ -1295,6 +1295,13 @@ function LoadingScreen({ onDone }) {
 /* ============================================================
    8. RESULTADO BLOQUEADO (node 95:769)
    ============================================================ */
+// Formata uma data como "18 MAR 2025" — igual ao Figma, sem o "de" que o
+// toLocaleDateString("pt-BR") normalmente adiciona.
+const MESES_ABREV = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+function formatDateBadge(date) {
+  return `${String(date.getDate()).padStart(2, "0")} ${MESES_ABREV[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
@@ -1375,11 +1382,25 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
                     <TeamBadge name={f.away} size={28} />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.away}</p>
                   </div>
+                  {isMobile ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                      <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#334155", textTransform: "uppercase", margin: 0 }}>{formatDateBadge(f.date)}</p>
+                      </div>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
+                    </div>
+                  ) : (
+                    <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
+                      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#334155", textTransform: "uppercase", margin: 0 }}>{formatDateBadge(f.date)}</p>
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: isMobile ? "flex-start" : "flex-end" }}>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Estimativa Ingresso</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
-                </div>
+                {!isMobile && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Estimativa Ingresso</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
