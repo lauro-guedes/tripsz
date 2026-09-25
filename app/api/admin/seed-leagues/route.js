@@ -33,7 +33,15 @@ const TARGET_LEAGUES = [
 ];
 
 function pickBestMatch(leagues, nameMatch) {
-  const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  // Remove acentos de verdade (á→a, ó→o, ç→c...) em vez de simplesmente
+  // apagar a letra acentuada — "División" precisa virar "division", não
+  // "divisin", senão a comparação com "Division" nunca bate.
+  const normalize = (s) =>
+    s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
   const target = normalize(nameMatch);
   // só ligas de tipo "League" (não copas) e evita ligas de base/mulheres
   const candidates = leagues.filter((l) => l.league.type === "League");
