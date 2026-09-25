@@ -42,6 +42,26 @@ export async function POST(request) {
     const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN });
     const preference = new Preference(client);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const supabase = supabaseAdmin();
+
+    // Desconto de 15% pra quem tem o Passport (assinante ativo, ou conta
+    // antiga de antes da assinatura existir). Calculado aqui no servidor
+    // de propósito — nunca confiamos num desconto que viesse do navegador.
+    const { data: userRow } = await supabase.auth.admin.getUserById(userId);
+    const createdAt = userRow?.user?.created_at;
+    const isLegacy = createdAt && new Date(createdAt) < new Date("2026-09-25T00:00:00Z");
+    let hasPassport = isLegacy;
+    if (!hasPassport) {
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+      hasPassport = !!sub;
+    }
+    const unitPrice = hasPassport ? 127.42 : 149.9;
 
     const result = await preference.create({
       body: {
@@ -49,7 +69,7 @@ export async function POST(request) {
           {
             title: "Consultoria humana — tripsz",
             quantity: 1,
-            unit_price: 149.9,
+            unit_price: unitPrice,
             currency_id: "BRL",
           },
         ],
@@ -67,14 +87,13 @@ export async function POST(request) {
     // Registra o agendamento como "pending" até o webhook confirmar o
     // pagamento. Diferente de antes, isto NUNCA bloqueia o acesso ao
     // roteiro — só representa a compra opcional da consultoria.
-    const supabase = supabaseAdmin();
     const { error: dbError } = await supabase.from("orders").insert({
       user_id: userId,
       trip_answers_id: tripAnswersId,
       mercadopago_preference_id: result.id,
       status: "pending",
       item_type: "consultoria",
-      amount_cents: 14990,
+      amount_cents: Math.round(unitPrice * 100),
       scheduled_date: scheduledDate,
       scheduled_time: scheduledTime,
     });
