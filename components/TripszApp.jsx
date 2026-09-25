@@ -15,7 +15,7 @@
  * uses lucide-react, since those specific files weren't uploaded.
  */
 "use client";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 
@@ -2377,10 +2377,16 @@ export default function App() {
   const [openLoginModal, setOpenLoginModal] = useState(false);
   // Pra onde ir depois de logar: "destino" se a pessoa clicou em "Montar
   // minha viagem" (quer começar um roteiro novo), ou "roteiros" se clicou
-  // em "Entrar" (só quer acessar a conta que já tem). Um ref porque o
-  // listener de autenticação (mais abaixo) precisa sempre ler o valor mais
-  // recente, sem precisar recriar a inscrição a cada mudança.
-  const postLoginTarget = useRef("destino");
+  // em "Entrar" (só quer acessar a conta que já tem). Precisa ser guardado
+  // no localStorage, não só em memória — o login com Google recarrega a
+  // página inteira (sai do site, vai pro Google, volta), e qualquer coisa
+  // guardada só em memória (como um useRef) se perderia nesse meio-tempo.
+  const setPostLoginTarget = (target) => localStorage.setItem("tripsz_post_login_target", target);
+  const readAndClearPostLoginTarget = () => {
+    const target = localStorage.getItem("tripsz_post_login_target") || "destino";
+    localStorage.removeItem("tripsz_post_login_target");
+    return target;
+  };
   const [answers, setAnswers] = useState({});
   // Trava que impede o efeito "tela → URL" de rodar antes do efeito de
   // restauração inicial ler a URL original — sem isso, a primeira
@@ -2475,7 +2481,7 @@ export default function App() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         setAnswers((a) => ({ ...a, userId: session.user.id }));
-        setScreen((current) => (current === "account" || current === "landing" ? postLoginTarget.current : current));
+        setScreen((current) => (current === "account" || current === "landing" ? readAndClearPostLoginTarget() : current));
       }
     });
 
@@ -2526,8 +2532,8 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh" }}>
       <FontImports />
-      {screen === "landing" && <LandingPage onStart={() => { postLoginTarget.current = "destino"; setScreen("account"); }} onLogin={() => { postLoginTarget.current = "roteiros"; setOpenLoginModal(true); setScreen("account"); }} />}
-      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(postLoginTarget.current)} onBack={restart} openLogin={openLoginModal} />}
+      {screen === "landing" && <LandingPage onStart={() => { setPostLoginTarget("destino"); setScreen("account"); }} onLogin={() => { setPostLoginTarget("roteiros"); setOpenLoginModal(true); setScreen("account"); }} />}
+      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget())} onBack={restart} openLogin={openLoginModal} />}
       {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("account")} />}
       {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("destino")} />}
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} />}
