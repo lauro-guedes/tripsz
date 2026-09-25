@@ -10,16 +10,19 @@ import { searchTeams } from "@/lib/footballApi";
  * Gasta 1 requisição da cota diária por time (30 no total).
  */
 
-// Mesma lista de nomes usada em TEAM_LOGO_IDS no TripszApp.jsx.
+// Times já confirmados na rodada anterior (IDs batem com o que já está
+// no app) — não precisa gastar cota buscando eles de novo.
 const TEAM_NAMES = [
-  "Arsenal", "Chelsea", "Liverpool", "Manchester City", "Tottenham",
-  "Real Madrid", "Barcelona", "Atletico Madrid", "Sevilla",
-  "Bayern Munich", "Borussia Dortmund", "Paris Saint Germain", "Marseille",
-  "Porto", "Benfica", "Ajax", "Feyenoord", "PSV",
-  "Galatasaray", "Fenerbahce", "Boca Juniors", "River Plate",
-  "Flamengo", "Fluminense", "Corinthians", "Palmeiras",
-  "Inter", "Milan", "Napoli", "Roma", "Lazio",
+  "Bayern München", "Borussia Dortmund", "Paris Saint Germain", "Marseille",
+  "Porto", "Benfica", "Ajax", "Feyenoord",
+  "PSV", "Galatasaray", "Fenerbahce", "Boca Juniors",
+  "River Plate", "Flamengo", "Fluminense", "Corinthians",
+  "Palmeiras", "Inter", "Milan", "Napoli",
+  "Roma", "Lazio",
 ];
+const BATCH_SIZE = 6; // ~6 chamadas x 1,2s ≈ 8s, seguro dentro do limite de tempo da função
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -28,8 +31,12 @@ export async function GET(request) {
     return Response.json({ error: "Não autorizado." }, { status: 401 });
   }
 
+  const batch = Math.max(1, parseInt(searchParams.get("batch") || "1", 10));
+  const totalBatches = Math.ceil(TEAM_NAMES.length / BATCH_SIZE);
+  const names = TEAM_NAMES.slice((batch - 1) * BATCH_SIZE, batch * BATCH_SIZE);
+
   const results = {};
-  for (const name of TEAM_NAMES) {
+  for (const name of names) {
     try {
       const teams = await searchTeams(name);
       results[name] = teams.slice(0, 3).map((t) => ({
@@ -41,7 +48,10 @@ export async function GET(request) {
     } catch (e) {
       results[name] = { error: e.message };
     }
+    // O plano grátis da API-Football limita requisições por minuto —
+    // essa pausa evita o erro 429 "Too many requests".
+    await sleep(1200);
   }
 
-  return Response.json({ results });
+  return Response.json({ batch, totalBatches, results });
 }
