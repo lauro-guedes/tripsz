@@ -2694,6 +2694,35 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ home: "", away: "", date: "", stadium: "", city: "", country: "", competition: "" });
   const [access, setAccess] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Autocomplete com debounce — só busca sugestões depois que a pessoa
+  // parar de digitar por meio segundo, e só a partir de 3 letras, pra
+  // não gastar a cota da API a cada tecla apertada.
+  useEffect(() => {
+    if (stadiumQuery.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(stadiumQuery)}`);
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions(true);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [stadiumQuery]);
+
+  const pickSuggestion = (name) => {
+    setStadiumQuery(name);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
 
   useEffect(() => {
     (async () => {
@@ -2858,16 +2887,39 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque o estádio onde o jogo aconteceu</p>
             </div>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: "100%" }}>
-              <div style={{ flex: 1, background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 12 }}>
-                <Icon name="search" size={18} color={MUTED} />
-                <input value={stadiumQuery} onChange={(e) => setStadiumQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="Buscar estádio..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+              <div style={{ position: "relative", flex: 1 }}>
+                <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 12 }}>
+                  <Icon name="search" size={18} color={MUTED} />
+                  <input
+                    value={stadiumQuery}
+                    onChange={(e) => setStadiumQuery(e.target.value)}
+                    onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                    onKeyDown={(e) => e.key === "Enter" && (setShowSuggestions(false), handleSearch())}
+                    placeholder="Buscar estádio..."
+                    style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }}
+                  />
+                </div>
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 20, overflow: "hidden" }}>
+                    {suggestions.map((s) => (
+                      <div
+                        key={s.name}
+                        onMouseDown={() => pickSuggestion(s.name)}
+                        style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
+                      >
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                        {s.city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.city}{s.country ? `, ${s.country}` : ""}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <select value={season} onChange={(e) => setSeason(parseInt(e.target.value, 10))} style={{ ...fieldStyle, width: isMobile ? "100%" : 140 }}>
                 <option value={2024}>2024/25</option>
                 <option value={2023}>2023/24</option>
                 <option value={2022}>2022/23</option>
               </select>
-              <div onClick={loading ? undefined : handleSearch} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
+              <div onClick={loading ? undefined : () => { setShowSuggestions(false); handleSearch(); }} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
               </div>
             </div>
