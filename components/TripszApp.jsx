@@ -1280,7 +1280,10 @@ const TEAM_LOGO_IDS = {
 function TeamBadge({ name, url, size = 32 }) {
   const [broken, setBroken] = useState(false);
   const id = TEAM_LOGO_IDS[name];
-  const src = url || (id ? `https://media.api-sports.io/football/teams/${id}.png` : null);
+  // Prioridade: link vindo direto da API (times "dinâmicos" achados numa
+  // busca ao vivo) > nossa cópia hospedada no Supabase Storage (times
+  // fixos conhecidos, imune a queda do CDN da API-Football) > iniciais.
+  const src = url || (id ? `https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos/${id}.png` : null);
   if (!src || broken) {
     return (
       <div style={{ width: size, height: size, borderRadius: "50%", background: BG_ALT, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
