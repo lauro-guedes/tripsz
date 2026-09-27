@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2 } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 
 const GREEN = "#00c853";
@@ -164,7 +164,7 @@ function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
   const isMobile = useIsMobile();
   const items = [
     ["Como Funciona", "como-funciona"],
-    ["Roteiros", "roteiros-preview"],
+    ["Roteiros", "pricing"],
     ["Diferenciais", "diferenciais"],
     ["FAQ", "faq"],
   ];
@@ -278,6 +278,7 @@ const PHOTO_STADIUM = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
 
 function LandingPage({ onStart, onLogin }) {
   const isMobile = useIsMobile();
+  const [billingAnnual, setBillingAnnual] = useState(false);
 
   // Rola até uma seção específica se a pessoa clicou num item do menu
   // (tipo "FAQ") estando em outra tela — a navegação guarda o alvo aqui
@@ -317,6 +318,11 @@ function LandingPage({ onStart, onLogin }) {
     ["Como garantem que os ingressos são legítimos?", "Nós trabalhamos apenas com revendedores oficiais de clubes e operadoras parceiras certificadas com seguro contra cancelamentos."],
     ["E se a data do jogo mudar por causa da TV?", "As ligas europeias costumam fixar datas de 3 a 5 semanas antes. Nossa equipe monitora os calendários e monta o roteiro prevendo janelas de segurança nas datas de voos e hotéis."],
     ["Posso viajar com crianças ou grupos?", "Sim! Adaptamos o perfil da viagem para roteiros mais familiares, com setores calmos e acessíveis nos estádios."],
+    ["Posso cancelar a assinatura a qualquer momento?", "Sim, sem multa. Seu acesso continua até o fim do período pago."],
+    ["O que acontece com meu Passport se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar."],
+    ["Preciso ser assinante para contratar a consultoria?", "Não, a consultoria é um add-on avulso. Mas assinantes ganham 15% de desconto."],
+    ["Como funciona o desconto anual?", "No plano anual você paga R$ 200/ano em vez de R$ 238,80 (12x R$ 19,90), economizando R$ 38,80."],
+    ["É só futebol europeu ou inclui jogos no Brasil?", "A plataforma cobre 13 países, incluindo Brasil, Argentina, Uruguai, Chile e Colômbia, além das principais ligas europeias."],
   ];
 
   const px = isMobile ? "16px" : "80px";
@@ -419,32 +425,93 @@ function LandingPage({ onStart, onLogin }) {
         </div>
       </div>
 
-      {/* trip-teaser */}
-      <div id="roteiros-preview" style={{ background: BG_ALT, padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
-        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "space-between", gap: isMobile ? 16 : 0 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", width: isMobile ? "100%" : 600 }}>
-            <Badge>Roteiro de Amostra</Badge>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, margin: 0 }}>Uma prévia do seu roteiro de jogos</p>
-          </div>
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "14px 24px", cursor: "pointer" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Ver Roteiro de Exemplo</p>
-          </div>
+      {/* pricing */}
+      <div id="pricing" style={{ background: BG_ALT, padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 48, alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
+          <Badge>Nossos Planos</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, margin: 0 }}>Escolha o plano ideal para sua jornada</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 14 : 16, color: "#475569", margin: 0, width: isMobile ? "100%" : 600 }}>Crie roteiros de futebol personalizados gratuitamente ou desbloqueie a experiência completa com o Passport Tripsz.</p>
         </div>
-        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "auto" : 360, overflow: "hidden" }}>
-          <div style={{ background: BG_ALT, width: isMobile ? "100%" : 400, flexShrink: 0, padding: isMobile ? 24 : 40, display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>INGLATERRA // 10 DIAS</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 32, color: TEXT, margin: 0 }}>Roteiro de jogos na Inglaterra</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 15, lineHeight: 1.5, color: BODY, margin: 0 }}>A plataforma cruza as partidas disponíveis e sugere a melhor sequência de cidades para assistir aos jogos que você quer ver.</p>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: GOLD, margin: 0 }}>A partir de R$ 49,90</p>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? MUTED : TEXT, textTransform: "uppercase", margin: 0 }}>Mensal</p>
+          <div onClick={() => setBillingAnnual((v) => !v)} style={{ width: 44, height: 24, borderRadius: 12, background: GREEN, position: "relative", cursor: "pointer" }}>
+            <div style={{ position: "absolute", top: 2, left: billingAnnual ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left .15s" }} />
           </div>
-          <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: isMobile ? 220 : "auto" }}>
-            <img src={PHOTO_RECTANGLE} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-            <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.6)" }} />
-            <div style={{ position: "relative", background: "rgba(255,255,255,0.9)", border: `1.5px solid ${GREEN}`, borderRadius: 12, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16, alignItems: "center", margin: isMobile ? 16 : 0 }}>
-              <Icon name="lockKeyhole" size={32} color={TEXT} />
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, textTransform: "uppercase", margin: 0, textAlign: "center" }}>Roteiro Completo Oculto</p>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, textAlign: "center", width: isMobile ? "100%" : 280, margin: 0 }}>Preencha o questionário para receber o roteiro de jogos e a melhor sequência de cidades para sua viagem.</p>
-              <Button onClick={onStart}>Montar meu roteiro</Button>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? TEXT : MUTED, margin: 0 }}>Anual (-17%)</p>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 32, width: "100%", maxWidth: 1000 }}>
+          {/* Grátis */}
+          <div style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: isMobile ? 24 : 32, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ background: "#f3f4f6", padding: "4px 12px", borderRadius: 999, alignSelf: "flex-start" }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>GRATUITO</p>
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>R$ 0</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>para sempre</p>
+            </div>
+            <div onClick={onStart} style={{ border: `1.5px solid ${GREEN}`, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>Começar grátis</p>
+            </div>
+            <div style={{ height: 1, background: BORDER }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Filtros por país, liga e time", true], ["Visualização de prévia do roteiro", true], ["Football Passport", false], ["Sistema de gamificação e badges", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
+                <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {ok ? <Check size={16} color={GREEN} /> : <X size={16} color="#9ca3af" />}
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: ok ? TEXT : "#6b7280", margin: 0 }}>{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Assinante — plano popular */}
+          <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 12px rgba(0,200,83,0.13)", borderRadius: 16, padding: isMobile ? 24 : 32, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ background: GREEN, padding: "4px 12px", borderRadius: 999, alignSelf: "flex-start" }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#fff", margin: 0 }}>MAIS POPULAR</p>
+              </div>
+              <div style={{ display: "flex", gap: 4, alignItems: "baseline" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 200" : "R$ 19,90"}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>{billingAnnual ? "/ ano" : "/ mês"}</p>
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 38,80/ano" : "ou R$ 200/ano e economize 17%"}</p>
+            </div>
+            <div onClick={onStart} style={{ background: GREEN, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Assinar agora</p>
+            </div>
+            <div style={{ height: 1, background: BORDER }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {["Tudo do plano gratuito", "Football Passport completo", "Sistema de gamificação e badges", "Níveis de torcedor (5 categorias)", "Histórico completo de jogos", "Registre jogos manualmente", "15% de desconto em consultorias", "Alertas personalizados de jogos"].map((label) => (
+                <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <Check size={16} color={GREEN} />
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add-on Consultoria */}
+          <div style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: isMobile ? 24 : 32, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ background: "#f3f4f6", padding: "4px 12px", borderRadius: 999, alignSelf: "flex-start" }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>ADD-ON</p>
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>R$ 149,90</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>por sessão</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: "#ff5722", margin: 0 }}>R$ 127,42 para assinantes (-15%)</p>
+            </div>
+            <div onClick={onStart} style={{ border: `1.5px solid ${BORDER}`, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Contratar consultoria</p>
+            </div>
+            <div style={{ height: 1, background: BORDER }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {["Sessão de 30min com especialista", "Ajuda com hotéis e hospedagem", "Sugestões de reservas e transfers", "Ajustes finais do roteiro", "Agendamento flexível", "Suporte pós-sessão por 48h"].map((label) => (
+                <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <Check size={16} color={GREEN} />
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -2130,8 +2197,9 @@ async function checkPassportAccess() {
   return { hasAccess: !!sub, legacy: false, subscription: sub, userId: user.id, userEmail: user.email };
 }
 
-function PassportPaywall({ userId, userEmail }) {
+function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew }) {
   const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState(null);
 
@@ -2153,41 +2221,112 @@ function PassportPaywall({ userId, userEmail }) {
     }
   };
 
+  const features = [
+    [Clipboard, "Registro Ilimitado de Jogos", "Adicione todas as partidas que você já assistiu ou planeja assistir nos estádios europeus."],
+    [Award, "Badges Exclusivas", "Ganhe insígnias virtuais personalizadas para cada clássico, liga ou país desbloqueado."],
+    [BarChart2, "Estatísticas Completas", "Acompanhe gráficos ricos sobre sua jornada, estádios visitados e gols assistidos ao vivo."],
+    [TrendingUp, "Ranking de Torcedores", "Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional."],
+    [Star, "Níveis de Torcedor", "Suba do nível 'Torcedor de Sofá' até a lendária categoria 'Lenda da Arquibancada'."],
+    [Share2, "Compartilhamento Social", "Gere cards personalizados perfeitos para postar no Instagram e mostrar seu progresso."],
+  ];
+
   return (
-    <div style={{ background: BG_ALT, padding: isMobile ? "32px 16px" : "80px", display: "flex", flexDirection: "column", gap: 32, alignItems: "center" }}>
-      <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 12, maxWidth: 600 }}>
-        <Badge gold>Recurso do Passport</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Assine o Passport Tripsz</p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 16, color: BODY, margin: 0 }}>Desbloqueie o Football Passport com sistema de níveis, registro ilimitado de jogos e histórico completo.</p>
-      </div>
-      {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 20, width: "100%", maxWidth: 720 }}>
-        <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>Plano Mensal</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0 }}>R$ 19,90<span style={{ fontSize: 14, color: MUTED, fontWeight: 500 }}>/mês</span></p>
-          <div onClick={loadingPlan ? undefined : () => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{loadingPlan === "monthly" ? "Redirecionando..." : "Assinar Mensal"}</p>
+    <div style={{ background: BG, width: "100%" }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `64px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
+        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          <Badge>Documento Oficial do Torcedor</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Football Passport</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
+        </div>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <Award size={22} color={GREEN} />
+          </div>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, overflow: "hidden", flexShrink: 0, background: GREEN_BUTTON2, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {userAvatar ? <img src={userAvatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: "#fff", margin: 0 }}>{initials(userName)}</p>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Titular</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{userName || "—"}</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nível de Acesso</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>BLOQUEADO</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>ID: #PENDENTE</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: —</p>
           </div>
         </div>
-        <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 28, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
-          <div style={{ position: "absolute", top: -12, right: 20, background: GREEN, padding: "4px 12px", borderRadius: 999 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>ECONOMIZE 17%</p>
+      </div>
+
+      <div style={{ padding: isMobile ? `24px ${px} 48px` : `24px ${px} 80px`, display: "flex", flexDirection: "column", gap: 24 }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>O que você desbloqueia com o Passport:</p>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+          {features.map(([Ic, title, body]) => (
+            <div key={title} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", gap: 16, alignItems: "center" }}>
+              <div style={{ background: GREEN_BG, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Ic size={18} color={GREEN} />
+              </div>
+              <div>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{title}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: "4px 0 0" }}>{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: `0 ${px} 24px` }}>
+        <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 26, color: TEXT, margin: 0 }}>Escolha seu plano e desbloqueie agora</p>
+            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
           </div>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Plano Anual</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: 0 }}>R$ 200<span style={{ fontSize: 14, color: MUTED, fontWeight: 500 }}>/ano</span></p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 38,80/ano</p>
-          <div onClick={loadingPlan ? undefined : () => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loadingPlan === "annual" ? "Redirecionando..." : "Assinar Anual"}</p>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 20, width: "100%", maxWidth: 720, margin: "0 auto" }}>
+            <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>Plano Mensal</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 19,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/mês</span></p>
+              <div onClick={loadingPlan ? undefined : () => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{loadingPlan === "monthly" ? "Redirecionando..." : "Assinar Mensal"}</p>
+              </div>
+            </div>
+            <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
+              <div style={{ position: "absolute", top: -12, right: 20, background: GREEN, padding: "4px 12px", borderRadius: 999 }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>ECONOMIZE 17%</p>
+              </div>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Plano Anual</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 200<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/ano</span></p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 38,80/ano</p>
+              <div onClick={loadingPlan ? undefined : () => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loadingPlan === "annual" ? "Redirecionando..." : "Assinar Anual"}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 600, width: "100%" }}>
-        {["Sistema de níveis e XP", "Registro ilimitado de jogos", "Histórico completo de partidas", "15% de desconto em consultorias"].map((l) => (
-          <div key={l} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Check size={16} color={GREEN} />
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{l}</p>
-          </div>
-        ))}
+
+      <div style={{ padding: `0 ${px} 80px` }}>
+        <div style={{ background: "#0f172a", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: "#fff", margin: 0 }}>Pronto para planejar sua próxima arquibancada?</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#e2e8f0", margin: 0 }}>Gere um roteiro inteligente personalizado com os melhores clássicos, derbies e sequências possíveis de jogos.</p>
+          {onCreateNew && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div onClick={onCreateNew} style={{ background: GREEN_BUTTON, padding: "14px 24px", borderRadius: 999, textAlign: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Montar meu roteiro →</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2269,7 +2408,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
     return (
       <div style={{ background: BG, width: "100%" }}>
         <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} onCreateNew={onCreateNew} />
         <AuthedFooter />
       </div>
     );
@@ -2434,7 +2573,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     return (
       <div style={{ background: BG, width: "100%" }}>
         <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} />
         <AuthedFooter />
       </div>
     );
@@ -2691,7 +2830,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     return (
       <div style={{ background: BG, width: "100%" }}>
         <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
+        <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} />
         <AuthedFooter />
       </div>
     );
@@ -2825,6 +2964,18 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
 }
 
 /* --- Minha Assinatura: gerenciar plano, ver status, cancelar --- */
+// Nomes amigáveis pros IDs de bandeira que o Mercado Pago devolve.
+const PAYMENT_METHOD_NAMES = {
+  visa: "Cartão Visa",
+  master: "Cartão Mastercard",
+  amex: "Cartão American Express",
+  elo: "Cartão Elo",
+  hipercard: "Cartão Hipercard",
+  diners: "Cartão Diners Club",
+  account_money: "Saldo em conta Mercado Pago",
+  pix: "Pix",
+};
+
 function MinhaAssinatura({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
@@ -2832,7 +2983,9 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
   const [userAvatar, setUserAvatar] = useState(null);
   const [access, setAccess] = useState(null);
   const [canceling, setCanceling] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [error, setError] = useState(null);
+  const [invoices, setInvoices] = useState(null);
 
   const load = async () => {
     const acc = await checkPassportAccess();
@@ -2841,6 +2994,16 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
     const { data: userData } = await supabase.auth.getUser();
     setUserName(userData.user?.user_metadata?.name || userData.user?.email || "");
     setUserAvatar(userData.user?.user_metadata?.avatar_url || null);
+
+    if (acc.userId) {
+      try {
+        const res = await fetch(`/api/subscribe/invoices?userId=${acc.userId}`);
+        const data = await res.json();
+        setInvoices(res.ok ? data.invoices : []);
+      } catch {
+        setInvoices([]);
+      }
+    }
   };
 
   useEffect(() => {
@@ -2867,6 +3030,37 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
     }
   };
 
+  // Trocar de plano hoje funciona cancelando o antigo e criando um novo —
+  // o Mercado Pago não tem uma troca direta de valor/frequência numa
+  // assinatura já ativa, então esse é o jeito real de fazer isso.
+  const handleSwitchPlan = async (newPlan) => {
+    if (!window.confirm(`Trocar para o plano ${newPlan === "annual" ? "anual" : "mensal"}? Sua assinatura atual será cancelada e você será redirecionado para confirmar a nova.`)) return;
+    setSwitching(true);
+    setError(null);
+    try {
+      const cancelRes = await fetch("/api/subscribe/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: access.userId }),
+      });
+      if (!cancelRes.ok) {
+        const d = await cancelRes.json();
+        throw new Error(d.error || "Não foi possível cancelar o plano atual.");
+      }
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: access.userId, email: access.userEmail, plan: newPlan }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Não foi possível iniciar o novo plano.");
+      window.location.href = data.checkoutUrl;
+    } catch (e) {
+      setError(e.message);
+      setSwitching(false);
+    }
+  };
+
   if (access === null) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
@@ -2877,39 +3071,144 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
   }
 
   const sub = access.subscription;
-  const planLabel = sub?.plan === "annual" ? "Anual (R$ 200,00/ano)" : sub?.plan === "monthly" ? "Mensal (R$ 19,90/mês)" : null;
+  const planLabel = sub?.plan === "annual" ? "Plano Assinante — Anual" : sub?.plan === "monthly" ? "Plano Assinante — Mensal" : null;
+  const planPrice = sub?.plan === "annual" ? "R$ 200,00/ano" : "R$ 19,90/mês";
+  // Próxima cobrança estimada a partir da data de início — o Mercado Pago
+  // não devolve essa data pronta pra gente exibir, então calculamos com
+  // base na frequência do plano (mensal = +1 mês, anual = +1 ano).
+  const nextBilling = sub?.created_at
+    ? (() => {
+        const d = new Date(sub.created_at);
+        if (sub.plan === "annual") d.setFullYear(d.getFullYear() + 1);
+        else d.setMonth(d.getMonth() + 1);
+        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+      })()
+    : null;
+
+  const perks = ["Football Passport completo", "Gamificação e badges", "Níveis de torcedor (5 categorias)", "Histórico completo de jogos", "15% desconto em consultorias", "Alertas personalizados de jogos"];
 
   return (
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-      <div style={{ padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24, maxWidth: 720, margin: "0 auto", width: "100%" }}>
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
+        </div>
         <Badge>Configurações de Conta</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Minha Assinatura</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>Gerencie seu plano, método de pagamento e histórico de faturas.</p>
+      </div>
 
-        {access.legacy ? (
-          <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Acesso liberado (conta antiga)</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Sua conta foi criada antes do lançamento da assinatura do Passport, então você continua com acesso livre ao Football Passport, sem precisar pagar nada.</p>
-          </div>
-        ) : sub?.status === "active" ? (
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Plano Atual</p>
-              <div style={{ background: GREEN_BG, padding: "4px 10px", borderRadius: 4 }}>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>ATIVO</p>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, padding: isMobile ? `24px ${px} 48px` : `40px ${px} 80px` }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24, maxWidth: isMobile ? "100%" : 780 }}>
+          {access.legacy ? (
+            <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Acesso liberado (conta antiga)</p>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Sua conta foi criada antes do lançamento da assinatura do Passport, então você continua com acesso livre, sem precisar pagar nada.</p>
+            </div>
+          ) : sub?.status === "active" ? (
+            <>
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 24 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: TEXT, margin: 0 }}>Plano Atual</p>
+                  <div style={{ width: 10, height: 10, borderRadius: 5, background: GREEN }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: 28, color: TEXT, margin: 0 }}>{planLabel}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: GREEN, margin: 0 }}>{planPrice}</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {nextBilling && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Próxima cobrança: {nextBilling}</p>}
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Renovação automática ativada</p>
+                </div>
+                {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+                <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                  <div onClick={switching || canceling ? undefined : () => handleSwitchPlan(sub.plan === "annual" ? "monthly" : "annual")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", cursor: switching ? "default" : "pointer", opacity: switching ? 0.6 : 1 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{switching ? "Processando..." : `Trocar para ${sub.plan === "annual" ? "mensal" : "anual"}`}</p>
+                  </div>
+                  <p onClick={canceling || switching ? undefined : handleCancel} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: canceling ? "default" : "pointer" }}>{canceling ? "Cancelando..." : "Cancelar assinatura"}</p>
+                </div>
+              </div>
+
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 12 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: TEXT, margin: 0 }}>Método de Pagamento</p>
+                {sub?.payment_method_id ? (
+                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                    <CreditCard size={32} color={GREEN} />
+                    <div>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{PAYMENT_METHOD_NAMES[sub.payment_method_id] || sub.payment_method_id}</p>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Os últimos dígitos do cartão não ficam disponíveis nessa integração — só a bandeira.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Ainda não identificamos a forma de pagamento — isso aparece assim que o Mercado Pago confirmar a assinatura.</p>
+                )}
+              </div>
+
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: TEXT, margin: 0 }}>Histórico de Faturas</p>
+                {invoices === null && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Carregando...</p>}
+                {invoices !== null && invoices.length === 0 && (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Nenhuma fatura ainda — a primeira cobrança aparece aqui assim que for processada.</p>
+                )}
+                {invoices !== null && invoices.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {!isMobile && (
+                      <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, paddingBottom: 12 }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0, width: 120 }}>Data</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0, flex: 1 }}>Descrição</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0, width: 100 }}>Valor</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0, width: 90, textAlign: "right" }}>Status</p>
+                      </div>
+                    )}
+                    {invoices.map((inv, i) => (
+                      <div key={i} style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 4 : 0, alignItems: isMobile ? "flex-start" : "center", padding: "16px 0", borderBottom: `1px solid ${BORDER}` }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0, width: isMobile ? "auto" : 120 }}>{new Date(inv.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: TEXT, margin: 0, flex: isMobile ? "none" : 1 }}>{inv.plan}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0, width: isMobile ? "auto" : 100 }}>{Number(inv.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                        <div style={{ width: isMobile ? "auto" : 90, display: "flex", justifyContent: isMobile ? "flex-start" : "flex-end" }}>
+                          <div style={{ width: 10, height: 10, borderRadius: 5, background: inv.status === "processed" || inv.status === "approved" ? GREEN : inv.status === "scheduled" || inv.status === "pending" ? GOLD : "#ef4444" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} />
+          )}
+        </div>
+
+        {(access.legacy || sub?.status === "active") && (
+          <div style={{ width: isMobile ? "100%" : 420, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: TEXT, margin: 0 }}>O que está incluído</p>
+              {perks.map((p) => (
+                <div key={p} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{ background: GREEN_BG, width: 20, height: 20, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Check size={12} color={GREEN} />
+                  </div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{p}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: TEXT, margin: 0 }}>Precisa de ajuda?</p>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: MUTED, margin: 0 }}>Dúvidas sobre sua assinatura ou problemas com o pagamento?</p>
+              <a href="mailto:suporte@tripsz.com.br" style={{ background: GREEN_BUTTON, borderRadius: 999, padding: "12px 20px", textAlign: "center", textDecoration: "none" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>Falar com suporte</p>
+              </a>
+              <div onClick={() => onNavigate("landing")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Perguntas frequentes</p>
               </div>
             </div>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 16, color: BODY, margin: 0 }}>{planLabel}</p>
-            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
-            <div onClick={canceling ? undefined : handleCancel} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: canceling ? "default" : "pointer", width: isMobile ? "100%" : 220 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#ef4444", margin: 0 }}>{canceling ? "Cancelando..." : "Cancelar assinatura"}</p>
-            </div>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar.</p>
           </div>
-        ) : (
-          <PassportPaywall userId={access.userId} userEmail={access.userEmail} />
         )}
       </div>
+
       <AuthedFooter />
     </div>
   );
@@ -2939,6 +3238,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
+  const [subAccess, setSubAccess] = useState(null);
 
   const loadProfile = async () => {
     const supabase = supabaseBrowser();
@@ -2958,6 +3258,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
     setAvatarUrl(user.user_metadata?.avatar_url || null);
     setOriginal(loaded);
     setLoading(false);
+    setSubAccess(await checkPassportAccess());
   };
 
   useEffect(() => {
@@ -3180,10 +3481,29 @@ function MeuPerfil({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#b78103", margin: 0 }}>Conta ativa</p>
                 </div>
               </div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Desbloqueie roteiros para acumular conquistas e destravar o nível VIP Groundhopper no seu Football Passport.</p>
-              <div onClick={() => onNavigate("assinatura")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ver Minha Assinatura</p>
-              </div>
+              {subAccess?.subscription?.status === "active" ? (
+                <div onClick={() => onNavigate("assinatura")} style={{ display: "flex", flexDirection: "column", gap: 12, cursor: "pointer" }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Minha Assinatura</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 5, background: GREEN }} />
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{subAccess.subscription.plan === "annual" ? "Plano Assinante - Anual" : "Plano Assinante - Mensal"}</p>
+                    </div>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: GREEN, margin: 0 }}>{subAccess.subscription.plan === "annual" ? "R$ 200,00/ano" : "R$ 19,90/mês"}</p>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Gerenciar assinatura</p>
+                    <Icon name="arrowRight" size={14} color={GREEN} />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Desbloqueie roteiros para acumular conquistas e destravar o nível VIP Groundhopper no seu Football Passport.</p>
+                  <div onClick={() => onNavigate("assinatura")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ver Minha Assinatura</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
