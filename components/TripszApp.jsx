@@ -1470,25 +1470,52 @@ function buildTrip(answers) {
   const paceCap = { compact: 4, balanced: 3, spaced: 2, relaxed: 2 }[answers.pace || "spaced"] ?? 3;
   const maxGames = priority === "maxgames" ? Math.min(candidates.length, 10) : Math.min(paceCap, candidates.length);
 
+  // Escolhe os jogos finais em RODÍZIO por país — isso garante que, se a
+  // pessoa escolheu 2+ países, o roteiro final realmente cruza jogos dos
+  // dois, em vez de simplesmente pegar os jogos com maior pontuação
+  // (o que poderia acabar devolvendo um roteiro só de um país, mesmo com
+  // vários selecionados). Com 1 país só, isso se comporta exatamente como
+  // um ranking normal por pontuação.
+  function pickAcrossCountries(pool, limit) {
+    const scored = pool.map((f) => ({ ...f, score: scoreFixture(f, answers) }));
+    const byCountry = {};
+    scored.forEach((f) => {
+      (byCountry[f.country] = byCountry[f.country] || []).push(f);
+    });
+    Object.values(byCountry).forEach((arr) => arr.sort((a, b) => b.score - a.score || a.date - b.date));
+
+    const countryKeys = Object.keys(byCountry);
+    const selected = [];
+    let round = 0;
+    while (selected.length < limit) {
+      let addedThisRound = false;
+      for (const country of countryKeys) {
+        if (selected.length >= limit) break;
+        const candidate = byCountry[country][round];
+        if (candidate) {
+          selected.push(candidate);
+          addedThisRound = true;
+        }
+      }
+      if (!addedThisRound) break;
+      round++;
+    }
+    return selected;
+  }
+
   let ranked;
   if (priority === "stadiums") {
-    // "Mais estádios": prioriza variedade de estádios/cidades em vez de
-    // repetir a mesma cidade — pega o melhor jogo de cada cidade antes
-    // de considerar um segundo jogo na mesma cidade.
+    // "Mais estádios": primeiro reduz a 1 melhor jogo por cidade (evita
+    // repetir a mesma cidade), e só então aplica o rodízio por país em
+    // cima disso — assim garante variedade de cidade E de país juntas.
     const bestByCity = {};
     candidates.forEach((f) => {
       const current = bestByCity[f.city];
       if (!current || scoreFixture(f, answers) > scoreFixture(current, answers)) bestByCity[f.city] = f;
     });
-    ranked = Object.values(bestByCity)
-      .map((f) => ({ ...f, score: scoreFixture(f, answers) }))
-      .sort((a, b) => b.score - a.score || a.date - b.date)
-      .slice(0, maxGames);
+    ranked = pickAcrossCountries(Object.values(bestByCity), maxGames);
   } else {
-    ranked = candidates
-      .map((f) => ({ ...f, score: scoreFixture(f, answers) }))
-      .sort((a, b) => b.score - a.score || a.date - b.date)
-      .slice(0, maxGames);
+    ranked = pickAcrossCountries(candidates, maxGames);
   }
   ranked.sort((a, b) => a.date - b.date);
 
