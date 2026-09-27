@@ -615,7 +615,12 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
       }
       setAnswers((a) => ({ ...a, userId: data.user?.id }));
       setShowLoginModal(false);
-      onNext();
+      // Não chama onNext() aqui de propósito: o listener de autenticação
+      // global (em App()) já detecta esse mesmo login e decide pra onde
+      // ir (Meus Roteiros ou o questionário, conforme a intenção salva).
+      // Chamar onNext() aqui de novo lia o mesmo localStorage uma segunda
+      // vez, já vazio, e sempre caía no questionário por engano — mesmo
+      // quando a pessoa só queria entrar na conta.
     } catch (e) {
       setLoginError("Não foi possível conectar com o servidor de contas. Tente novamente.");
       console.error(e);
