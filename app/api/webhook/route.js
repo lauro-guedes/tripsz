@@ -37,7 +37,11 @@ export async function POST(request) {
       const supabase = supabaseAdmin();
       const { error } = await supabase
         .from("subscriptions")
-        .update({ status: mapSubscriptionStatus(preapproval.status), updated_at: new Date().toISOString() })
+        .update({
+          status: mapSubscriptionStatus(preapproval.status),
+          payment_method_id: preapproval.payment_method_id || null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("mercadopago_preapproval_id", preapprovalId);
       if (error) console.error("Erro ao atualizar status da assinatura:", error.message);
 
