@@ -1,4 +1,7 @@
 import { searchVenues, searchTeams } from "@/lib/footballApi";
+import { supabaseAdmin } from "@/lib/supabase";
+
+const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
 
 // Testamos ao vivo: a busca de ESTÁDIO da API-Football (/venues) não
 // acha vários apelidos populares (Anfield, Old Trafford, San Siro,
@@ -46,6 +49,8 @@ function mapGames(fixtures) {
     apiFixtureId: f.fixture.id,
     home: f.teams.home.name,
     away: f.teams.away.name,
+    homeTeamId: f.teams.home.id,
+    awayTeamId: f.teams.away.id,
     homeLogo: f.teams.home.logo,
     awayLogo: f.teams.away.logo,
     homeScore: f.goals.home,
@@ -53,6 +58,58 @@ function mapGames(fixtures) {
     date: f.fixture.date,
     competition: f.league.name,
     country: f.league.country,
+  }));
+}
+
+// Cache que cresce sozinho: se já temos o escudo desse time guardado no
+// Supabase Storage (dos 30 fixos ou de uma busca anterior), usa nossa
+// cópia. Senão, baixa da API-Football agora e guarda pra próxima vez —
+// assim qualquer time que apareça numa busca de Registrar Jogo fica
+// protegido depois da primeira vez que alguém o encontrar.
+async function ensureLogoCached(teamId, originalUrl) {
+  if (!teamId || !originalUrl) return originalUrl;
+  const ourUrl = `${TEAM_LOGO_BUCKET_URL}/${teamId}.png`;
+  try {
+    const head = await fetch(ourUrl, { method: "HEAD" });
+    if (head.ok) return ourUrl;
+  } catch {
+    // segue pro download abaixo
+  }
+  try {
+    const res = await fetch(originalUrl);
+    if (!res.ok) return originalUrl;
+    const buffer = await res.arrayBuffer();
+    const supabase = supabaseAdmin();
+    const { error } = await supabase.storage.from("team-logos").upload(`${teamId}.png`, buffer, { contentType: "image/png", upsert: true });
+    if (error) {
+      console.error("Erro ao guardar escudo no cache:", error.message);
+      return originalUrl;
+    }
+    return ourUrl;
+  } catch (e) {
+    console.error("Erro ao baixar escudo pra cachear:", e.message);
+    return originalUrl;
+  }
+}
+
+// Processa cada time só UMA vez por busca (mesmo que apareça em vários
+// jogos), pra não repetir download à toa.
+async function cacheGameLogos(games) {
+  const urlByTeamId = new Map();
+  games.forEach((g) => {
+    if (g.homeTeamId) urlByTeamId.set(g.homeTeamId, g.homeLogo);
+    if (g.awayTeamId) urlByTeamId.set(g.awayTeamId, g.awayLogo);
+  });
+
+  const cachedUrlByTeamId = new Map();
+  for (const [teamId, url] of urlByTeamId) {
+    cachedUrlByTeamId.set(teamId, await ensureLogoCached(teamId, url));
+  }
+
+  return games.map((g) => ({
+    ...g,
+    homeLogo: cachedUrlByTeamId.get(g.homeTeamId) || g.homeLogo,
+    awayLogo: cachedUrlByTeamId.get(g.awayTeamId) || g.awayLogo,
   }));
 }
 
@@ -176,6 +233,8 @@ export async function GET(request) {
     if (!matchedVenue) {
       return Response.json({ found: false, reason: "sem_jogos_no_periodo", venue: lastVenueTried });
     }
+
+    games = await cacheGameLogos(games);
 
     return Response.json({
       found: true,
