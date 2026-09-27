@@ -210,14 +210,14 @@ function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
 /* Shared wizard chrome */
 const WIZARD_TOTAL = 6;
 
-function WizardTopBar({ step, onExit }) {
+function WizardTopBar({ step, onExit, onLogoClick }) {
   const isMobile = useIsMobile();
   const pct = Math.round((step / WIZARD_TOTAL) * 100);
   if (isMobile) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 0, alignItems: "flex-start", width: "100%" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", width: "100%", background: "#fff" }}>
-          <Wordmark height={20} />
+          <Wordmark height={20} onClick={onLogoClick} />
           <p onClick={onExit} style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, cursor: "pointer", margin: 0 }}>Sair</p>
         </div>
         <div style={{ height: 1, background: BORDER, width: "100%" }} />
@@ -227,7 +227,7 @@ function WizardTopBar({ step, onExit }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, alignItems: "flex-start", width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 80px", width: "100%" }}>
-        <Wordmark />
+        <Wordmark onClick={onLogoClick} />
         <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", width: 360 }}>
           <div style={{ display: "flex", justifyContent: "space-between", width: "100%", fontFamily: FONT_MONO, fontSize: 12 }}>
             <span style={{ color: GREEN, textTransform: "uppercase" }}>Passo {step} de {WIZARD_TOTAL}</span>
@@ -692,7 +692,7 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", width: "100%" }}>
-          <Wordmark />
+          <Wordmark onClick={onBack} />
           <p onClick={onBack} style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 12 : 14, color: MUTED, cursor: "pointer", margin: 0 }}>{isMobile ? "Sair" : "Sair do questionário"}</p>
         </div>
         <div style={{ height: 1, background: BORDER, width: "100%" }} />
@@ -708,16 +708,16 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
           <MobileProgress step={1} />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", width: 800 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Passo 1 de 5</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Passo 1 de {WIZARD_TOTAL}</p>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                {[1, 2, 3, 4, 5].map((n) => (
+                {Array.from({ length: WIZARD_TOTAL }, (_, i) => i + 1).map((n) => (
                   <div key={n} style={{ background: n === 1 ? GREEN_BUTTON2 : BORDER, width: 24, height: 24, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: n === 1 ? TEXT : MUTED, margin: 0 }}>{n}</p>
                   </div>
                 ))}
               </div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>20% Concluído</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>{Math.round((1 / WIZARD_TOTAL) * 100)}% Concluído</p>
             </div>
           </div>
         )}
@@ -931,7 +931,7 @@ const COUNTRIES_BY_CONTINENT = {
   sa: ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia"],
 };
 
-function StepDestino({ answers, setAnswers, onNext, onBack }) {
+function StepDestino({ answers, setAnswers, onNext, onBack, onHome }) {
   const isMobile = useIsMobile();
   const continents = answers.continents || [];
   const countries = answers.countries || [];
@@ -951,7 +951,7 @@ function StepDestino({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={2} onExit={onBack} />
+      <WizardTopBar step={2} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 40, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Para onde você quer ir?</p>
@@ -1008,7 +1008,7 @@ const TEAMS_BY_LEAGUE = [
 /* ============================================================
    3.5 TIMES FAVORITOS (node 225:9126) — novo passo, entre Destino e Datas
    ============================================================ */
-function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
+function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome }) {
   const isMobile = useIsMobile();
   const favoriteTeams = answers.favoriteTeams || [];
   const [search, setSearch] = useState("");
@@ -1061,7 +1061,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={3} onExit={onBack} />
+      <WizardTopBar step={3} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 32, alignItems: "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: "center", textAlign: "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quais são seus times favoritos?</p>
@@ -1146,7 +1146,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
 /* ============================================================
    4. DATAS (node 95:546)
    ============================================================ */
-function StepDatas({ answers, setAnswers, onNext, onBack }) {
+function StepDatas({ answers, setAnswers, onNext, onBack, onHome }) {
   const isMobile = useIsMobile();
   const flexLevel = answers.flexLevel || "fixed";
   const FLEX_OPTS = [{ id: "fixed", label: "Datas fixas" }, { id: "some", label: "Posso variar alguns dias" }, { id: "flex", label: "Bastante flexibilidade" }];
@@ -1163,7 +1163,7 @@ function StepDatas({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={4} onExit={onBack} />
+      <WizardTopBar step={4} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 56, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quando você quer viajar?</p>
@@ -1243,7 +1243,7 @@ function Counter({ label, value, onChange }) {
   );
 }
 
-function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
+function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHome }) {
   const isMobile = useIsMobile();
   const adults = answers.adults ?? 2;
   const kids = answers.kids ?? 0;
@@ -1262,7 +1262,7 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={5} onExit={onBack} />
+      <WizardTopBar step={5} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quem vai e qual o orçamento total da viagem?</p>
@@ -1309,7 +1309,7 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
 /* ============================================================
    6. PREFERÊNCIAS (node 95:681)
    ============================================================ */
-function StepPreferencias({ answers, setAnswers, onNext, onBack }) {
+function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome }) {
   const isMobile = useIsMobile();
   const priority = answers.priority || "classics";
   const pace = answers.pace || "spaced";
@@ -1318,7 +1318,7 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={6} onExit={onBack} />
+      <WizardTopBar step={6} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Como quer cruzar as partidas?</p>
@@ -4289,11 +4289,11 @@ export default function App() {
       <FontImports />
       {screen === "landing" && <LandingPage onStart={() => { setPostLoginTarget("destino"); setScreen("account"); }} onLogin={() => { setPostLoginTarget("roteiros"); setOpenLoginModal(true); setScreen("account"); }} />}
       {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} openLogin={openLoginModal} />}
-      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} />}
-      {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} />}
-      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} />}
-      {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} />}
-      {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} />}
+      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} onHome={restart} />}
+      {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} onHome={restart} />}
+      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} onHome={restart} />}
+      {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} />}
+      {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} />}
       {screen === "loading" && <LoadingScreen onDone={handleSaveTrip} />}
       {screen === "resultado" && <ResultadoRoteiro trip={trip} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
