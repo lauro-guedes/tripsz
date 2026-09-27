@@ -1012,6 +1012,9 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
   const isMobile = useIsMobile();
   const favoriteTeams = answers.favoriteTeams || [];
   const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   const toggleTeam = (team) =>
     setAnswers((a) => ({
@@ -1019,10 +1022,42 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
       favoriteTeams: favoriteTeams.includes(team) ? favoriteTeams.filter((t) => t !== team) : [...favoriteTeams, team],
     }));
 
+  // Autocomplete de verdade: busca times reais na API (não só os ~30 já
+  // conhecidos), com debounce pra não gastar cota a cada tecla.
+  useEffect(() => {
+    if (search.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    setLoadingSuggestions(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/teams/suggest?q=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions(true);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const pickSuggestion = (name) => {
+    toggleTeam(name);
+    setSearch("");
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
+  // A grade de times por liga fica sempre visível (times pré-conhecidos
+  // dos países escolhidos no passo anterior) — a busca serve só pra
+  // adicionar OUTROS times que não estão nessa lista fixa, sem esconder
+  // a grade ou dar a impressão de que as escolhas anteriores sumiram.
   const selectedCountries = answers.countries || [];
-  const groups = TEAMS_BY_LEAGUE.filter((g) => selectedCountries.length === 0 || selectedCountries.includes(g.country))
-    .map((g) => ({ ...g, teams: g.teams.filter((t) => t.toLowerCase().includes(search.toLowerCase())) }))
-    .filter((g) => g.teams.length > 0);
+  const groups = TEAMS_BY_LEAGUE.filter((g) => selectedCountries.length === 0 || selectedCountries.includes(g.country));
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -1033,16 +1068,53 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack }) {
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 720, margin: 0 }}>Selecione os clubes que você quer acompanhar — montaremos roteiros personalizados para os jogos deles.</p>
         </div>
         {isMobile && <MobileProgress step={3} />}
-        <div style={{ width: isMobile ? "100%" : 600 }}>
+
+        <div style={{ position: "relative", width: isMobile ? "100%" : 600 }}>
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar time..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Buscar qualquer time (ex: Fiorentina)..."
+              style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }}
+            />
             <Icon name="search" size={18} color={MUTED} />
           </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 40, width: isMobile ? "100%" : 900 }}>
-          {groups.length === 0 && (
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textAlign: "center" }}>Nenhum time encontrado. Isso é opcional — pode pular pra frente sem escolher nenhum.</p>
+          {showSuggestions && search.trim().length >= 3 && (
+            <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 20, overflow: "hidden" }}>
+              {loadingSuggestions && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "12px 16px" }}>Buscando...</p>
+              )}
+              {!loadingSuggestions && suggestions.length === 0 && (
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "12px 16px" }}>Nenhum time encontrado com esse nome.</p>
+              )}
+              {!loadingSuggestions && suggestions.map((s) => (
+                <div key={s.name} onMouseDown={() => pickSuggestion(s.name)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                  <TeamBadge name={s.name} url={s.logo} size={24} />
+                  <div>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                    {s.country && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.country}</p>}
+                  </div>
+                  {favoriteTeams.includes(s.name) && <Check size={16} color={GREEN} style={{ marginLeft: "auto" }} />}
+                </div>
+              ))}
+            </div>
           )}
+        </div>
+
+        {favoriteTeams.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", width: isMobile ? "100%" : 900 }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0, width: "100%", textAlign: isMobile ? "left" : "center" }}>Times selecionados ({favoriteTeams.length})</p>
+            {favoriteTeams.map((team) => (
+              <div key={team} onClick={() => toggleTeam(team)} style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{team}</p>
+                <X size={12} color={GREEN} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 40, width: isMobile ? "100%" : 900 }}>
           {groups.map((g) => (
             <div key={g.league} style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1551,8 +1623,27 @@ function buildTrip(answers) {
    ============================================================ */
 function LoadingScreen({ onDone }) {
   const isMobile = useIsMobile();
-  const [activeIdx] = useState(2);
+  const [activeIdx, setActiveIdx] = useState(0);
   const lines = ["Cruzando calendários por país e data...", "Listando partidas possíveis...", "Organizando sequência de cidades...", "Preparando o roteiro..."];
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Mostra cada etapa por um tempinho, uma de cada vez, e só avança
+      // pra tela seguinte (chamando a lógica de verdade, que salva o
+      // roteiro) depois que a última etapa terminar de aparecer.
+      for (let i = 0; i < lines.length; i++) {
+        if (cancelled) return;
+        setActiveIdx(i);
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      }
+      if (!cancelled) onDone();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "0 16px" : 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 32 : 48, alignItems: "center", width: "100%" }}>
@@ -1569,9 +1660,6 @@ function LoadingScreen({ onDone }) {
             </div>
           ))}
         </div>
-        <div onClick={onDone} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 8, cursor: "pointer" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Pular (demo) →</p>
-        </div>
       </div>
     </div>
   );
@@ -1587,13 +1675,20 @@ function formatDateBadge(date) {
   return `${String(date.getDate()).padStart(2, "0")} ${MESES_ABREV[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
+function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
-  const handleNavItem = (id) => {
-    sessionStorage.setItem("tripsz_scroll_target", id);
-    onRestart();
-  };
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase.auth.getUser();
+      setUserName(data.user?.user_metadata?.name || data.user?.email || "");
+      setUserAvatar(data.user?.user_metadata?.avatar_url || null);
+    })();
+  }, []);
 
   const summaryCard = (
     <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
@@ -1638,7 +1733,7 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <TopNavPublic onStart={onRestart} onHome={onRestart} onNavItem={handleNavItem} active="Roteiros" />
+      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
       <div style={{ background: GOLD_BG, borderTop: `1px solid ${GOLD_BORDER}`, borderBottom: `1px solid ${GOLD_BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? `12px ${px}` : `16px ${px}` }}>
         <AlertTriangle size={18} color={GOLD} style={{ flexShrink: 0 }} />
         <p style={{ flex: 1, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 11 : 14, color: GOLD, margin: 0 }}>
@@ -1698,6 +1793,7 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onRestart }) {
 
         {!isMobile && <div style={{ width: 420, flexShrink: 0 }}>{summaryCard}</div>}
       </div>
+      <AuthedFooter />
     </div>
   );
 }
@@ -4199,7 +4295,7 @@ export default function App() {
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} />}
       {screen === "loading" && <LoadingScreen onDone={handleSaveTrip} />}
-      {screen === "resultado" && <ResultadoRoteiro trip={trip} onHireConsultoria={() => setScreen("checkout")} onRestart={restart} />}
+      {screen === "resultado" && <ResultadoRoteiro trip={trip} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
