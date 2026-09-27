@@ -17,11 +17,16 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "signal iduna park": "Borussia Dortmund",
   "westfalenstadion": "Borussia Dortmund",
   "mineirao": "Cruzeiro",
-  "mineirão": "Cruzeiro",
   "itaquerao": "Corinthians",
-  "itaquerão": "Corinthians",
   "ali sami yen": "Galatasaray",
 };
+
+// A API-Football rejeita caracteres acentuados na busca de estádio
+// ("ã", "ç" etc não passam na validação deles) — removemos os acentos
+// antes de mandar pra eles, só pra essa chamada específica.
+function stripDiacritics(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
 async function footballFetchRaw(path, params) {
   const url = new URL("https://v3.football.api-sports.io" + path);
@@ -107,19 +112,32 @@ export async function GET(request) {
     // conhecido(s) quando possível, na ordem de prioridade.
     let candidates = [];
 
-    const nicknameTeam = STADIUM_NICKNAME_TO_TEAM[rawStadium.toLowerCase()];
+    const nicknameTeam = STADIUM_NICKNAME_TO_TEAM[stripDiacritics(rawStadium.toLowerCase())];
     if (nicknameTeam) {
       const r = await venueFromTeamName(nicknameTeam);
       if (r) candidates.push(r);
     }
 
-    const directVenues = await searchVenues(rawStadium);
-    directVenues.slice(0, 3).forEach((v) => candidates.push({ venue: v, teamId: null }));
+    // Só faz a busca direta de estádio se o apelido não resolveu — evita
+    // gastar uma chamada à toa, e evita que um erro aqui (ex: acento
+    // rejeitado pela API) derrube um resultado que já tínhamos achado.
+    if (candidates.length === 0) {
+      try {
+        const directVenues = await searchVenues(stripDiacritics(rawStadium));
+        directVenues.slice(0, 3).forEach((v) => candidates.push({ venue: v, teamId: null }));
+      } catch (e) {
+        console.error("Busca direta de estádio falhou:", e.message);
+      }
+    }
 
     if (candidates.length === 0) {
       // Último recurso: talvez a pessoa tenha digitado o nome de um time.
-      const r = await venueFromTeamName(rawStadium);
-      if (r) candidates.push(r);
+      try {
+        const r = await venueFromTeamName(stripDiacritics(rawStadium));
+        if (r) candidates.push(r);
+      } catch (e) {
+        console.error("Busca por nome de time (último recurso) falhou:", e.message);
+      }
     }
 
     if (candidates.length === 0) {
