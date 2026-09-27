@@ -935,9 +935,19 @@ function StepDestino({ answers, setAnswers, onNext, onBack }) {
   const isMobile = useIsMobile();
   const continents = answers.continents || [];
   const countries = answers.countries || [];
+  const [error, setError] = useState(null);
   const toggleContinent = (id) => setAnswers((a) => ({ ...a, continents: continents.includes(id) ? continents.filter((x) => x !== id) : [...continents, id] }));
   const toggleCountry = (c) => setAnswers((a) => ({ ...a, countries: countries.includes(c) ? countries.filter((x) => x !== c) : [...countries, c] }));
   const availableCountries = continents.flatMap((id) => COUNTRIES_BY_CONTINENT[id] || []);
+
+  const handleNext = () => {
+    if (countries.length === 0) {
+      setError("Escolha ao menos um país antes de continuar.");
+      return;
+    }
+    setError(null);
+    onNext();
+  };
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -970,8 +980,9 @@ function StepDestino({ answers, setAnswers, onNext, onBack }) {
             </div>
           </>
         )}
+        {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, textAlign: "center" }}>{error}</p>}
       </div>
-      <WizardBottomBar onBack={onBack} onNext={onNext} mutedBack />
+      <WizardBottomBar onBack={onBack} onNext={handleNext} mutedBack />
     </div>
   );
 }
@@ -1067,6 +1078,16 @@ function StepDatas({ answers, setAnswers, onNext, onBack }) {
   const isMobile = useIsMobile();
   const flexLevel = answers.flexLevel || "fixed";
   const FLEX_OPTS = [{ id: "fixed", label: "Datas fixas" }, { id: "some", label: "Posso variar alguns dias" }, { id: "flex", label: "Bastante flexibilidade" }];
+  const [error, setError] = useState(null);
+
+  const handleNext = () => {
+    if (!answers.dateStart || !answers.dateEnd) {
+      setError("Escolha a data de ida e a data de volta antes de continuar.");
+      return;
+    }
+    setError(null);
+    onNext();
+  };
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -1123,8 +1144,9 @@ function StepDatas({ answers, setAnswers, onNext, onBack }) {
             })}
           </div>
         </div>
+        {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, textAlign: isMobile ? "left" : "center" }}>{error}</p>}
       </div>
-      <WizardBottomBar onBack={onBack} onNext={onNext} />
+      <WizardBottomBar onBack={onBack} onNext={handleNext} />
     </div>
   );
 }
@@ -1155,6 +1177,16 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
   const kids = answers.kids ?? 0;
   const budget = answers.budget;
   const budgetOpts = ["R$ 5.000", "R$ 10.000", "R$ 20.000", "R$ 30.000+"];
+  const [error, setError] = useState(null);
+
+  const handleNext = () => {
+    if (!answers.budget && !answers.budgetCustom) {
+      setError("Escolha um orçamento (ou digite um valor) antes de continuar.");
+      return;
+    }
+    setError(null);
+    onNext();
+  };
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -1195,8 +1227,9 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack }) {
             </div>
           </div>
         </div>
+        {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, textAlign: isMobile ? "left" : "center" }}>{error}</p>}
       </div>
-      <WizardBottomBar onBack={onBack} onNext={onNext} mutedBack />
+      <WizardBottomBar onBack={onBack} onNext={handleNext} mutedBack />
     </div>
   );
 }
