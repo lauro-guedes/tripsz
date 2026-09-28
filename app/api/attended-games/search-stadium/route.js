@@ -77,6 +77,7 @@ function mapGames(fixtures) {
     date: f.fixture.date,
     competition: f.league.name,
     country: f.league.country,
+    leagueId: f.league.id,
   }));
 }
 
@@ -221,6 +222,29 @@ export async function GET(request) {
     if (!matchedGames) {
       return Response.json({ found: false, reason: "sem_jogos_no_periodo" });
     }
+
+    // A pessoa pode ter visto um jogo de OUTRO clube no mesmo estádio —
+    // estádios não pertencem a um time só (o Morumbi recebe majoritariamente
+    // o São Paulo, mas às vezes hospeda jogos de outros clubes também).
+    // Agora que sabemos o ID real do estádio (confirmado pelos jogos do
+    // primeiro time), buscamos de novo por estádio + competição, sem
+    // travar num time só, pra pegar esses outros jogos.
+    const leagueIds = [...new Set(matchedGames.map((g) => g.leagueId).filter(Boolean))];
+    const seenIds = new Set(matchedGames.map((g) => g.apiFixtureId));
+    for (const leagueId of leagueIds) {
+      try {
+        const extra = await footballFetchRaw("/fixtures", { venue: matchedVenueInfo.id, league: leagueId, season });
+        for (const f of extra) {
+          if (!seenIds.has(f.fixture.id)) {
+            seenIds.add(f.fixture.id);
+            matchedGames.push(mapGames([f])[0]);
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao expandir busca por estádio+competição:", e.message);
+      }
+    }
+    matchedGames.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const games = await cacheGameLogos(matchedGames);
 
