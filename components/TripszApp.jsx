@@ -3290,7 +3290,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                         </div>
                         <div onClick={() => toggleGame(g.apiFixtureId)} style={{ background: selected ? BORDER : GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: "pointer", flexShrink: 0 }}>
                           {selected && <Check size={14} color={MUTED} />}
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{selected ? "Adicionado ✓" : "+ Adicionar"}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{selected ? "Adicionado" : "+ Adicionar"}</p>
                         </div>
                       </div>
                     );
