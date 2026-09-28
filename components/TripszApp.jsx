@@ -64,12 +64,12 @@ function useIsMobile() {
 // Barra de progresso "Passo X de 5 / Y% Concluído" usada no topo de cada
 // tela do questionário no mobile (Figma 125:129, 125:196, 125:252, etc.),
 // substituindo os 5 círculos numerados do desktop, que não cabem numa tela estreita.
-function MobileProgress({ step }) {
-  const pct = step * 20;
+function MobileProgress({ step, total = WIZARD_TOTAL }) {
+  const pct = Math.round((step / total) * 100);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", padding: "0 16px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Passo {step} de 5</p>
+        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Passo {step} de {total}</p>
         <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, margin: 0 }}>{pct}% Concluído</p>
       </div>
       <div style={{ background: BORDER, height: 6, borderRadius: 100, width: "100%", overflow: "hidden" }}>
@@ -220,9 +220,9 @@ function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
 /* Shared wizard chrome */
 const WIZARD_TOTAL = 6;
 
-function WizardTopBar({ step, onExit, onLogoClick }) {
+function WizardTopBar({ step, onExit, onLogoClick, total = WIZARD_TOTAL }) {
   const isMobile = useIsMobile();
-  const pct = Math.round((step / WIZARD_TOTAL) * 100);
+  const pct = Math.round((step / total) * 100);
   if (isMobile) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 0, alignItems: "flex-start", width: "100%" }}>
@@ -240,7 +240,7 @@ function WizardTopBar({ step, onExit, onLogoClick }) {
         <Wordmark onClick={onLogoClick} />
         <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", width: 360 }}>
           <div style={{ display: "flex", justifyContent: "space-between", width: "100%", fontFamily: FONT_MONO, fontSize: 12 }}>
-            <span style={{ color: GREEN, textTransform: "uppercase" }}>Passo {step} de {WIZARD_TOTAL}</span>
+            <span style={{ color: GREEN, textTransform: "uppercase" }}>Passo {step} de {total}</span>
             <span style={{ color: MUTED }}>{pct}% Concluído</span>
           </div>
           <div style={{ width: "100%", height: 4, borderRadius: 2, background: BORDER, overflow: "hidden" }}>
@@ -567,6 +567,117 @@ function LandingPage({ onStart, onLogin }) {
 /* ============================================================
    2. CRIAR CONTA (node 95:489)
    ============================================================ */
+/* --- Modal de login independente — funciona sobre QUALQUER tela (landing,
+   questionário etc), sem precisar trocar a tela de fundo pra "account". --- */
+function LoginModal({ onClose }) {
+  const isMobile = useIsMobile();
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+
+  const fieldStyle = (invalid) => ({
+    width: "100%",
+    background: "#fff",
+    border: `1px solid ${invalid ? "#dc2626" : BORDER}`,
+    borderRadius: 12,
+    height: 56,
+    padding: "0 16px",
+    fontFamily: FONT_BODY,
+    fontSize: 16,
+    color: TEXT,
+    outline: "none",
+  });
+
+  const handleLogin = async () => {
+    setLoginError(null);
+    if (!loginEmail || !loginPassword) {
+      setLoginError("Preencha e-mail e senha para continuar.");
+      return;
+    }
+    setLoginLoading(true);
+    try {
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+      if (error) {
+        setLoginError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : error.message);
+        return;
+      }
+      onClose();
+      // Não navega daqui de propósito: o listener de autenticação global
+      // (em App()) já detecta esse login e decide pra onde ir, conforme
+      // a intenção salva (Meus Roteiros, questionário etc).
+    } catch (e) {
+      setLoginError("Não foi possível conectar com o servidor de contas. Tente novamente.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoginError(null);
+    const supabase = supabaseBrowser();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) setLoginError(error.message);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "#0f172a", opacity: 0.56 }} />
+      <div style={{ position: "relative", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: isMobile ? "calc(100% - 32px)" : 400, maxWidth: 400, display: "flex", flexDirection: "column", gap: 20, boxShadow: "0px 12px 16px rgba(15,23,42,0.1)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso</p>
+          <div onClick={onClose} style={{ background: BG, border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <X size={16} color={TEXT} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+          <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
+            <Icon name="google" size={20} color={TEXT} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Entrar com Google</p>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", width: "100%" }}>
+            <div style={{ flex: 1, height: 1, background: BORDER }} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>ou</p>
+            <div style={{ flex: 1, height: 1, background: BORDER }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>E-mail</p>
+            <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="nome@exemplo.com" style={fieldStyle(false)} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Senha</p>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showLoginPassword ? "text" : "password"}
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
+                placeholder="••••••••"
+                style={{ ...fieldStyle(false), paddingRight: 48 }}
+              />
+              <div onClick={() => setShowLoginPassword((v) => !v)} style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: MUTED, display: "flex" }}>
+                {showLoginPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </div>
+            </div>
+          </div>
+          {loginError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{loginError}</p>}
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Esqueci minha senha</p>
+        </div>
+
+        <div onClick={loginLoading ? undefined : handleLogin} style={{ background: GREEN_BUTTON2, opacity: loginLoading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: loginLoading ? "default" : "pointer" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{loginLoading ? "Entrando..." : "Entrar"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
   const set = (k, v) => setAnswers((a) => ({ ...a, [k]: v }));
   const [loading, setLoading] = useState(false);
@@ -600,44 +711,6 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
 
   const [showLoginModal, setShowLoginModal] = useState(!!openLogin);
   const isMobile = useIsMobile();
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState(null);
-
-  const handleLogin = async () => {
-    setLoginError(null);
-    if (!loginEmail || !loginPassword) {
-      setLoginError("Preencha e-mail e senha para continuar.");
-      return;
-    }
-    setLoginLoading(true);
-    try {
-      const supabase = supabaseBrowser();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
-      if (error) {
-        setLoginError(error.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : error.message);
-        return;
-      }
-      setAnswers((a) => ({ ...a, userId: data.user?.id }));
-      setShowLoginModal(false);
-      // Não chama onNext() aqui de propósito: o listener de autenticação
-      // global (em App()) já detecta esse mesmo login e decide pra onde
-      // ir (Meus Roteiros ou o questionário, conforme a intenção salva).
-      // Chamar onNext() aqui de novo lia o mesmo localStorage uma segunda
-      // vez, já vazio, e sempre caía no questionário por engano — mesmo
-      // quando a pessoa só queria entrar na conta.
-    } catch (e) {
-      setLoginError("Não foi possível conectar com o servidor de contas. Tente novamente.");
-      console.error(e);
-    } finally {
-      setLoginLoading(false);
-    }
-  };
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -861,65 +934,7 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
         </div>
       </div>
 
-      {showLoginModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div onClick={() => setShowLoginModal(false)} style={{ position: "absolute", inset: 0, background: "#0f172a", opacity: 0.56 }} />
-          <div style={{ position: "relative", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: isMobile ? "calc(100% - 32px)" : 400, maxWidth: 400, display: "flex", flexDirection: "column", gap: 20, boxShadow: "0px 12px 16px rgba(15,23,42,0.1)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso</p>
-              <div onClick={() => setShowLoginModal(false)} style={{ background: BG, border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <X size={16} color={TEXT} />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-              <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
-                <Icon name="google" size={20} color={TEXT} />
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Entrar com Google</p>
-              </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", width: "100%" }}>
-                <div style={{ flex: 1, height: 1, background: BORDER }} />
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>ou</p>
-                <div style={{ flex: 1, height: 1, background: BORDER }} />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>E-mail</p>
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="nome@exemplo.com"
-                  style={fieldStyle(false)}
-                />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Senha</p>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type={showLoginPassword ? "text" : "password"}
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
-                    placeholder="••••••••"
-                    style={{ ...fieldStyle(false), paddingRight: 48 }}
-                  />
-                  <div onClick={() => setShowLoginPassword((v) => !v)} style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: MUTED, display: "flex" }}>
-                    {showLoginPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </div>
-                </div>
-              </div>
-              {loginError && (
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{loginError}</p>
-              )}
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Esqueci minha senha</p>
-            </div>
-
-            <div onClick={loginLoading ? undefined : handleLogin} style={{ background: GREEN_BUTTON2, opacity: loginLoading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: loginLoading ? "default" : "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{loginLoading ? "Entrando..." : "Entrar"}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
 
       <WizardBottomBar
         onBack={onBack}
@@ -946,7 +961,7 @@ const COUNTRIES_BY_CONTINENT = {
   sa: ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia"],
 };
 
-function StepDestino({ answers, setAnswers, onNext, onBack, onHome }) {
+function StepDestino({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const continents = answers.continents || [];
   const countries = answers.countries || [];
@@ -966,13 +981,13 @@ function StepDestino({ answers, setAnswers, onNext, onBack, onHome }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={2} onExit={onBack} onLogoClick={onHome} />
+      <WizardTopBar step={2 - stepOffset} total={WIZARD_TOTAL - stepOffset} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 40, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Para onde você quer ir?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Escolha um ou mais continentes — depois você pode refinar por país de sua preferência.</p>
         </div>
-        {isMobile && <MobileProgress step={2} />}
+        {isMobile && <MobileProgress step={2 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 16, justifyContent: "center", width: "100%" }}>
           {[{ id: "sa", label: "América do Sul" }, { id: "eu", label: "Europa" }].map((c) => {
             const active = continents.includes(c.id);
@@ -1023,7 +1038,7 @@ const TEAMS_BY_LEAGUE = [
 /* ============================================================
    3.5 TIMES FAVORITOS (node 225:9126) — novo passo, entre Destino e Datas
    ============================================================ */
-function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome }) {
+function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const favoriteTeams = answers.favoriteTeams || [];
   const [search, setSearch] = useState("");
@@ -1076,13 +1091,13 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={3} onExit={onBack} onLogoClick={onHome} />
+      <WizardTopBar step={3 - stepOffset} total={WIZARD_TOTAL - stepOffset} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 32, alignItems: "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: "center", textAlign: "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quais são seus times favoritos?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 720, margin: 0 }}>Selecione os clubes que você quer acompanhar — montaremos roteiros personalizados para os jogos deles.</p>
         </div>
-        {isMobile && <MobileProgress step={3} />}
+        {isMobile && <MobileProgress step={3 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
 
         <div style={{ position: "relative", width: isMobile ? "100%" : 600 }}>
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
@@ -1161,7 +1176,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome }) {
 /* ============================================================
    4. DATAS (node 95:546)
    ============================================================ */
-function StepDatas({ answers, setAnswers, onNext, onBack, onHome }) {
+function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const flexLevel = answers.flexLevel || "fixed";
   const FLEX_OPTS = [{ id: "fixed", label: "Datas fixas" }, { id: "some", label: "Posso variar alguns dias" }, { id: "flex", label: "Bastante flexibilidade" }];
@@ -1178,13 +1193,13 @@ function StepDatas({ answers, setAnswers, onNext, onBack, onHome }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={4} onExit={onBack} onLogoClick={onHome} />
+      <WizardTopBar step={4 - stepOffset} total={WIZARD_TOTAL - stepOffset} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 56, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quando você quer viajar?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Escolha as datas e diga o quanto pode flexibilizar</p>
         </div>
-        {isMobile && <MobileProgress step={4} />}
+        {isMobile && <MobileProgress step={4 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Datas de viagem</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: isMobile ? "100%" : 800 }}>
@@ -1258,7 +1273,7 @@ function Counter({ label, value, onChange }) {
   );
 }
 
-function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHome }) {
+function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const adults = answers.adults ?? 2;
   const kids = answers.kids ?? 0;
@@ -1277,13 +1292,13 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHome }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={5} onExit={onBack} onLogoClick={onHome} />
+      <WizardTopBar step={5 - stepOffset} total={WIZARD_TOTAL - stepOffset} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quem vai e qual o orçamento total da viagem?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Informe o número de viajantes e o orçamento total estimado para a viagem</p>
         </div>
-        {isMobile && <MobileProgress step={5} />}
+        {isMobile && <MobileProgress step={5 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : 800 }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Viajantes</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 24 }}>
@@ -1324,7 +1339,7 @@ function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHome }) {
 /* ============================================================
    6. PREFERÊNCIAS (node 95:681)
    ============================================================ */
-function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome }) {
+function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const priority = answers.priority || "classics";
   const pace = answers.pace || "spaced";
@@ -1333,13 +1348,13 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <WizardTopBar step={6} onExit={onBack} onLogoClick={onHome} />
+      <WizardTopBar step={6 - stepOffset} total={WIZARD_TOTAL - stepOffset} onExit={onBack} onLogoClick={onHome} />
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Como quer cruzar as partidas?</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Último passo - nos conte suas prioridades para cruzar partidas possíveis nos países e datas selecionados</p>
         </div>
-        {isMobile && <MobileProgress step={6} />}
+        {isMobile && <MobileProgress step={6 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Prioridade do roteiro</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isMobile ? 8 : 12, justifyContent: isMobile ? "flex-start" : "center", width: isMobile ? "100%" : 800 }}>
@@ -4513,7 +4528,11 @@ const PATH_TO_SCREEN = Object.fromEntries(Object.entries(SCREEN_TO_PATH).map(([k
 
 export default function App() {
   const [screen, setScreen] = useState("landing");
-  const [openLoginModal, setOpenLoginModal] = useState(false);
+  const [showGlobalLoginModal, setShowGlobalLoginModal] = useState(false);
+  // Quando a pessoa já está logada e começa um roteiro novo, ela pula a
+  // tela de Criar Conta — então a numeração dos passos precisa "adiantar"
+  // 1 casa (Destino vira Passo 1 em vez de Passo 2, e por aí vai).
+  const [stepOffset, setStepOffset] = useState(0);
   // Pra onde ir depois de logar: "destino" se a pessoa clicou em "Montar
   // minha viagem" (quer começar um roteiro novo), ou "roteiros" se clicou
   // em "Entrar" (só quer acessar a conta que já tem). Precisa ser guardado
@@ -4678,13 +4697,29 @@ export default function App() {
   return (
     <div style={{ width: "100%", minHeight: "100vh" }}>
       <FontImports />
-      {screen === "landing" && <LandingPage onStart={() => { setPostLoginTarget("destino"); setScreen("account"); }} onLogin={() => { setPostLoginTarget("roteiros"); setOpenLoginModal(true); setScreen("account"); }} />}
-      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} openLogin={openLoginModal} />}
-      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} onHome={restart} />}
-      {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} onHome={restart} />}
-      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} onHome={restart} />}
-      {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} />}
-      {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} />}
+      {screen === "landing" && (
+        <LandingPage
+          onStart={async () => {
+            const supabase = supabaseBrowser();
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+              setStepOffset(1);
+              setScreen("destino");
+            } else {
+              setStepOffset(0);
+              setPostLoginTarget("destino");
+              setScreen("account");
+            }
+          }}
+          onLogin={() => { setPostLoginTarget("roteiros"); setShowGlobalLoginModal(true); }}
+        />
+      )}
+      {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} />}
+      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} onHome={restart} stepOffset={stepOffset} />}
+      {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} onHome={restart} stepOffset={stepOffset} />}
+      {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} onHome={restart} stepOffset={stepOffset} />}
+      {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
+      {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "loading" && <LoadingScreen onDone={handleSaveTrip} />}
       {screen === "resultado" && <ResultadoRoteiro trip={trip} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
@@ -4701,13 +4736,14 @@ export default function App() {
         <MeusRoteiros
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
           onOpenTrip={(tripAnswers) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
             setScreen("roteiro");
           }}
           onEditTrip={(tripAnswers) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
+            setStepOffset(1);
             setScreen("destino");
           }}
         />
@@ -4716,7 +4752,7 @@ export default function App() {
         <MinhasConquistas
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "jogos" && (
@@ -4737,11 +4773,12 @@ export default function App() {
         <MeuNivel
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {showGlobalLoginModal && <LoginModal onClose={() => setShowGlobalLoginModal(false)} />}
     </div>
   );
 }
