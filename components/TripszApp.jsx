@@ -2160,12 +2160,149 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
 }
 
 /* --- Minhas Conquistas: Football Passport com estatísticas reais --- */
+// Estádios icônicos reconhecidos pra badge "Colecionador de Templos" —
+// lista curada, não exaustiva.
+const ICONIC_STADIUMS = [
+  "maracanã", "anfield", "san siro", "giuseppe meazza", "camp nou",
+  "santiago bernabéu", "old trafford", "allianz arena", "signal iduna park",
+  "estádio cívitas metropolitano", "wanda metropolitano", "emirates stadium",
+];
+
+// Pares de clássicos/derbies conhecidos, pra badge "Clássico" — em
+// qualquer ordem (casa x fora ou fora x casa).
+const KNOWN_DERBIES = [
+  ["Flamengo", "Fluminense"], ["Corinthians", "Palmeiras"], ["Real Madrid", "Barcelona"],
+  ["Inter", "Milan"], ["Boca Juniors", "River Plate"], ["Arsenal", "Tottenham"],
+  ["Liverpool", "Everton"], ["Manchester City", "Manchester United"],
+];
+
+function isDerby(home, away) {
+  return KNOWN_DERBIES.some(([a, b]) => (home === a && away === b) || (home === b && away === a));
+}
+
+const TIER_COLORS = { bronze: "#cd7f32", silver: "#c0c0c0", gold: "#ffd700" };
+
+function computeBadgeCategories(ctx) {
+  if (!ctx) return [];
+  const { allGames: games, stadiumsSet, countriesSet, favoriteTeamsSet, manualCount, apiCount, userCreatedAt } = ctx;
+  const totalGames = games.length;
+
+  const hasCompetition = (regex, countryFilter) =>
+    games.some((g) => regex.test(g.competition || "") && (!countryFilter || g.country === countryFilter));
+
+  const validDates = games.map((g) => new Date(g.date)).filter((d) => !isNaN(d));
+  const firstGameDate = validDates.length ? new Date(Math.min(...validDates)) : null;
+
+  const hasIconicStadium = games.some((g) => ICONIC_STADIUMS.some((s) => (g.stadium || "").toLowerCase().includes(s)));
+
+  const euSet = new Set(COUNTRIES_BY_CONTINENT.eu || []);
+  const saSet = new Set(COUNTRIES_BY_CONTINENT.sa || []);
+  const hasEU = [...countriesSet].some((c) => euSet.has(c));
+  const hasSA = [...countriesSet].some((c) => saSet.has(c));
+  const hasDerby = games.some((g) => isDerby(g.home, g.away));
+
+  const teamToLeague = {};
+  TEAMS_BY_LEAGUE.forEach((g) => g.teams.forEach((t) => { teamToLeague[t] = g.league; }));
+  const favoriteLeagues = new Set([...favoriteTeamsSet].map((t) => teamToLeague[t]).filter(Boolean));
+  const hasFavoriteGame = games.some((g) => favoriteTeamsSet.has(g.home) || favoriteTeamsSet.has(g.away));
+
+  // "Maratonista": jogos em 2+ países dentro de uma janela de 7 dias.
+  const sorted = games.map((g) => ({ ...g, d: new Date(g.date) })).filter((g) => !isNaN(g.d)).sort((a, b) => a.d - b.d);
+  let hasMarathon = false;
+  for (let i = 0; i < sorted.length && !hasMarathon; i++) {
+    const windowCountries = new Set();
+    for (let j = i; j < sorted.length; j++) {
+      if ((sorted[j].d - sorted[i].d) / 86400000 > 7) break;
+      if (sorted[j].country) windowCountries.add(sorted[j].country);
+    }
+    if (windowCountries.size >= 2) hasMarathon = true;
+  }
+
+  const hasWinterEU = games.some((g) => {
+    const d = new Date(g.date);
+    const m = d.getMonth() + 1;
+    return euSet.has(g.country) && (m === 12 || m === 1 || m === 2);
+  });
+  const hasNewYear = games.some((g) => {
+    const d = new Date(g.date);
+    return (d.getMonth() === 11 && d.getDate() === 31) || (d.getMonth() === 0 && d.getDate() === 1);
+  });
+
+  const isLegacy = !!(userCreatedAt && userCreatedAt < PASSPORT_LAUNCH_DATE);
+  const b = (unlocked, detail) => ({ unlocked, detail: detail || null });
+
+  return [
+    {
+      title: "Estádios & Geografia",
+      badges: [
+        { id: "est5", label: "5 Estádios", tier: "bronze", ...b(stadiumsSet.size >= 5) },
+        { id: "est15", label: "15 Estádios", tier: "silver", ...b(stadiumsSet.size >= 15) },
+        { id: "est30", label: "30 Estádios", tier: "gold", ...b(stadiumsSet.size >= 30) },
+        { id: "pais3", label: "3 Países", ...b(countriesSet.size >= 3) },
+        { id: "pais6", label: "6 Países", ...b(countriesSet.size >= 6) },
+        { id: "pais10", label: "10 Países", ...b(countriesSet.size >= 10) },
+        { id: "templos", label: "Colecionador de Templos", ...b(hasIconicStadium) },
+        { id: "continentes", label: "2 Continentes", ...b(hasEU && hasSA) },
+      ],
+    },
+    {
+      title: "Competições",
+      badges: [
+        { id: "champions", label: "Champions League", ...b(games.some((g) => g.competition === "champions") || hasCompetition(/champions league/i)) },
+        { id: "worldcup", label: "Copa do Mundo", ...b(hasCompetition(/world cup|copa do mundo/i)) },
+        { id: "premier", label: "Premier League", ...b(hasCompetition(/premier league/i)) },
+        { id: "laliga", label: "La Liga", ...b(hasCompetition(/la liga/i)) },
+        { id: "seriea", label: "Serie A", ...b(hasCompetition(/serie a/i, "Italy")) },
+        { id: "bundesliga", label: "Bundesliga", ...b(hasCompetition(/bundesliga/i)) },
+        { id: "ligue1", label: "Ligue 1", ...b(hasCompetition(/ligue 1/i)) },
+        { id: "brasileirao", label: "Brasileirão", ...b(hasCompetition(/brasileir/i) || hasCompetition(/serie a/i, "Brazil")) },
+        { id: "libertadores", label: "Libertadores", ...b(hasCompetition(/libertadores/i)) },
+        { id: "classico", label: "Clássico", ...b(hasDerby) },
+      ],
+    },
+    {
+      title: "Marcos de Jornada",
+      badges: [
+        { id: "primeiro", label: "Primeiro Jogo", ...b(totalGames >= 1, firstGameDate) },
+        { id: "jogos5", label: "5 Jogos", ...b(totalGames >= 5) },
+        { id: "jogos10", label: "10 Jogos", tier: "silver", ...b(totalGames >= 10) },
+        { id: "jogos25", label: "25 Jogos", ...b(totalGames >= 25) },
+        { id: "jogos50", label: "50 Jogos", ...b(totalGames >= 50) },
+        { id: "maratonista", label: "Maratonista", ...b(hasMarathon) },
+      ],
+    },
+    {
+      title: "Times Favoritos",
+      badges: [
+        { id: "torcedorfiel", label: "Torcedor Fiel", ...b(hasFavoriteGame) },
+        { id: "multitorcida", label: "Multi-Torcida", ...b(favoriteLeagues.size >= 3) },
+      ],
+    },
+    {
+      title: "Passport & Comunidade",
+      badges: [
+        { id: "fundador", label: "Membro Fundador", ...b(isLegacy, userCreatedAt) },
+        { id: "detetive", label: "Detetive de Campo", ...b(manualCount >= 1) },
+        { id: "verificado", label: "Verificado", ...b(apiCount >= 10) },
+      ],
+    },
+    {
+      title: "Sazonais",
+      badges: [
+        { id: "invernoeuropeu", label: "Inverno Europeu", ...b(hasWinterEU) },
+        { id: "reveillon", label: "Réveillon do Futebol", ...b(hasNewYear) },
+      ],
+    },
+  ];
+}
+
 function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const isMobile = useIsMobile();
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState(null);
   const [userId, setUserId] = useState("");
   const [stats, setStats] = useState(null);
+  const [ctx, setCtx] = useState(null);
   const [attendedGames, setAttendedGames] = useState([]);
   const [showAddGame, setShowAddGame] = useState(false);
 
@@ -2194,7 +2331,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       flexLevel: row.flex_level,
       priority: row.priority,
       pace: row.pace,
-    }).games);
+    }).games.map((g) => ({ ...g, source: "plano" })));
 
     const { data: attendedRows } = await supabase
       .from("attended_games")
@@ -2203,27 +2340,40 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const attended = attendedRows || [];
     setAttendedGames(attended);
 
-    // Jogos do roteiro planejado (mock) e jogos do passado que a pessoa
-    // registrou (reais, vindos da API ou preenchidos à mão) contam juntos
-    // pras mesmas estatísticas — os dois são partidas que ela viveu ou
-    // vai viver de verdade.
-    const stadiums = new Set([...plannedGames.map((g) => g.stadium), ...attended.map((g) => g.stadium)].filter(Boolean));
-    const countries = new Set([...source.flatMap((r) => r.countries || []), ...attended.map((g) => g.country)].filter(Boolean));
-    const competitions = new Set([
-      ...plannedGames.map((g) => g.competition || "domestica"),
-      ...attended.map((g) => g.competition || "domestica"),
-    ]);
-    const hasChampions =
-      plannedGames.some((g) => g.competition === "champions") ||
-      attended.some((g) => looksLikeChampions(g.competition));
+    // Normaliza os dois tipos de jogo (do roteiro planejado e os
+    // registrados de verdade) pro mesmo formato, pra dar pra calcular
+    // tudo em cima de uma lista só.
+    const allGames = [
+      ...plannedGames.map((g) => ({ date: g.date, stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home, away: g.away, source: "plano" })),
+      ...attended.map((g) => ({ date: new Date(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source })),
+    ];
+
+    const stadiums = new Set(allGames.map((g) => g.stadium).filter(Boolean));
+    const countries = new Set(allGames.map((g) => g.country).filter(Boolean));
+    const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
+    const hasChampions = allGames.some((g) => g.competition === "champions" || looksLikeChampions(g.competition));
+
+    // Times favoritos combinados de TODOS os roteiros que a pessoa já
+    // preencheu — hoje isso já fica salvo de verdade em trip_answers.
+    const favoriteTeams = new Set(trips.flatMap((r) => r.favorite_teams || []));
 
     setStats({
       stadiums: stadiums.size,
       countries: countries.size,
-      games: plannedGames.length + attended.length,
+      games: allGames.length,
       competitions: competitions.size,
       hasChampions,
       tripsCount: source.length,
+    });
+
+    setCtx({
+      allGames,
+      stadiumsSet: stadiums,
+      countriesSet: countries,
+      favoriteTeamsSet: favoriteTeams,
+      manualCount: attended.filter((g) => g.source === "manual").length,
+      apiCount: attended.filter((g) => g.source === "api").length,
+      userCreatedAt: user?.created_at ? new Date(user.created_at) : null,
     });
   };
 
@@ -2241,15 +2391,14 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const px = isMobile ? "16px" : "80px";
   const level = stats && stats.countries >= 5 ? "VIP GROUNDHOPPER" : stats && stats.countries >= 1 ? "GROUNDHOPPER" : "NOVATO";
 
-  const badges = stats
-    ? [
-        { title: `${stats.stadiums} Estádio${stats.stadiums === 1 ? "" : "s"}`, subtitle: "Veterano de Arena", unlocked: stats.stadiums >= 5, icon: "shieldCheck" },
-        { title: `${stats.countries} Paí${stats.countries === 1 ? "s" : "ses"}`, subtitle: "Viajante Global", unlocked: stats.countries >= 3, icon: "compass" },
-        { title: "Champions League", subtitle: "Noites de Glória", unlocked: stats.hasChampions, icon: "flame" },
-        { title: "World Cup", subtitle: "Bloqueado", unlocked: false, icon: "globe" },
-        { title: "Premier League", subtitle: "Bloqueado", unlocked: false, icon: "shieldCheck" },
-      ]
-    : [];
+  const fmtDate = (d) => {
+    if (!d) return null;
+    const dd = new Date(d);
+    if (isNaN(dd)) return null;
+    return `${String(dd.getDate()).padStart(2, "0")} ${MESES_ABREV[dd.getMonth()].charAt(0) + MESES_ABREV[dd.getMonth()].slice(1).toLowerCase()} ${dd.getFullYear()}`;
+  };
+
+  const badgeCategories = computeBadgeCategories(ctx);
 
   return (
     <div style={{ background: BG, width: "100%" }}>
@@ -2309,15 +2458,29 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       <div style={{ background: BG_ALT, padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
         <Badge gold>Galeria de Conquistas</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Badges de Viagem</p>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
-          {badges.map((b) => (
-            <div key={b.title} style={{ background: "#fff", border: `1.5px solid ${b.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: b.unlocked ? 1 : 0.6 }}>
-              <div style={{ background: b.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name={b.icon} size={20} color={b.unlocked ? GREEN : MUTED} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+          {badgeCategories.map((cat) => (
+            <div key={cat.title} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                <div style={{ background: GREEN, width: 4, height: 32, borderRadius: 2 }} />
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, textTransform: "uppercase", margin: 0 }}>{cat.title}</p>
               </div>
-              <div>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: b.unlocked ? TEXT : MUTED, margin: 0 }}>{b.title}</p>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: b.unlocked ? GREEN : MUTED, textTransform: "uppercase", margin: 0 }}>{b.unlocked ? b.subtitle : "Bloqueado"}</p>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
+                {cat.badges.map((bdg) => {
+                  const tierColor = bdg.tier ? TIER_COLORS[bdg.tier] : GREEN;
+                  const dateLabel = bdg.unlocked ? (fmtDate(bdg.detail) || "Desbloqueado") : "Bloqueado";
+                  return (
+                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? tierColor : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
+                      <div style={{ background: bdg.unlocked ? `${tierColor}1a` : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Award size={20} color={bdg.unlocked ? tierColor : MUTED} />
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: bdg.unlocked ? TEXT : MUTED, margin: 0 }}>{bdg.label}</p>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: bdg.unlocked ? tierColor : MUTED, textTransform: "uppercase", margin: 0 }}>{dateLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -4275,6 +4438,7 @@ export default function App() {
         budget: answers.budget,
         priority: answers.priority,
         pace: answers.pace,
+        favorite_teams: answers.favoriteTeams || [],
       })
       .select()
       .single();
