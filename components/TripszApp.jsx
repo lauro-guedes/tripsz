@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2 } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 
 const GREEN = "#00c853";
@@ -91,6 +91,7 @@ const RAW_ICONS = {
   flame: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M16.0005 9.50027C14.0002 7.83354 12.6667 5.66678 12 3C10.3331 4.33339 9.49972 5.66678 9.49972 7.00017C9.49972 9.00025 10.9999 10.0003 10.9999 12.0004C10.9999 12.6634 10.7365 13.2994 10.2676 13.7682C9.79868 14.2371 9.16272 14.5005 8.49961 14.5005C7.83649 14.5005 7.20053 14.2371 6.73164 13.7682C6.26274 13.2994 5.99932 12.6634 5.99932 12.0004C5.35014 12.8659 4.99921 13.9186 4.99921 15.0005C4.99921 16.8571 5.73679 18.6377 7.04969 19.9505C8.3626 21.2633 10.1433 22.0008 12 22.0008C13.8567 22.0008 15.6374 21.2633 16.9503 19.9505C18.2632 18.6377 19.0008 16.8571 19.0008 15.0005C19.0008 13.0004 18.0007 11.167 16.0005 9.50027Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   compass: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0007C17.5233 22.0007 22.0008 17.5232 22.0008 11.9999C22.0008 6.47666 17.5233 1.99915 12 1.99915C6.47672 1.99915 1.99921 6.47666 1.99921 11.9999C1.99921 17.5232 6.47672 22.0007 12 22.0007Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   chevronDown: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M4 6L8 10L12 6" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  chevronRight: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6 4L10 8L6 12" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   pen: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M22.0008 4.81839C22.0007 5.56599 21.7036 6.28294 21.1749 6.8115L7.82666 20.1603C7.59481 20.3914 7.30978 20.562 6.99659 20.6573L2.6432 21.9772C2.55675 22.0032 2.46488 22.0053 2.37733 21.9833C2.28979 21.9613 2.20983 21.916 2.14595 21.8522C2.08207 21.7885 2.03664 21.7086 2.01449 21.6211C1.99234 21.5336 1.9943 21.4417 2.02014 21.3553L3.34126 17.0033C3.43738 16.6899 3.6091 16.4048 3.84131 16.1733L17.1885 2.82457C17.7173 2.29601 18.4343 1.99911 19.182 1.99921C19.9297 1.9993 20.6467 2.29637 21.1754 2.82507C21.704 3.35377 22.0009 4.07079 22.0008 4.81839Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   fileText: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M13.9998 1.99921H6.00059C5.47021 1.99921 4.96156 2.20994 4.58652 2.58504C4.21149 2.96015 4.00079 3.46889 4.00079 3.99937V20.0006C4.00079 20.5311 4.21149 21.0399 4.58652 21.415C4.96156 21.7901 5.47021 22.0008 6.00059 22.0008H17.9994C18.5298 22.0008 19.0384 21.7901 19.4135 21.415C19.7885 21.0399 19.9992 20.5311 19.9992 20.0006V7.99969M13.9998 1.99921C14.3163 1.9987 14.6298 2.06082 14.9222 2.18199C15.2146 2.30317 15.4802 2.48101 15.7036 2.70527L19.2913 6.29355C19.5161 6.51708 19.6944 6.78294 19.8159 7.07578C19.9374 7.36862 19.9997 7.68263 19.9992 7.99969M13.9998 1.99921V6.99961C13.9998 7.26484 14.1051 7.51922 14.2927 7.70677C14.4802 7.89432 14.7345 7.99969 14.9997 7.99969L19.9992 7.99969M10.0002 8.99977H8.00039M15.9996 13.0001H8.00039M15.9996 17.0004H8.00039" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   planeTakeoff: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M1.99921 22.0001H21.9992M6.35921 17.4002L3.99921 17.0002L1.99921 13.0002L3.09921 12.4502C3.37836 12.3095 3.68661 12.2362 3.99921 12.2362C4.3118 12.2362 4.62005 12.3095 4.89921 12.4502L5.06921 12.5502C5.34836 12.6909 5.65661 12.7641 5.96921 12.7641C6.2818 12.7641 6.59005 12.6909 6.86921 12.5502L7.99921 12.0002L4.99921 6.00019L5.89921 5.55019C6.23188 5.38653 6.6035 5.31857 6.97256 5.35388C7.34162 5.3892 7.69361 5.52641 7.98921 5.75019L12.0092 8.75019C12.3058 8.9759 12.6596 9.11423 13.0307 9.14957C13.4018 9.18491 13.7753 9.11585 14.1092 8.95019L18.2992 6.89019C18.8346 6.62028 19.4515 6.55966 20.0292 6.72019L20.9992 7.00019C21.1996 7.05584 21.3851 7.15546 21.5422 7.29179C21.6993 7.42812 21.824 7.59774 21.9074 7.78833C21.9907 7.97891 22.0305 8.18567 22.0239 8.39356C22.0173 8.60146 21.9644 8.80527 21.8692 8.99019L21.4892 9.75019C21.2592 10.2102 20.8892 10.5902 20.4192 10.8302L7.57921 17.2002C7.20165 17.3872 6.77468 17.4502 6.35921 17.3802V17.4002Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
@@ -2840,6 +2841,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [search, setSearch] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("todas");
   const [access, setAccess] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   const loadGames = async () => {
     const acc = await checkPassportAccess();
@@ -2971,27 +2973,46 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>{grouped[season].length} jogo(s)</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {grouped[season].map((g) => (
-                  <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                      <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
-                        <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <TeamBadge name={g.home_team} url={g.home_logo} size={22} />
+                {grouped[season].map((g) => {
+                  const expanded = expandedId === g.id;
+                  return (
+                    <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                        <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
+                          <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
-                          <TeamBadge name={g.away_team} url={g.away_logo} size={22} />
+                        </div>
+                        <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
                         </div>
                       </div>
-                      <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <MapPin size={16} color={BODY} />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
+                        </div>
+                        <div onClick={() => setExpandedId(expanded ? null : g.id)} style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Ver detalhes da experiência</p>
+                          <Icon name={expanded ? "chevronDown" : "chevronRight"} size={14} color={GREEN} />
+                        </div>
                       </div>
+                      {expanded && (
+                        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                          <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                            <TeamBadge name={g.home_team} url={g.home_logo} size={40} />
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                            <TeamBadge name={g.away_team} url={g.away_logo} size={40} />
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
+                            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
+                          </div>
+                          <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
+                        </div>
+                      )}
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}{g.competition ? ` · ${g.competition}` : ""}</p>
-                      <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
