@@ -2680,11 +2680,11 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
 
 /* --- Meu Nível: sistema de XP calculado de verdade a partir dos dados do usuário --- */
 const XP_TIERS = [
-  { level: 1, name: "Torcedor de Sofá", min: 0, max: 99, icon: "sofa", perk: "Cadastro inicial e rastreamento de estádios" },
-  { level: 2, name: "Estreante", min: 100, max: 499, icon: "mapPin", perk: "Acesso à galeria e badges de conquistas" },
-  { level: 3, name: "Groundhopper", min: 500, max: 1499, icon: "globe", perk: "Desconto de 10% em qualquer roteiro oficial" },
-  { level: 4, name: "Veterano", min: 1500, max: 3999, icon: "trophy", perk: "Acesso prioritário a caravanas e grupos de viagem" },
-  { level: 5, name: "Lenda", min: 4000, max: Infinity, icon: "crown", perk: "Sorteio de ingressos & Consultoria premium grátis" },
+  { level: 1, name: "Torcedor de Sofá", min: 0, max: 499, icon: "sofa", perk: "Cadastro inicial e rastreamento de estádios" },
+  { level: 2, name: "Estreante", min: 500, max: 1499, icon: "mapPin", perk: "Acesso à galeria e badges de conquistas" },
+  { level: 3, name: "Groundhopper", min: 1500, max: 4999, icon: "globe", perk: "Desconto de 10% em qualquer roteiro oficial" },
+  { level: 4, name: "Veterano", min: 5000, max: 19999, icon: "trophy", perk: "Acesso prioritário a caravanas e grupos de viagem" },
+  { level: 5, name: "Lenda", min: 20000, max: Infinity, icon: "crown", perk: "Sorteio de ingressos & Consultoria premium grátis" },
 ];
 
 function computeTier(xp) {
@@ -2729,8 +2729,8 @@ function PodiumSpot({ entry, position }) {
 }
 
 function RankingRow({ entry, highlighted, isMobile }) {
-  const tierColors = { "Lenda": GOLD, "Veterano": "#6b7280", "Explorador": GREEN, "Estreante": MUTED, "Torcedor de Sofá": MUTED };
-  const tierBg = { "Lenda": GOLD_BG, "Veterano": "#f1f5f9", "Explorador": GREEN_BG, "Estreante": "#f1f5f9", "Torcedor de Sofá": "#f1f5f9" };
+  const tierColors = { "Lenda": GOLD, "Veterano": "#6b7280", "Groundhopper": GREEN, "Estreante": MUTED, "Torcedor de Sofá": MUTED };
+  const tierBg = { "Lenda": GOLD_BG, "Veterano": "#f1f5f9", "Groundhopper": GREEN_BG, "Estreante": "#f1f5f9", "Torcedor de Sofá": "#f1f5f9" };
   const color = tierColors[entry.tier] || MUTED;
   const bg = tierBg[entry.tier] || "#f1f5f9";
   const initials = (entry.name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
