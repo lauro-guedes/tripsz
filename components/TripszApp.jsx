@@ -1887,6 +1887,11 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
           </div>
           {menuOpen && (
             <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 180, overflow: "hidden", zIndex: 20 }}>
+              {isMobile && (
+                <div onClick={() => { setMenuOpen(false); onNavigate("perfil"); }} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === "perfil" ? GREEN : TEXT, fontWeight: active === "perfil" ? 700 : 500, margin: 0 }}>Meu perfil</p>
+                </div>
+              )}
               <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#dc2626", fontWeight: 700, margin: 0 }}>Sair</p>
               </div>
@@ -1896,7 +1901,7 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
       </div>
       {isMobile && (
         <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 4, padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap" }}>
-          {items.map(([label, key]) => (
+          {items.filter(([, key]) => key !== "perfil").map(([label, key]) => (
             <div key={key} onClick={() => onNavigate(key)} style={{ background: active === key ? GREEN_BG : "transparent", padding: "6px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active === key ? 700 : 500, fontSize: 12, color: active === key ? GREEN : "#63738c", margin: 0 }}>{label}</p>
             </div>
@@ -4005,6 +4010,20 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
   );
 }
 
+const COUNTRY_LIST = [
+  "Brasil",
+  "Alemanha", "Angola", "Argentina", "Austrália", "Áustria",
+  "Bélgica", "Bolívia", "Canadá", "Chile", "China", "Colômbia",
+  "Coreia do Sul", "Costa Rica", "Croácia", "Cuba", "Dinamarca",
+  "Egito", "Equador", "Escócia", "Espanha", "Estados Unidos",
+  "França", "Grécia", "Holanda", "Hungria", "Índia", "Inglaterra",
+  "Irlanda", "Islândia", "Itália", "Japão", "México", "Marrocos",
+  "Moçambique", "Noruega", "Nova Zelândia", "Panamá", "Paraguai",
+  "Peru", "Polônia", "Portugal", "Reino Unido", "República Tcheca",
+  "Rússia", "Senegal", "Sérvia", "Suécia", "Suíça", "Turquia",
+  "Ucrânia", "Uruguai", "Venezuela",
+];
+
 function MeuPerfil({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const PREFS = [
@@ -4021,6 +4040,8 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [country, setCountry] = useState("");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -4068,11 +4089,13 @@ function MeuPerfil({ onNavigate, onLogout }) {
       name: user.user_metadata?.name || "",
       email: user.email || "",
       whatsapp: user.user_metadata?.whatsapp || "",
+      country: user.user_metadata?.country || "",
       prefs: user.user_metadata?.preferences || [],
     };
     setName(loaded.name);
     setEmail(loaded.email);
     setWhatsapp(loaded.whatsapp);
+    setCountry(loaded.country);
     setPrefs(loaded.prefs);
     setAvatarUrl(user.user_metadata?.avatar_url || null);
     setOriginal(loaded);
@@ -4166,14 +4189,14 @@ function MeuPerfil({ onNavigate, onLogout }) {
         if (reauthError) throw new Error("Senha atual incorreta.");
       }
 
-      const updates = { data: { name, whatsapp, preferences: prefs } };
+      const updates = { data: { name, whatsapp, country, preferences: prefs } };
       if (email !== original.email) updates.email = email;
       if (newPassword) updates.password = newPassword;
 
       const { error: updateError } = await supabase.auth.updateUser(updates);
       if (updateError) throw updateError;
 
-      setOriginal({ name, email, whatsapp, prefs });
+      setOriginal({ name, email, whatsapp, country, prefs });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -4239,6 +4262,30 @@ function MeuPerfil({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>WhatsApp</p>
                   <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} style={fieldStyle} />
                 </div>
+              </div>
+              <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8, maxWidth: isMobile ? "100%" : "calc(50% - 10px)" }}>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>País</p>
+                <input
+                  value={country}
+                  onChange={(e) => { setCountry(e.target.value); setShowCountryDropdown(true); }}
+                  onFocus={() => setShowCountryDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowCountryDropdown(false), 150)}
+                  placeholder="Digite ou escolha seu país"
+                  style={fieldStyle}
+                />
+                {showCountryDropdown && (
+                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
+                    {COUNTRY_LIST.filter((c) => c.toLowerCase().includes(country.toLowerCase())).map((c) => (
+                      <div
+                        key={c}
+                        onMouseDown={() => { setCountry(c); setShowCountryDropdown(false); }}
+                        style={{ padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
+                      >
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{c}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
