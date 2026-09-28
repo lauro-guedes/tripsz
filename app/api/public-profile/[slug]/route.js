@@ -1,3 +1,4 @@
+```js
 import { supabaseAdmin } from "@/lib/supabase";
 
 const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
@@ -143,3 +144,4 @@ export async function GET(request, { params }) {
     return Response.json({ error: "Não foi possível carregar esse perfil." }, { status: 500 });
   }
 }
+```
