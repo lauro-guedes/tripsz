@@ -1,0 +1,103 @@
+import { searchTeams } from "@/lib/footballApi";
+
+const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
+
+async function footballFetchRaw(path, params) {
+  const url = new URL("https://v3.football.api-sports.io" + path);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) url.searchParams.set(k, v);
+  });
+  const res = await fetch(url.toString(), { headers: { "x-apisports-key": process.env.FOOTBALL_API_KEY } });
+  const data = await res.json();
+  if (!res.ok || (data.errors && Object.keys(data.errors).length > 0)) {
+    throw new Error(`API-Football error: ${res.status} ${JSON.stringify(data.errors || data)}`);
+  }
+  return data.response;
+}
+
+async function ensureLogoCached(teamId, originalUrl) {
+  if (!teamId || !originalUrl) return originalUrl;
+  const ourUrl = `${TEAM_LOGO_BUCKET_URL}/${teamId}.png`;
+  try {
+    const head = await fetch(ourUrl, { method: "HEAD" });
+    if (head.ok) return ourUrl;
+  } catch {}
+  try {
+    const res = await fetch(originalUrl);
+    if (!res.ok) return originalUrl;
+    const buffer = await res.arrayBuffer();
+    const { supabaseAdmin } = await import("@/lib/supabase");
+    const supabase = supabaseAdmin();
+    const { error } = await supabase.storage.from("team-logos").upload(`${teamId}.png`, buffer, { contentType: "image/png", upsert: true });
+    if (error) return originalUrl;
+    return ourUrl;
+  } catch {
+    return originalUrl;
+  }
+}
+
+/**
+ * GET /api/attended-games/search-team?team=Arsenal&season=2024
+ *
+ * Fluxo de "Registrar Jogo" pela aba CLUBE — busca por time em vez de
+ * estádio. Isso traz TODOS os jogos do time na temporada (qualquer
+ * competição, qualquer estádio, incluindo jogos fora de casa), sem
+ * nenhum dos problemas de cruzamento de dados que a busca por estádio
+ * tem (times/estádios às vezes vêm com cadastro inconsistente na
+ * API-Football).
+ */
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const rawTeam = searchParams.get("team")?.trim();
+  const season = parseInt(searchParams.get("season"), 10);
+
+  if (!rawTeam) {
+    return Response.json({ error: "Informe o nome do clube." }, { status: 400 });
+  }
+  if (!season || season < 2022 || season > 2024) {
+    return Response.json({ error: "Escolha um ano entre 2022 e 2024." }, { status: 400 });
+  }
+
+  try {
+    const teams = await searchTeams(rawTeam);
+    if (!teams || teams.length === 0) {
+      return Response.json({ found: false, reason: "clube_nao_encontrado" });
+    }
+    const best = teams.find((t) => t.team.name.toLowerCase() === rawTeam.toLowerCase()) || teams[0];
+
+    const fixtures = await footballFetchRaw("/fixtures", { team: best.team.id, season });
+    if (fixtures.length === 0) {
+      return Response.json({ found: false, reason: "sem_jogos_no_periodo" });
+    }
+
+    // Cacheia o escudo do próprio clube buscado (os adversários ficam
+    // cacheados sozinhos na hora de salvar, como já fazemos).
+    const clubLogo = await ensureLogoCached(best.team.id, best.team.logo);
+
+    const games = fixtures.map((f) => ({
+      apiFixtureId: f.fixture.id,
+      home: f.teams.home.name,
+      away: f.teams.away.name,
+      homeTeamId: f.teams.home.id,
+      awayTeamId: f.teams.away.id,
+      homeLogo: f.teams.home.id === best.team.id ? clubLogo : f.teams.home.logo,
+      awayLogo: f.teams.away.id === best.team.id ? clubLogo : f.teams.away.logo,
+      homeScore: f.goals.home,
+      awayScore: f.goals.away,
+      date: f.fixture.date,
+      competition: f.league.name,
+      country: f.league.country,
+      stadium: f.fixture.venue?.name || null,
+      city: f.fixture.venue?.city || null,
+    }));
+
+    return Response.json({
+      found: true,
+      club: { id: best.team.id, name: best.team.name, city: best.venue?.city || null, country: best.team.country, logo: clubLogo },
+      games,
+    });
+  } catch (e) {
+    console.error("Erro em /api/attended-games/search-team:", e);
+    return Response.json({ error: e.message || "Não foi possível buscar os jogos." }, { status: 500 });
+  }
+}
