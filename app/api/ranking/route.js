@@ -1,22 +1,13 @@
 import { supabaseAdmin } from "@/lib/supabase";
 
-const XP_TIERS = [
-  { level: 1, name: "Torcedor de Sofá" },
-  { level: 2, name: "Estreante" },
-  { level: 3, name: "Groundhopper" },
-  { level: 4, name: "Explorador" }, // nomeação usada no ranking (Figma) pra quem já tem alguma badge
-  { level: 5, name: "Veterano" },
-  { level: 6, name: "Lenda" },
-];
-
-// Faixas de XP pro nome exibido no ranking (bate com o que já usamos em
-// Meu Nível, só que aqui reaproveitamos o nome "Explorador"/"Veterano"
-// como o próprio design do ranking pede).
+// Faixas de XP pro nome exibido no ranking — têm que bater exatamente
+// com os mesmos 5 níveis usados em Meu Nível, senão a mesma pessoa
+// aparece com nomes de nível diferentes em telas diferentes.
 function tierName(xp) {
-  if (xp >= 4000) return "Lenda";
-  if (xp >= 1500) return "Veterano";
-  if (xp >= 500) return "Explorador";
-  if (xp >= 100) return "Estreante";
+  if (xp >= 20000) return "Lenda";
+  if (xp >= 5000) return "Veterano";
+  if (xp >= 1500) return "Groundhopper";
+  if (xp >= 500) return "Estreante";
   return "Torcedor de Sofá";
 }
 
