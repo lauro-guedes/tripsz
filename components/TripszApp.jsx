@@ -16,8 +16,9 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
+import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
 const GREEN = "#00c853";
 const GREEN_BUTTON = "#00e676";
@@ -3391,6 +3392,113 @@ const PAYMENT_METHOD_NAMES = {
   pix: "Pix",
 };
 
+// Só inicializa o SDK do Mercado Pago uma vez, mesmo se o modal abrir e
+// fechar várias vezes.
+let mpInitialized = false;
+
+/* --- Atualizar Cartão: usa os "Secure Fields" do Mercado Pago — os
+   campos de número/validade/CVV rodam isolados no SDK deles, o dado
+   bruto do cartão nunca passa pelo nosso código nem pelo nosso servidor,
+   só o token gerado. --- */
+function AtualizarCartaoModal({ userId, onClose, onSaved }) {
+  const [cardholderName, setCardholderName] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!mpInitialized && process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY) {
+      initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY);
+      mpInitialized = true;
+    }
+  }, []);
+
+  const handleSave = async () => {
+    if (!cardholderName.trim()) return setError("Preencha o nome como está no cartão.");
+    if (!cpf.trim()) return setError("Preencha o CPF do titular do cartão.");
+    setSaving(true);
+    setError(null);
+    try {
+      const token = await createCardToken({
+        cardholderName: cardholderName.trim(),
+        identificationType: "CPF",
+        identificationNumber: cpf.replace(/\D/g, ""),
+      });
+      const res = await fetch("/api/subscribe/update-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, cardTokenId: token.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Não foi possível atualizar o cartão.");
+      onSaved();
+    } catch (e) {
+      setError(e.message || "Não foi possível gerar o token do cartão. Confira os dados e tente novamente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fieldBoxStyle = { background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "12px 14px" };
+  const labelStyle = { fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: "0 0 6px" };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20, maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ background: "rgba(0,200,83,0.07)", borderRadius: 999, padding: 12 }}>
+            <CreditCard size={28} color={GREEN} />
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center", textAlign: "center" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Atualizar pagamento</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Insira os dados do novo cartão de crédito para faturamento.</p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <p style={labelStyle}>Número do cartão</p>
+            <div style={fieldBoxStyle}>
+              <CardNumber placeholder="0000 0000 0000 0000" style={{ base: { fontSize: "14px", fontFamily: "Inter, sans-serif", color: TEXT } }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <p style={labelStyle}>Validade</p>
+              <div style={fieldBoxStyle}>
+                <ExpirationDate placeholder="MM/AA" style={{ base: { fontSize: "14px", fontFamily: "Inter, sans-serif", color: TEXT } }} />
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={labelStyle}>CVV</p>
+              <div style={fieldBoxStyle}>
+                <SecurityCode placeholder="123" style={{ base: { fontSize: "14px", fontFamily: "Inter, sans-serif", color: TEXT } }} />
+              </div>
+            </div>
+          </div>
+          <div>
+            <p style={labelStyle}>Nome no cartão</p>
+            <input value={cardholderName} onChange={(e) => setCardholderName(e.target.value)} placeholder="Nome como está no cartão" style={{ ...fieldBoxStyle, width: "100%", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" }} />
+          </div>
+          <div>
+            <p style={labelStyle}>CPF do titular</p>
+            <input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" style={{ ...fieldBoxStyle, width: "100%", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" }} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: "4px 0 0" }}>Exigido pelo Mercado Pago pra gerar o token do cartão com segurança — não fica salvo com a gente.</p>
+          </div>
+        </div>
+        {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+        <div style={{ display: "flex", gap: 12 }}>
+          <div onClick={onClose} style={{ flex: 1, border: `1px solid ${BORDER}`, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Cancelar</p>
+          </div>
+          <div onClick={saving ? undefined : handleSave} style={{ flex: 1, background: GREEN, opacity: saving ? 0.6 : 1, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: saving ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : "Salvar"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MinhaAssinatura({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
@@ -3401,6 +3509,8 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
   const [switching, setSwitching] = useState(false);
   const [error, setError] = useState(null);
   const [invoices, setInvoices] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
 
   const load = async () => {
     const acc = await checkPassportAccess();
@@ -3426,7 +3536,6 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
   }, []);
 
   const handleCancel = async () => {
-    if (!window.confirm("Cancelar sua assinatura? Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar.")) return;
     setCanceling(true);
     setError(null);
     try {
@@ -3437,6 +3546,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Não foi possível cancelar.");
+      setShowCancelModal(false);
       await load();
     } catch (e) {
       setError(e.message);
@@ -3543,7 +3653,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
                   <div onClick={switching || canceling ? undefined : () => handleSwitchPlan(sub.plan === "annual" ? "monthly" : "annual")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", cursor: switching ? "default" : "pointer", opacity: switching ? 0.6 : 1 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{switching ? "Processando..." : `Trocar para ${sub.plan === "annual" ? "mensal" : "anual"}`}</p>
                   </div>
-                  <p onClick={canceling || switching ? undefined : handleCancel} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: canceling ? "default" : "pointer" }}>{canceling ? "Cancelando..." : "Cancelar assinatura"}</p>
+                  <p onClick={() => setShowCancelModal(true)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Cancelar assinatura</p>
                 </div>
               </div>
 
@@ -3559,6 +3669,11 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
                   </div>
                 ) : (
                   <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Ainda não identificamos a forma de pagamento — isso aparece assim que o Mercado Pago confirmar a assinatura.</p>
+                )}
+                {sub?.status === "active" && (
+                  <div onClick={() => setShowCardModal(true)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 16px", textAlign: "center", cursor: "pointer", width: isMobile ? "100%" : 200 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Atualizar cartão</p>
+                  </div>
                 )}
               </div>
 
@@ -3625,6 +3740,56 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
       </div>
 
       <AuthedFooter />
+
+      {showCancelModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ background: "rgba(239,68,68,0.06)", borderRadius: 999, padding: 12 }}>
+                <AlertCircle size={28} color="#ef4444" />
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center", textAlign: "center" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Cancelar assinatura</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Tem certeza? Você perderá acesso a todos os seus benefícios premium:</p>
+            </div>
+            <div style={{ background: BG, borderRadius: 8, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              {["Football Passport completo", "Badges e sistema de gamificação", "Níveis de torcedor e categorias", "Registro ilimitado de jogos", "15% de desconto em consultorias", "Histórico completo de partidas"].map((label) => (
+                <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid #ef4444", borderRadius: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#ef4444", margin: 0 }}>✕</p>
+                  </div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 12, color: TEXT, margin: 0 }}>{label}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ background: "rgba(234,179,8,0.13)", borderRadius: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 10, color: "#b48200", margin: 0 }}>i</p>
+              </div>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 11, lineHeight: 1.3, color: TEXT, margin: 0 }}>Seu plano permanecerá ativo até o final do período vigente.</p>
+            </div>
+            {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", width: "100%" }}>
+              <div onClick={() => setShowCancelModal(false)} style={{ background: GREEN, borderRadius: 999, padding: "12px 24px", textAlign: "center", cursor: "pointer", width: "100%" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Manter assinatura</p>
+              </div>
+              <p onClick={canceling ? undefined : handleCancel} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#ef4444", margin: 0, cursor: canceling ? "default" : "pointer", padding: "8px 0" }}>{canceling ? "Cancelando..." : "Confirmar cancelamento"}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCardModal && (
+        <AtualizarCartaoModal
+          userId={access.userId}
+          onClose={() => setShowCardModal(false)}
+          onSaved={() => {
+            setShowCardModal(false);
+            load();
+          }}
+        />
+      )}
     </div>
   );
 }
