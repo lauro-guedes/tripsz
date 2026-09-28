@@ -3002,11 +3002,6 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       </div>
                       {expanded && (
                         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                          <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-                            <TeamBadge name={g.home_team} url={g.home_logo} size={40} />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
-                            <TeamBadge name={g.away_team} url={g.away_logo} size={40} />
-                          </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
                             <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
