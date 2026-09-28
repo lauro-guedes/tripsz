@@ -2989,7 +2989,11 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                         <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
                           <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                            <TeamBadge name={g.home_team} url={g.home_logo} size={22} />
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
+                            <TeamBadge name={g.away_team} url={g.away_logo} size={22} />
+                          </div>
                         </div>
                         <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
@@ -3009,7 +3013,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                           <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
                             <TeamBadge name={g.home_team} url={g.home_logo} size={40} />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
                             <TeamBadge name={g.away_team} url={g.away_logo} size={40} />
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -3150,6 +3154,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         away_team: g.away,
         home_logo: g.homeLogo,
         away_logo: g.awayLogo,
+        home_score: g.homeScore,
+        away_score: g.awayScore,
         match_date: g.date.split("T")[0],
         stadium: venue.name,
         city: venue.city,
