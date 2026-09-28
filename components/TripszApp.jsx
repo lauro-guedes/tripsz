@@ -3126,18 +3126,14 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     }
   };
 
-  const toggleGame = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const [savingId, setSavingId] = useState(null);
 
-  const handleAddToTrip = async () => {
-    if (selectedIds.size === 0) return setError("Selecione ao menos um jogo.");
-    setSaving(true);
+  // Clicar em "+ Adicionar" já salva aquele jogo na hora — antes exigia
+  // um segundo clique em "Adicionar à viagem" pra confirmar em lote, o
+  // que dava a impressão de que nada tinha sido salvo.
+  const handleAddGame = async (g) => {
+    if (selectedIds.has(g.apiFixtureId) || savingId) return;
+    setSavingId(g.apiFixtureId);
     setError(null);
     try {
       const supabase = supabaseBrowser();
@@ -3145,30 +3141,26 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       const userId = userData.user?.id;
       if (!userId) throw new Error("Sessão expirada. Entre novamente.");
 
-      const rows = games
-        .filter((g) => selectedIds.has(g.apiFixtureId))
-        .map((g) => ({
-          user_id: userId,
-          source: "api",
-          api_fixture_id: g.apiFixtureId,
-          home_team: g.home,
-          away_team: g.away,
-          home_logo: g.homeLogo,
-          away_logo: g.awayLogo,
-          match_date: g.date.split("T")[0],
-          stadium: venue.name,
-          city: venue.city,
-          country: venue.country,
-          competition: g.competition,
-        }));
-
-      const { error: insertError } = await supabase.from("attended_games").insert(rows);
+      const { error: insertError } = await supabase.from("attended_games").insert({
+        user_id: userId,
+        source: "api",
+        api_fixture_id: g.apiFixtureId,
+        home_team: g.home,
+        away_team: g.away,
+        home_logo: g.homeLogo,
+        away_logo: g.awayLogo,
+        match_date: g.date.split("T")[0],
+        stadium: venue.name,
+        city: venue.city,
+        country: venue.country,
+        competition: g.competition,
+      });
       if (insertError) throw insertError;
-      onDone();
+      setSelectedIds((prev) => new Set(prev).add(g.apiFixtureId));
     } catch (e) {
       setError(e.message);
     } finally {
-      setSaving(false);
+      setSavingId(null);
     }
   };
 
@@ -3321,6 +3313,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {filteredGames.map((g) => {
                     const selected = selectedIds.has(g.apiFixtureId);
+                    const isSaving = savingId === g.apiFixtureId;
                     return (
                       <div key={g.apiFixtureId} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
                         <div>
@@ -3332,9 +3325,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                           </div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
                         </div>
-                        <div onClick={() => toggleGame(g.apiFixtureId)} style={{ background: selected ? BORDER : GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: "pointer", flexShrink: 0 }}>
+                        <div onClick={() => handleAddGame(g)} style={{ background: selected ? BORDER : GREEN_BUTTON, opacity: isSaving ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: selected || isSaving ? "default" : "pointer", flexShrink: 0 }}>
                           {selected && <Check size={14} color={MUTED} />}
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{selected ? "Adicionado" : "+ Adicionar"}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{isSaving ? "Salvando..." : selected ? "Adicionado" : "+ Adicionar"}</p>
                         </div>
                       </div>
                     );
@@ -3344,11 +3337,11 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
               <div style={{ height: 1, background: BORDER, width: "100%" }} />
               <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: 16, width: "100%" }}>
                 <div>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 3 · Adicionar à viagem</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>Pronto para adicionar ao seu Football Passport</p>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 3 · Concluir</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>{selectedIds.size > 0 ? `${selectedIds.size} jogo(s) já adicionados ao seu Football Passport` : "Clique em \"+ Adicionar\" nos jogos que você quer registrar"}</p>
                 </div>
-                <div onClick={saving ? undefined : handleAddToTrip} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: saving ? "default" : "pointer", whiteSpace: "nowrap" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : `Adicionar ${selectedIds.size || ""} à viagem →`}</p>
+                <div onClick={onDone} style={{ background: GREEN_BUTTON, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Concluir →</p>
                 </div>
               </div>
             </>
