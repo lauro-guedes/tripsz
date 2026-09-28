@@ -3788,6 +3788,34 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [prefs, setPrefs] = useState([]);
+  const [shareLink, setShareLink] = useState(null);
+  const [loadingShareLink, setLoadingShareLink] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleGetShareLink = async () => {
+    setLoadingShareLink(true);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const res = await fetch("/api/profile/get-or-create-slug", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userData.user?.id, name: userData.user?.user_metadata?.name }),
+      });
+      const data = await res.json();
+      if (res.ok) setShareLink(`${window.location.origin}/u/${data.slug}`);
+    } catch {
+      // silencioso — não é uma ação crítica, a pessoa pode tentar de novo
+    } finally {
+      setLoadingShareLink(false);
+    }
+  };
+
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const [original, setOriginal] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -4057,6 +4085,25 @@ function MeuPerfil({ onNavigate, onLogout }) {
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ver Minha Assinatura</p>
                   </div>
                 </>
+              )}
+            </div>
+
+            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Perfil Público</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Gere um link pra mostrar seu Football Passport (nível, badges e estatísticas) pra quem você quiser — sem precisar fazer login pra ver.</p>
+              {shareLink ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12 }}>
+                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: TEXT, margin: 0, wordBreak: "break-all" }}>{shareLink}</p>
+                  </div>
+                  <div onClick={handleCopyShareLink} style={{ background: GREEN_BUTTON, padding: "10px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{copied ? "Copiado ✓" : "Copiar link"}</p>
+                  </div>
+                </div>
+              ) : (
+                <div onClick={loadingShareLink ? undefined : handleGetShareLink} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: loadingShareLink ? "default" : "pointer" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{loadingShareLink ? "Gerando link..." : "Gerar link do meu perfil"}</p>
+                </div>
               )}
             </div>
           </div>
