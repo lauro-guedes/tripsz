@@ -22,6 +22,7 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "mineirao": "Cruzeiro",
   "itaquerao": "Corinthians",
   "ali sami yen": "Galatasaray",
+  "mangueirao": "Remo",
 };
 
 // A API-Football rejeita caracteres acentuados na busca de estádio
@@ -119,7 +120,12 @@ async function venueFromTeamName(teamName) {
   const teams = await searchTeams(teamName);
   const best = teams?.find((t) => t.team.name.toLowerCase() === teamName.toLowerCase()) || teams?.[0];
   if (!best?.venue) return null;
-  return { venue: best.venue, teamId: best.team.id };
+  // Confirmado testando ao vivo: o estádio devolvido junto da busca de
+  // TIME não tem o campo "country" (só id/name/address/city/capacity) —
+  // sem isso, salvar o jogo depois falhava (a tabela exige país
+  // preenchido). Usamos o país do próprio time como respaldo.
+  const venue = { ...best.venue, country: best.venue.country || best.team.country };
+  return { venue, teamId: best.team.id };
 }
 
 // Dado só o estádio (sem saber ainda qual time joga lá), pergunta pra
