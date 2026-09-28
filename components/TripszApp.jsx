@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -106,6 +106,7 @@ const RAW_ICONS = {
   google: `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>`,
   search: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.16667 16.6667C13.3088 16.6667 16.6667 13.3088 16.6667 9.16667C16.6667 5.02453 13.3088 1.66667 9.16667 1.66667C5.02453 1.66667 1.66667 5.02453 1.66667 9.16667C1.66667 13.3088 5.02453 16.6667 9.16667 16.6667Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18.3333 18.3333L14.1667 14.1667" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0008C17.5228 22.0008 22 17.5236 22 12.0008C22 6.47792 17.5228 2.00076 12 2.00076C6.47715 2.00076 2 6.47792 2 12.0008C2 17.5236 6.47715 22.0008 12 22.0008Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12.0008H22" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 2.00076C14.5013 4.73866 15.9228 8.29331 16 12.0008C15.9228 15.7082 14.5013 19.2629 12 22.0008C9.49872 19.2629 8.07725 15.7082 8 12.0008C8.07725 8.29331 9.49872 4.73866 12 2.00076Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  mapPin: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="12" cy="10" r="3" stroke="COLOR" stroke-width="2"/> </svg>`,
   trophy: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6 9H4.5A2.5 2.5 0 012 6.5V5a1 1 0 011-1h3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18 9h1.5A2.5 2.5 0 0022 6.5V5a1 1 0 00-1-1h-3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M6 4h12v6a6 6 0 01-12 0V4z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 16v4M8 22h8" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   crown: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 18h18M4 18l-1-10 5 4 4-7 4 7 5-4-1 10" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
   ticket: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M13 5v2M13 11v2M13 17v2" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
@@ -2671,8 +2672,8 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
 /* --- Meu Nível: sistema de XP calculado de verdade a partir dos dados do usuário --- */
 const XP_TIERS = [
   { level: 1, name: "Torcedor de Sofá", min: 0, max: 99, icon: "sofa", perk: "Cadastro inicial e rastreamento de estádios" },
-  { level: 2, name: "Estreante", min: 100, max: 499, icon: "ticket", perk: "Acesso à galeria e badges de conquistas" },
-  { level: 3, name: "Groundhopper", min: 500, max: 1499, icon: "circleX", perk: "Desconto de 10% em qualquer roteiro oficial" },
+  { level: 2, name: "Estreante", min: 100, max: 499, icon: "mapPin", perk: "Acesso à galeria e badges de conquistas" },
+  { level: 3, name: "Groundhopper", min: 500, max: 1499, icon: "globe", perk: "Desconto de 10% em qualquer roteiro oficial" },
   { level: 4, name: "Veterano", min: 1500, max: 3999, icon: "trophy", perk: "Acesso prioritário a caravanas e grupos de viagem" },
   { level: 5, name: "Lenda", min: 4000, max: Infinity, icon: "crown", perk: "Sorteio de ingressos & Consultoria premium grátis" },
 ];
@@ -2798,7 +2799,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
               return (
                 <div key={t.level} style={{ background: "#fff", border: isCurrent ? `2px solid ${GREEN}` : `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", gap: 16, alignItems: "center", opacity: isLocked ? 0.6 : 1 }}>
                   <div style={{ background: isCurrent ? GREEN_BG : BG_ALT, width: 44, height: 44, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon name={t.icon} size={20} color={isCurrent ? GREEN : MUTED} />
+                    {t.icon === "sofa" ? <ImageIcon size={20} color={isCurrent ? GREEN : MUTED} /> : <Icon name={t.icon} size={20} color={isCurrent ? GREEN : MUTED} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
