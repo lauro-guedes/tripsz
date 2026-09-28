@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -110,7 +110,7 @@ const RAW_ICONS = {
   trophy: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6 9H4.5A2.5 2.5 0 012 6.5V5a1 1 0 011-1h3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18 9h1.5A2.5 2.5 0 0022 6.5V5a1 1 0 00-1-1h-3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M6 4h12v6a6 6 0 01-12 0V4z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 16v4M8 22h8" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   crown: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 18h18M4 18l-1-10 5 4 4-7 4 7 5-4-1 10" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
   ticket: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M13 5v2M13 11v2M13 17v2" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
-  sofa: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M4 14v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12v-1a2 2 0 012-2 2 2 0 012 2v1M22 12v-1a2 2 0 00-2-2 2 2 0 00-2 2v1" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M6 12h12v3a1 1 0 01-1 1H7a1 1 0 01-1-1v-3z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> <path d="M6 9a1 1 0 011-1h10a1 1 0 011 1v3H6V9z" stroke="COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  sofa: `<svg width="24" height="18" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M21 5V3C21 1.35 19.65 0 18 0H14C13.23 0 12.53 0.3 12 0.78C11.47 0.3 10.77 0 10 0H6C4.35 0 3 1.35 3 3V5C1.35 5 0 6.35 0 8V13C0 14.65 1.35 16 3 16V18H5V16H19V18H21V16C22.65 16 24 14.65 24 13V8C24 6.35 22.65 5 21 5ZM14 2H18C18.55 2 19 2.45 19 3V5.78C18.39 6.33 18 7.12 18 8V10H13V3C13 2.45 13.45 2 14 2ZM5 3C5 2.45 5.45 2 6 2H10C10.55 2 11 2.45 11 3V10H6V8C6 7.12 5.61 6.33 5 5.78V3ZM22 13C22 13.55 21.55 14 21 14H3C2.45 14 2 13.55 2 13V8C2 7.45 2.45 7 3 7C3.55 7 4 7.45 4 8V12H20V8C20 7.45 20.45 7 21 7C21.55 7 22 7.45 22 8V13Z" fill="COLOR"/> </svg>`,
 };
 
 function Icon({ name, size, color }) {
@@ -2799,7 +2799,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
               return (
                 <div key={t.level} style={{ background: "#fff", border: isCurrent ? `2px solid ${GREEN}` : `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", gap: 16, alignItems: "center", opacity: isLocked ? 0.6 : 1 }}>
                   <div style={{ background: isCurrent ? GREEN_BG : BG_ALT, width: 44, height: 44, borderRadius: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {t.icon === "sofa" ? <ImageIcon size={20} color={isCurrent ? GREEN : MUTED} /> : <Icon name={t.icon} size={20} color={isCurrent ? GREEN : MUTED} />}
+                    <Icon name={t.icon} size={20} color={isCurrent ? GREEN : MUTED} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
