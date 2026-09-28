@@ -11,17 +11,47 @@ const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v
 // resolvemos o estádio through o time que joga nele, em vez de tentar
 // achar o nome exato que a busca de estádio aceita.
 const STADIUM_NICKNAME_TO_TEAM = {
+  // Inglaterra
   "anfield": "Liverpool",
   "old trafford": "Manchester United",
-  "san siro": "Inter",
-  "giuseppe meazza": "Inter",
+  "stamford bridge": "Chelsea",
+  "etihad stadium": "Manchester City",
+  "etihad": "Manchester City",
+  // Espanha
   "wanda metropolitano": "Atletico Madrid",
   "metropolitano": "Atletico Madrid",
+  "ramon sanchez-pizjuan": "Sevilla",
+  "sanchez pizjuan": "Sevilla",
+  // Itália
+  "san siro": "Inter",
+  "giuseppe meazza": "Inter",
+  "stadio olimpico": "Roma",
+  // Alemanha
   "signal iduna park": "Borussia Dortmund",
   "westfalenstadion": "Borussia Dortmund",
+  "allianz arena": "Bayern München",
+  // França
+  "velodrome": "Marseille",
+  "orange velodrome": "Marseille",
+  // Portugal
+  "estadio da luz": "Benfica",
+  "estadio do dragao": "Porto",
+  // Holanda
+  "johan cruyff arena": "Ajax",
+  "amsterdam arena": "Ajax",
+  "de kuip": "Feyenoord",
+  // Turquia
+  "ali sami yen": "Galatasaray",
+  "turk telekom stadyumu": "Galatasaray",
+  "sukru saracoglu": "Fenerbahce",
+  // Argentina
+  "la bombonera": "Boca Juniors",
+  "monumental": "River Plate",
+  "el monumental": "River Plate",
+  // Brasil
   "mineirao": "Cruzeiro",
   "itaquerao": "Corinthians",
-  "ali sami yen": "Galatasaray",
+  "arena corinthians": "Corinthians",
   "mangueirao": "Remo",
 };
 
