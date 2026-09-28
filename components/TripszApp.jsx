@@ -1606,10 +1606,44 @@ function buildTrip(answers) {
   }
   ranked.sort((a, b) => a.date - b.date);
 
+  // Reordena o roteiro final em BLOCOS geográficos, em vez de só pela
+  // data — sem isso, o rodízio por país podia devolver uma sequência
+  // tipo "Brasil → Argentina → Brasil → Argentina", o que não faz
+  // sentido logisticamente (ida e volta desnecessária entre países).
+  // Agora a viagem visita cada país uma vez só (bloco contínuo), e
+  // dentro do país visita cada cidade uma vez só também — os blocos em
+  // si continuam em ordem cronológica (o bloco com o jogo mais cedo
+  // vem primeiro), só os jogos DENTRO de cada bloco não ficam mais
+  // espalhados pelo resto da viagem.
+  function orderByGeographicBlocks(games) {
+    const byCountry = new Map();
+    games.forEach((g) => {
+      if (!byCountry.has(g.country)) byCountry.set(g.country, []);
+      byCountry.get(g.country).push(g);
+    });
+    const countryOrder = [...byCountry.keys()].sort(
+      (a, b) => Math.min(...byCountry.get(a).map((g) => g.date)) - Math.min(...byCountry.get(b).map((g) => g.date))
+    );
+    return countryOrder.flatMap((country) => {
+      const gamesInCountry = byCountry.get(country);
+      const byCity = new Map();
+      gamesInCountry.forEach((g) => {
+        if (!byCity.has(g.city)) byCity.set(g.city, []);
+        byCity.get(g.city).push(g);
+      });
+      const cityOrder = [...byCity.keys()].sort(
+        (a, b) => Math.min(...byCity.get(a).map((g) => g.date)) - Math.min(...byCity.get(b).map((g) => g.date))
+      );
+      return cityOrder.flatMap((city) => byCity.get(city).sort((a, b) => a.date - b.date));
+    });
+  }
+  ranked = orderByGeographicBlocks(ranked);
+
   const cities = [...new Set(ranked.map((f) => f.city))];
   const stadiums = [...new Set(ranked.map((f) => f.stadium))];
-  const firstDate = ranked[0]?.date ?? new Date(now + 20 * 86400000);
-  const lastDate = ranked[ranked.length - 1]?.date ?? firstDate;
+  const allDates = ranked.map((f) => f.date);
+  const firstDate = allDates.length ? new Date(Math.min(...allDates)) : new Date(now + 20 * 86400000);
+  const lastDate = allDates.length ? new Date(Math.max(...allDates)) : firstDate;
   const days = answers.dateStart && answers.dateEnd
     ? Math.max(3, Math.round((new Date(answers.dateEnd) - new Date(answers.dateStart)) / 86400000))
     : Math.max(5, Math.round((lastDate - firstDate) / 86400000) + 4);
