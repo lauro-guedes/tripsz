@@ -1862,39 +1862,46 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
     ["Meu perfil", "perfil"],
   ];
   return (
-    <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", position: "relative" }}>
-      <div style={{ cursor: "pointer" }} onClick={() => onNavigate("roteiros")}><Wordmark /></div>
-      {!isMobile && (
-        <div style={{ display: "flex", gap: 40, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
+    <div>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", position: "relative" }}>
+        <div style={{ cursor: "pointer" }} onClick={() => onNavigate("roteiros")}><Wordmark /></div>
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 40, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
+            {items.map(([label, key]) => (
+              <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer" }}>{label}</p>
+            ))}
+          </div>
+        )}
+        <div style={{ position: "relative" }}>
+          <div onClick={() => setMenuOpen((v) => !v)} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
+            <AvatarCircle url={userAvatar} name={userName} size={isMobile ? 28 : 36} fontSize={isMobile ? 12 : 14} />
+            {!isMobile && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{userName || "Minha conta"}</p>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>Área do usuário</p>
+              </div>
+            )}
+            {isMobile && <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>{(userName || "Conta").split(" ")[0]}</p>}
+            <Icon name="chevronDown" size={16} color={MUTED} />
+          </div>
+          {menuOpen && (
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 180, overflow: "hidden", zIndex: 20 }}>
+              <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#dc2626", fontWeight: 700, margin: 0 }}>Sair</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {isMobile && (
+        <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 4, padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap" }}>
           {items.map(([label, key]) => (
-            <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer" }}>{label}</p>
+            <div key={key} onClick={() => onNavigate(key)} style={{ background: active === key ? GREEN_BG : "transparent", padding: "6px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active === key ? 700 : 500, fontSize: 12, color: active === key ? GREEN : "#63738c", margin: 0 }}>{label}</p>
+            </div>
           ))}
         </div>
       )}
-      <div style={{ position: "relative" }}>
-        <div onClick={() => setMenuOpen((v) => !v)} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
-          <AvatarCircle url={userAvatar} name={userName} size={36} fontSize={14} />
-          {!isMobile && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{userName || "Minha conta"}</p>
-              <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>Área do usuário</p>
-            </div>
-          )}
-          <Icon name="chevronDown" size={16} color={MUTED} />
-        </div>
-        {menuOpen && (
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 180, overflow: "hidden", zIndex: 20 }}>
-            {isMobile && items.map(([label, key]) => (
-              <div key={key} onClick={() => { setMenuOpen(false); onNavigate(key); }} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
-              </div>
-            ))}
-            <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#dc2626", fontWeight: 700, margin: 0 }}>Sair</p>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -3029,6 +3036,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [userAvatar, setUserAvatar] = useState(null);
 
   const [stadiumQuery, setStadiumQuery] = useState("");
+  const [searchMode, setSearchMode] = useState("estadio"); // "estadio" | "clube"
   const [season, setSeason] = useState(2024);
   const [competitionFilter, setCompetitionFilter] = useState("todas");
   const [loading, setLoading] = useState(false);
@@ -3053,7 +3061,10 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(stadiumQuery)}`);
+        const endpoint = searchMode === "clube"
+          ? `/api/teams/suggest?q=${encodeURIComponent(stadiumQuery)}`
+          : `/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(stadiumQuery)}`;
+        const res = await fetch(endpoint);
         const data = await res.json();
         setSuggestions(data.suggestions || []);
         setShowSuggestions(true);
@@ -3062,7 +3073,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [stadiumQuery]);
+  }, [stadiumQuery, searchMode]);
 
   const pickSuggestion = (name) => {
     setStadiumQuery(name);
@@ -3084,7 +3095,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   }, []);
 
   const handleSearch = async () => {
-    if (!stadiumQuery.trim()) return setError("Digite o nome de um estádio.");
+    if (!stadiumQuery.trim()) return setError(searchMode === "clube" ? "Digite o nome de um clube." : "Digite o nome de um estádio.");
     setError(null);
     setLoading(true);
     setVenue(null);
@@ -3092,6 +3103,22 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     setSelectedIds(new Set());
     setCompetitionFilter("todas");
     try {
+      if (searchMode === "clube") {
+        const res = await fetch(`/api/attended-games/search-team?team=${encodeURIComponent(stadiumQuery)}&season=${season}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erro na busca.");
+        if (!data.found) {
+          setShowManual(true);
+          setManual((m) => ({ ...m, home: stadiumQuery }));
+          setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos o clube, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.` : "Não encontramos esse clube na nossa base — preencha manualmente.");
+          return;
+        }
+        setVenue({ name: data.club.name, city: data.club.city, country: data.club.country, isClub: true });
+        setGames(data.games);
+        setShowManual(false);
+        return;
+      }
+
       const res = await fetch(`/api/attended-games/search-stadium?stadium=${encodeURIComponent(stadiumQuery)}&season=${season}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro na busca.");
@@ -3141,9 +3168,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         home_score: g.homeScore,
         away_score: g.awayScore,
         match_date: g.date.split("T")[0],
-        stadium: venue.name,
-        city: venue.city,
-        country: venue.country,
+        stadium: g.stadium || venue.name,
+        city: g.city || venue.city,
+        country: g.country || venue.country,
         competition: g.competition,
       });
       if (insertError) throw insertError;
@@ -3226,8 +3253,16 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 40, width: "100%", maxWidth: 960, display: "flex", flexDirection: "column", gap: 32 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
             <div>
-              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 1 · Estádio</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque o estádio onde o jogo aconteceu</p>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 1 · Busca</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque pelo estádio ou clube</p>
+            </div>
+            <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
+              {[["estadio", "Estádio"], ["clube", "Clube"]].map(([mode, label]) => (
+                <div key={mode} onClick={() => { setSearchMode(mode); setStadiumQuery(""); setVenue(null); setGames([]); setShowManual(false); setError(null); }} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: searchMode === mode ? TEXT : MUTED, margin: 0 }}>{label}</p>
+                  <div style={{ background: searchMode === mode ? GREEN : BORDER, height: 2, borderRadius: 1, width: searchMode === mode ? 56 : 44 }} />
+                </div>
+              ))}
             </div>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: "100%" }}>
               <div style={{ position: "relative", flex: 1 }}>
@@ -3238,7 +3273,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                     onChange={(e) => setStadiumQuery(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     onKeyDown={(e) => e.key === "Enter" && (setShowSuggestions(false), handleSearch())}
-                    placeholder="Buscar estádio..."
+                    placeholder={searchMode === "clube" ? "Buscar clube..." : "Buscar estádio..."}
                     style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }}
                   />
                 </div>
@@ -3248,10 +3283,13 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                       <div
                         key={s.name}
                         onMouseDown={() => pickSuggestion(s.name)}
-                        style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
+                        style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
                       >
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
-                        {s.city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.city}{s.country ? `, ${s.country}` : ""}</p>}
+                        {searchMode === "clube" && <TeamBadge name={s.name} url={s.logo} size={22} />}
+                        <div>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                          {s.city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.city}{s.country ? `, ${s.country}` : ""}</p>}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -3268,9 +3306,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
             </div>
             {venue && (
               <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
-                <div>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.name}</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{venue.city}, {venue.country}{venue.capacity ? ` • Capacidade: ${venue.capacity.toLocaleString("pt-BR")}` : ""}</p>
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  {venue.isClub && <TeamBadge name={venue.name} size={40} />}
+                  <div>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.name}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{venue.city}, {venue.country}{venue.capacity ? ` • Capacidade: ${venue.capacity.toLocaleString("pt-BR")}` : ""}</p>
+                  </div>
                 </div>
                 <div style={{ background: GREEN_BG, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
                   <Check size={14} color={GREEN} />
