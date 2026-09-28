@@ -1410,6 +1410,8 @@ const TEAM_LOGO_IDS = {
   Galatasaray: 645, Fenerbahçe: 611, "Boca Juniors": 451, "River Plate": 435,
   Flamengo: 127, Fluminense: 124, Corinthians: 131, Palmeiras: 121,
   Inter: 505, Milan: 489, Napoli: 492, Roma: 497, Lazio: 487,
+  "AZ Alkmaar": 201, Bologna: 500, "Colo-Colo": 2315, Millonarios: 1125,
+  Nacional: 2356, Newcastle: 34, "Peñarol": 2348, "Santa Fe": 1139, "Universidad de Chile": 2323,
 };
 
 function TeamBadge({ name, url, size = 32 }) {
