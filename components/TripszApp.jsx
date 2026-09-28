@@ -1465,47 +1465,6 @@ const FIXTURES_BY_COUNTRY = {
 
 const TICKET_RANGE = { derby: "£65–£140", title: "£80–£210", null: "£45–£95" };
 
-// --- Afiliação de ingressos (Awin) ---
-// Depois de aprovado nos dois programas (FootballTicketNet e
-// LiveFootballTickets), cole aqui o seu Publisher ID da Awin. Enquanto
-// estiver vazio, os links abaixo mandam direto pro site do parceiro, sem
-// rastrear comissão nenhuma — então nada quebra, só não paga ainda.
-const AWIN_AFFILIATE_ID = "3105691";
-
-const TICKET_PARTNERS = [
-  { name: "FootballTicketNet", merchantId: "109002", url: "https://www.footballticketnet.com" },
-  { name: "LiveFootballTickets", merchantId: "119227", url: "https://www.livefootballtickets.com" },
-];
-
-function buildTicketAffiliateLink(merchantId, destinationUrl) {
-  if (!AWIN_AFFILIATE_ID) return destinationUrl;
-  const params = new URLSearchParams({
-    awinmid: merchantId,
-    awinaffid: AWIN_AFFILIATE_ID,
-    clickref: "tripsz",
-    p: destinationUrl,
-  });
-  return `https://www.awin1.com/cread.php?${params.toString()}`;
-}
-
-function TicketPartnerLinks({ size = 11 }) {
-  return (
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      {TICKET_PARTNERS.map((p) => (
-        <a
-          key={p.name}
-          href={buildTicketAffiliateLink(p.merchantId, p.url)}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: size, color: GREEN, textDecoration: "none" }}
-        >
-          Ver no {p.name} ↗
-        </a>
-      ))}
-    </div>
-  );
-}
-
 function scoreFixture(f, answers) {
   let score = f.vibe;
   const priority = answers.priority || "classics";
@@ -1819,7 +1778,6 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
                       </div>
-                      <TicketPartnerLinks size={10} />
                     </div>
                   ) : (
                     <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
@@ -1831,7 +1789,6 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
                     <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Estimativa Ingresso</p>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
-                    <TicketPartnerLinks />
                   </div>
                 )}
               </div>
