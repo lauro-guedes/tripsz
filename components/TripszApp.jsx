@@ -2334,15 +2334,6 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
     const source = unlocked.length ? unlocked : trips; // fallback pra não ficar tudo zerado em conta nova
 
-    const plannedGames = source.flatMap((row) => buildTrip({
-      countries: row.countries || [],
-      dateStart: row.date_start,
-      dateEnd: row.date_end,
-      flexLevel: row.flex_level,
-      priority: row.priority,
-      pace: row.pace,
-    }).games.map((g) => ({ ...g, source: "plano" })));
-
     const { data: attendedRows } = await supabase
       .from("attended_games")
       .select("*")
@@ -2350,18 +2341,15 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const attended = attendedRows || [];
     setAttendedGames(attended);
 
-    // Normaliza os dois tipos de jogo (do roteiro planejado e os
-    // registrados de verdade) pro mesmo formato, pra dar pra calcular
-    // tudo em cima de uma lista só.
-    const allGames = [
-      ...plannedGames.map((g) => ({ date: g.date, stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home, away: g.away, source: "plano" })),
-      ...attended.map((g) => ({ date: new Date(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source })),
-    ];
+    // Só jogos REGISTRADOS de verdade contam pras conquistas — gerar um
+    // roteiro sugerido é só uma sugestão de viagem, não uma confirmação
+    // de que a pessoa foi ao jogo.
+    const allGames = attended.map((g) => ({ date: new Date(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source }));
 
     const stadiums = new Set(allGames.map((g) => g.stadium).filter(Boolean));
     const countries = new Set(allGames.map((g) => g.country).filter(Boolean));
     const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
-    const hasChampions = allGames.some((g) => g.competition === "champions" || looksLikeChampions(g.competition));
+    const hasChampions = allGames.some((g) => looksLikeChampions(g.competition));
 
     // Times favoritos combinados de TODOS os roteiros que a pessoa já
     // preencheu — hoje isso já fica salvo de verdade em trip_answers.
@@ -2702,28 +2690,16 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
       setUserName(user?.user_metadata?.name || user?.email || "");
       setUserAvatar(user?.user_metadata?.avatar_url || null);
 
-      const { data: rows } = await supabase.from("trip_answers").select("*, orders(status)");
-      const trips = rows || [];
-      const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
-      const source = unlocked.length ? unlocked : trips;
-      const plannedGames = source.flatMap((row) => buildTrip({
-        countries: row.countries || [],
-        dateStart: row.date_start,
-        dateEnd: row.date_end,
-        flexLevel: row.flex_level,
-        priority: row.priority,
-        pace: row.pace,
-      }).games);
-
+      // Só jogos REGISTRADOS de verdade contam pra XP — gerar um roteiro
+      // sugerido é só uma sugestão de viagem, não uma confirmação de que
+      // a pessoa foi ao jogo, então não deveria valer conquista.
       const { data: attendedRows } = await supabase.from("attended_games").select("*");
       const attended = attendedRows || [];
 
-      const stadiums = new Set([...plannedGames.map((g) => g.stadium), ...attended.map((g) => g.stadium)].filter(Boolean));
-      const countries = new Set([...source.flatMap((r) => r.countries || []), ...attended.map((g) => g.country)].filter(Boolean));
-      const totalGames = plannedGames.length + attended.length;
-      const hasChampions =
-        plannedGames.some((g) => g.competition === "champions") ||
-        attended.some((g) => /champions league/i.test(g.competition || ""));
+      const stadiums = new Set(attended.map((g) => g.stadium).filter(Boolean));
+      const countries = new Set(attended.map((g) => g.country).filter(Boolean));
+      const totalGames = attended.length;
+      const hasChampions = attended.some((g) => /champions league/i.test(g.competition || ""));
       // "Badges completadas" — mesmos critérios usados em Minhas Conquistas
       // (5+ estádios, 3+ países, alguma partida de Champions).
       const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
