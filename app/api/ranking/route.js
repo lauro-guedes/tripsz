@@ -21,9 +21,16 @@ function tierName(xp) {
 }
 
 const COUNTRY_FLAGS = {
-  Brasil: "🇧🇷", Portugal: "🇵🇹", Argentina: "🇦🇷", Espanha: "🇪🇸", Inglaterra: "🇬🇧",
-  Itália: "🇮🇹", Alemanha: "🇩🇪", França: "🇫🇷", Holanda: "🇳🇱", Turquia: "🇹🇷",
-  Uruguai: "🇺🇾", Chile: "🇨🇱", Colômbia: "🇨🇴",
+  Brasil: "🇧🇷", Alemanha: "🇩🇪", Angola: "🇦🇴", Argentina: "🇦🇷", Austrália: "🇦🇺", Áustria: "🇦🇹",
+  Bélgica: "🇧🇪", Bolívia: "🇧🇴", Canadá: "🇨🇦", Chile: "🇨🇱", China: "🇨🇳", Colômbia: "🇨🇴",
+  "Coreia do Sul": "🇰🇷", "Costa Rica": "🇨🇷", Croácia: "🇭🇷", Cuba: "🇨🇺", Dinamarca: "🇩🇰",
+  Egito: "🇪🇬", Equador: "🇪🇨", Escócia: "🇬🇧", Espanha: "🇪🇸", "Estados Unidos": "🇺🇸",
+  França: "🇫🇷", Grécia: "🇬🇷", Holanda: "🇳🇱", Hungria: "🇭🇺", Índia: "🇮🇳", Inglaterra: "🇬🇧",
+  Irlanda: "🇮🇪", Islândia: "🇮🇸", Itália: "🇮🇹", Japão: "🇯🇵", México: "🇲🇽", Marrocos: "🇲🇦",
+  Moçambique: "🇲🇿", Noruega: "🇳🇴", "Nova Zelândia": "🇳🇿", Panamá: "🇵🇦", Paraguai: "🇵🇾",
+  Peru: "🇵🇪", Polônia: "🇵🇱", Portugal: "🇵🇹", "Reino Unido": "🇬🇧", "República Tcheca": "🇨🇿",
+  Rússia: "🇷🇺", Senegal: "🇸🇳", Sérvia: "🇷🇸", Suécia: "🇸🇪", Suíça: "🇨🇭", Turquia: "🇹🇷",
+  Ucrânia: "🇺🇦", Uruguai: "🇺🇾", Venezuela: "🇻🇪",
 };
 
 /**
@@ -76,12 +83,13 @@ export async function GET(request) {
       const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
       const xp = totalGames * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
 
-      // País "de casa" inferido pelo país mais frequente nos jogos dela —
-      // não temos um campo de nacionalidade cadastrado, então isso é uma
-      // aproximação, não um dado que a pessoa preencheu.
+      // País de casa: usa o que a pessoa cadastrou de verdade em Meu
+      // Perfil, quando existir — só cai pra estimativa (país mais
+      // frequente nos jogos dela) se ela nunca preencheu isso.
       const countryCounts = {};
       userGames.forEach((g) => { if (g.country) countryCounts[g.country] = (countryCounts[g.country] || 0) + 1; });
-      const homeCountry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+      const inferredCountry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+      const homeCountry = user.user_metadata?.country || inferredCountry;
 
       entries.push({
         userId: uid,
