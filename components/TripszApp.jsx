@@ -3012,6 +3012,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
 
   const [stadiumQuery, setStadiumQuery] = useState("");
   const [season, setSeason] = useState(2024);
+  const [competitionFilter, setCompetitionFilter] = useState("todas");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [venue, setVenue] = useState(null);
@@ -3071,6 +3072,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     setVenue(null);
     setGames([]);
     setSelectedIds(new Set());
+    setCompetitionFilter("todas");
     try {
       const res = await fetch(`/api/attended-games/search-stadium?stadium=${encodeURIComponent(stadiumQuery)}&season=${season}`);
       const data = await res.json();
@@ -3173,6 +3175,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   };
 
   const fieldStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" };
+  const distinctCompetitions = [...new Set(games.map((g) => g.competition).filter(Boolean))];
+  const filteredGames = competitionFilter === "todas" ? games : games.filter((g) => g.competition === competitionFilter);
 
   if (access === null) {
     return (
@@ -3269,13 +3273,24 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
             <>
               <div style={{ height: 1, background: BORDER, width: "100%" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
-                <div>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 2 · Lista de jogos</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Jogos disponíveis</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{games.length} jogo(s) encontrado(s)</p>
+                <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "flex-end", gap: 12 }}>
+                  <div>
+                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Etapa 2 · Lista de jogos</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Jogos disponíveis</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{filteredGames.length} jogo(s) encontrado(s)</p>
+                  </div>
+                  {distinctCompetitions.length > 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, width: isMobile ? "100%" : 220 }}>
+                      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Competição</p>
+                      <select value={competitionFilter} onChange={(e) => setCompetitionFilter(e.target.value)} style={{ ...fieldStyle, padding: "10px 14px" }}>
+                        <option value="todas">Todas as competições</option>
+                        {distinctCompetitions.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {games.map((g) => {
+                  {filteredGames.map((g) => {
                     const selected = selectedIds.has(g.apiFixtureId);
                     return (
                       <div key={g.apiFixtureId} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
