@@ -3,11 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
 
 const XP_TIERS = [
-  { level: 1, name: "Torcedor de Sofá", min: 0, max: 99 },
-  { level: 2, name: "Estreante", min: 100, max: 499 },
-  { level: 3, name: "Groundhopper", min: 500, max: 1499 },
-  { level: 4, name: "Veterano", min: 1500, max: 3999 },
-  { level: 5, name: "Lenda", min: 4000, max: Infinity },
+  { level: 1, name: "Torcedor de Sofá", min: 0, max: 499 },
+  { level: 2, name: "Estreante", min: 500, max: 1499 },
+  { level: 3, name: "Groundhopper", min: 1500, max: 4999 },
+  { level: 4, name: "Veterano", min: 5000, max: 19999 },
+  { level: 5, name: "Lenda", min: 20000, max: Infinity },
 ];
 
 function computeTier(xp) {
