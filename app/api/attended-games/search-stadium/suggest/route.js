@@ -1,5 +1,7 @@
 import { searchVenues } from "@/lib/footballApi";
 
+export const dynamic = "force-dynamic";
+
 function stripDiacritics(str) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
