@@ -9,6 +9,30 @@ const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v
 // (/teams) sempre devolve o estádio junto — inclusive com esse mesmo
 // apelido. Então, pros casos mais famosos, resolvemos o TIME que joga
 // lá, em vez de tentar achar o nome exato do estádio.
+// Ligas principais de cada país — usado como último recurso quando um
+// estádio não tem um time-âncora confiável (estádios neutros/multiuso,
+// tipo estádios nacionais que recebem vários clubes diferentes, sem
+// "dono" fixo). Nesse caso, buscamos direto por estádio + liga, sem
+// precisar de time nenhum.
+// Os IDs marcados "a confirmar" foram preenchidos de memória (não
+// testados ao vivo ainda) — se um deles estiver errado, o pior caso é
+// simplesmente não achar jogos extra por essa liga, nunca um dado errado.
+const MAIN_LEAGUES_BY_COUNTRY = {
+  England: [39], // Premier League — confirmado
+  Spain: [140], // La Liga — confirmado
+  Italy: [135], // Serie A — confirmado
+  Germany: [78], // Bundesliga — confirmado
+  France: [61], // Ligue 1 — confirmado
+  Brazil: [71, 72], // Série A, Série B — 71 confirmado ao vivo; 72 a confirmar
+  Portugal: [94], // Primeira Liga — a confirmar
+  Netherlands: [88], // Eredivisie — a confirmar
+  Turkey: [203], // Süper Lig — a confirmar
+  Argentina: [128], // Liga Profesional — a confirmar
+  Uruguay: [268], // Primera División — a confirmar
+  Chile: [265], // Primera División — a confirmar
+  Colombia: [239], // Primera A — a confirmar
+};
+
 const STADIUM_NICKNAME_TO_TEAM = {
   "anfield": "Liverpool",
   "old trafford": "Manchester United",
@@ -165,6 +189,7 @@ export async function GET(request) {
 
   try {
     const teamIdCandidates = [];
+    let directVenueCandidates = [];
 
     const nicknameTeam = STADIUM_NICKNAME_TO_TEAM[queryNorm];
     if (nicknameTeam) {
@@ -174,8 +199,8 @@ export async function GET(request) {
 
     if (teamIdCandidates.length === 0) {
       try {
-        const directVenues = await searchVenues(stripDiacritics(rawStadium));
-        for (const v of directVenues.slice(0, 3)) {
+        directVenueCandidates = await searchVenues(stripDiacritics(rawStadium));
+        for (const v of directVenueCandidates.slice(0, 3)) {
           const ids = await teamIdsForVenue(v.id);
           teamIdCandidates.push(...ids);
         }
@@ -189,14 +214,53 @@ export async function GET(request) {
       if (id) teamIdCandidates.push(id);
     }
 
-    if (teamIdCandidates.length === 0) {
-      return Response.json({ found: false, reason: "estadio_nao_encontrado" });
-    }
-
     let matchedGames = null;
     let matchedVenueInfo = null;
+    let usedNeutralFallback = false;
 
-    for (const teamId of [...new Set(teamIdCandidates)]) {
+    if (teamIdCandidates.length === 0) {
+      // Nenhum time-âncora confiável (estádio provavelmente neutro/multiuso,
+      // sem "dono" fixo — tipo um estádio nacional). Último recurso: busca
+      // direto por estádio + cada liga principal do país, sem precisar de
+      // time nenhum.
+      const venue = directVenueCandidates[0];
+      const leagueIds = venue?.country ? MAIN_LEAGUES_BY_COUNTRY[venue.country] || [] : [];
+      if (venue && leagueIds.length > 0) {
+        const seenIds = new Set();
+        const collected = [];
+        for (const leagueId of leagueIds) {
+          try {
+            const fixtures = await footballFetchRaw("/fixtures", { venue: venue.id, league: leagueId, season });
+            for (const f of fixtures) {
+              if (!seenIds.has(f.fixture.id)) {
+                seenIds.add(f.fixture.id);
+                collected.push(f);
+              }
+            }
+          } catch (e) {
+            console.error(`Fallback estádio neutro (liga ${leagueId}) falhou:`, e.message);
+          }
+        }
+        if (collected.length > 0) {
+          usedNeutralFallback = true;
+          matchedGames = mapGames(collected);
+          const lastFixture = collected[collected.length - 1];
+          matchedVenueInfo = {
+            id: lastFixture.fixture.venue.id,
+            name: lastFixture.fixture.venue.name,
+            city: lastFixture.fixture.venue.city || venue.city || null,
+            country: lastFixture.league.country,
+            capacity: null,
+          };
+        }
+      }
+
+      if (!matchedGames) {
+        return Response.json({ found: false, reason: "estadio_nao_encontrado" });
+      }
+    }
+
+    for (const teamId of matchedGames ? [] : [...new Set(teamIdCandidates)]) {
       const fixtures = await footballFetchRaw("/fixtures", { team: teamId, season });
 
       const matches = fixtures.filter((f) => {
@@ -229,7 +293,7 @@ export async function GET(request) {
     // Agora que sabemos o ID real do estádio (confirmado pelos jogos do
     // primeiro time), buscamos de novo por estádio + competição, sem
     // travar num time só, pra pegar esses outros jogos.
-    const leagueIds = [...new Set(matchedGames.map((g) => g.leagueId).filter(Boolean))];
+    const leagueIds = usedNeutralFallback ? [] : [...new Set(matchedGames.map((g) => g.leagueId).filter(Boolean))];
     const seenIds = new Set(matchedGames.map((g) => g.apiFixtureId));
     for (const leagueId of leagueIds) {
       try {
