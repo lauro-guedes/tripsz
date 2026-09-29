@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // Faixas de XP pro nome exibido no ranking — têm que bater exatamente
 // com os mesmos 5 níveis usados em Meu Nível, senão a mesma pessoa
 // aparece com nomes de nível diferentes em telas diferentes.
