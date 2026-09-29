@@ -1,6 +1,8 @@
 import { searchVenues, searchTeams } from "@/lib/footballApi";
 import { supabaseAdmin } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
 
 // Testamos ao vivo: a busca de ESTÁDIO da API-Football (/venues) não
