@@ -70,6 +70,13 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "mangueirao": "Remo",
   "morumbi": "Sao Paulo",
   "morumbis": "Sao Paulo",
+  // Estádio Nacional Mané Garrincha (Brasília) — sem "dono" fixo. O
+  // usuário confirmou uma lista real de jogos lá entre 2022-2024; usamos
+  // os times que mais aparecem nela, do mais frequente pro menos.
+  "mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
+  "estadio nacional mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
+  "arena brb mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
+  "estadio governador helio prates da silveira": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
 };
 
 function stripDiacritics(str) {
@@ -193,10 +200,13 @@ export async function GET(request) {
     const teamIdCandidates = [];
     let directVenueCandidates = [];
 
-    const nicknameTeam = STADIUM_NICKNAME_TO_TEAM[queryNorm];
-    if (nicknameTeam) {
-      const id = await teamIdFromName(nicknameTeam);
-      if (id) teamIdCandidates.push(id);
+    const nicknameTeams = STADIUM_NICKNAME_TO_TEAM[queryNorm];
+    if (nicknameTeams) {
+      const names = Array.isArray(nicknameTeams) ? nicknameTeams : [nicknameTeams];
+      for (const name of names) {
+        const id = await teamIdFromName(name);
+        if (id) teamIdCandidates.push(id);
+      }
     }
 
     if (teamIdCandidates.length === 0) {
