@@ -1,5 +1,9 @@
-```js
 import { supabaseAdmin } from "@/lib/supabase";
+
+// Essa rota SEMPRE precisa rodar de verdade (consulta o banco a cada
+// chamada) — sem isso, o Next.js tenta "pré-analisar" ela durante o
+// build (por causa do parâmetro dinâmico [slug]) e quebra.
+export const dynamic = "force-dynamic";
 
 const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
 
@@ -144,4 +148,3 @@ export async function GET(request, { params }) {
     return Response.json({ error: "Não foi possível carregar esse perfil." }, { status: 500 });
   }
 }
-```
