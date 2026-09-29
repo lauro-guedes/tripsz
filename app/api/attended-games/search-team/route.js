@@ -90,6 +90,7 @@ export async function GET(request) {
       stadium: f.fixture.venue?.name || null,
       city: f.fixture.venue?.city || null,
     }));
+    games.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     return Response.json({
       found: true,
