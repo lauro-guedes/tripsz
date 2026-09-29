@@ -3247,6 +3247,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       try {
         const endpoint = searchMode === "clube"
           ? `/api/teams/suggest?q=${encodeURIComponent(stadiumQuery)}`
+          : searchMode === "selecao"
+          ? `/api/teams/suggest?q=${encodeURIComponent(stadiumQuery)}&mode=selecao`
           : `/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(stadiumQuery)}`;
         const res = await fetch(endpoint);
         const data = await res.json();
@@ -3279,7 +3281,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   }, []);
 
   const handleSearch = async () => {
-    if (!stadiumQuery.trim()) return setError(searchMode === "clube" ? "Digite o nome de um clube." : "Digite o nome de um estádio.");
+    if (!stadiumQuery.trim()) return setError(searchMode === "clube" ? "Digite o nome de um clube." : searchMode === "selecao" ? "Digite o nome de uma seleção." : "Digite o nome de um estádio.");
     setError(null);
     setLoading(true);
     setVenue(null);
@@ -3287,14 +3289,16 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     setSelectedIds(new Set());
     setCompetitionFilter("todas");
     try {
-      if (searchMode === "clube") {
-        const res = await fetch(`/api/attended-games/search-team?team=${encodeURIComponent(stadiumQuery)}&season=${season}`);
+      if (searchMode === "clube" || searchMode === "selecao") {
+        const modeParam = searchMode === "selecao" ? "&mode=selecao" : "";
+        const res = await fetch(`/api/attended-games/search-team?team=${encodeURIComponent(stadiumQuery)}&season=${season}${modeParam}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Erro na busca.");
         if (!data.found) {
           setShowManual(true);
           setManual((m) => ({ ...m, home: stadiumQuery }));
-          setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos o clube, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.` : "Não encontramos esse clube na nossa base — preencha manualmente.");
+          const noun = searchMode === "selecao" ? "a seleção" : "o clube";
+          setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos ${noun}, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.` : `Não encontramos ${searchMode === "selecao" ? "essa seleção" : "esse clube"} na nossa base — preencha manualmente.`);
           return;
         }
         setVenue({ name: data.club.name, city: data.club.city, country: data.club.country, isClub: true });
@@ -3441,7 +3445,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque pelo estádio ou clube</p>
             </div>
             <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
-              {[["estadio", "Estádio"], ["clube", "Clube"]].map(([mode, label]) => (
+              {[["estadio", "Estádio"], ["clube", "Clube"], ["selecao", "Seleção"]].map(([mode, label]) => (
                 <div key={mode} onClick={() => { setSearchMode(mode); setStadiumQuery(""); setVenue(null); setGames([]); setShowManual(false); setError(null); }} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer" }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: searchMode === mode ? TEXT : MUTED, margin: 0 }}>{label}</p>
                   <div style={{ background: searchMode === mode ? GREEN : BORDER, height: 2, borderRadius: 1, width: searchMode === mode ? 56 : 44 }} />
@@ -3457,7 +3461,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                     onChange={(e) => setStadiumQuery(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     onKeyDown={(e) => e.key === "Enter" && (setShowSuggestions(false), handleSearch())}
-                    placeholder={searchMode === "clube" ? "Buscar clube..." : "Buscar estádio..."}
+                    placeholder={searchMode === "clube" ? "Buscar clube..." : searchMode === "selecao" ? "Buscar seleção (ex: Brasil)..." : "Buscar estádio..."}
                     style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }}
                   />
                 </div>
@@ -3469,7 +3473,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                         onMouseDown={() => pickSuggestion(s.name)}
                         style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
                       >
-                        {searchMode === "clube" && <TeamBadge name={s.name} url={s.logo} size={22} />}
+                        {(searchMode === "clube" || searchMode === "selecao") && <TeamBadge name={s.name} url={s.logo} size={22} />}
                         <div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
                           {s.city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.city}{s.country ? `, ${s.country}` : ""}</p>}
