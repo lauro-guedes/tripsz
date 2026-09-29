@@ -71,6 +71,27 @@ async function ensureLogoCached(teamId, originalUrl) {
   }
 }
 
+// Cacheia o escudo de TODOS os times que aparecem nos resultados (o
+// clube buscado e cada adversário), não só o principal — antes disso,
+// só o clube buscado tinha escudo confiável, e os adversários dependiam
+// direto do CDN da API-Football, que às vezes falha.
+async function cacheGameLogos(games) {
+  const urlByTeamId = new Map();
+  games.forEach((g) => {
+    if (g.homeTeamId) urlByTeamId.set(g.homeTeamId, g.homeLogo);
+    if (g.awayTeamId) urlByTeamId.set(g.awayTeamId, g.awayLogo);
+  });
+  const cachedUrlByTeamId = new Map();
+  for (const [teamId, url] of urlByTeamId) {
+    cachedUrlByTeamId.set(teamId, await ensureLogoCached(teamId, url));
+  }
+  return games.map((g) => ({
+    ...g,
+    homeLogo: cachedUrlByTeamId.get(g.homeTeamId) || g.homeLogo,
+    awayLogo: cachedUrlByTeamId.get(g.awayTeamId) || g.awayLogo,
+  }));
+}
+
 /**
  * GET /api/attended-games/search-team?team=Arsenal&season=2024
  *
@@ -118,8 +139,8 @@ export async function GET(request) {
       away: f.teams.away.name,
       homeTeamId: f.teams.home.id,
       awayTeamId: f.teams.away.id,
-      homeLogo: f.teams.home.id === best.team.id ? clubLogo : f.teams.home.logo,
-      awayLogo: f.teams.away.id === best.team.id ? clubLogo : f.teams.away.logo,
+      homeLogo: f.teams.home.logo,
+      awayLogo: f.teams.away.logo,
       homeScore: f.goals.home,
       awayScore: f.goals.away,
       date: f.fixture.date,
@@ -129,11 +150,12 @@ export async function GET(request) {
       city: f.fixture.venue?.city || null,
     }));
     games.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const cachedGames = await cacheGameLogos(games);
 
     return Response.json({
       found: true,
       club: { id: best.team.id, name: best.team.name, city: best.venue?.city || null, country: best.team.country, logo: clubLogo },
-      games,
+      games: cachedGames,
     });
   } catch (e) {
     console.error("Erro em /api/attended-games/search-team:", e);
