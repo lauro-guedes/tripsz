@@ -1,5 +1,7 @@
 import { searchTeams } from "@/lib/footballApi";
 
+export const dynamic = "force-dynamic";
+
 // A API-Football guarda o nome das seleções em inglês — traduzimos os
 // nomes mais comuns em português, pra pessoa poder digitar do jeito
 // natural (ex: "Brasil" em vez de precisar saber que é "Brazil").
