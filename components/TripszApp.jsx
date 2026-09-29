@@ -3301,7 +3301,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
           setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos ${noun}, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.` : `Não encontramos ${searchMode === "selecao" ? "essa seleção" : "esse clube"} na nossa base — preencha manualmente.`);
           return;
         }
-        setVenue({ name: data.club.name, city: data.club.city, country: data.club.country, isClub: true });
+        setVenue({ name: data.club.name, city: data.club.city, country: data.club.country, logo: data.club.logo, isClub: true });
         setGames(data.games);
         setShowManual(false);
         return;
@@ -3495,7 +3495,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
             {venue && (
               <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                  {venue.isClub && <TeamBadge name={venue.name} size={40} />}
+                  {venue.isClub && <TeamBadge name={venue.name} url={venue.logo} size={40} />}
                   <div>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.name}</p>
                     <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{venue.city}, {venue.country}{venue.capacity ? ` • Capacidade: ${venue.capacity.toLocaleString("pt-BR")}` : ""}</p>
