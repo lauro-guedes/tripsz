@@ -1,5 +1,7 @@
 import { searchTeams } from "@/lib/footballApi";
 
+export const dynamic = "force-dynamic";
+
 const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
 
 // Mesma tradução usada em /api/teams/suggest — a API-Football guarda o
