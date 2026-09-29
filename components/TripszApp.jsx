@@ -4088,7 +4088,13 @@ function MeuPerfil({ onNavigate, onLogout }) {
     const supabase = supabaseBrowser();
     const { data } = await supabase.auth.getUser();
     const user = data.user;
-    if (!user) return;
+    if (!user) {
+      // Sessão expirada — manda pra Landing em vez de travar a tela
+      // pra sempre num "Carregando..." que nunca termina.
+      setLoading(false);
+      onLogout();
+      return;
+    }
     const loaded = {
       name: user.user_metadata?.name || "",
       email: user.email || "",
