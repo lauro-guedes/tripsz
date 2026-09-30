@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   ["Visão Geral", LayoutDashboard, "overview", true],
   ["Usuários", Users, "users", true],
   ["Roteiros", Map, "trips", false],
-  ["Consultorias", CalendarDays, "consulting", false],
+  ["Consultorias", CalendarDays, "consulting", true],
   ["Assinaturas", CreditCard, "subscriptions", true],
   ["Financeiro", Landmark, "finance", false],
   ["Gamificação", Trophy, "gamification", false],
@@ -41,6 +41,7 @@ function StatusBadge({ label }) {
     "Legado (grátis)": { bg: "rgba(100,116,139,0.1)", text: MUTED },
     "Nunca assinou": { bg: "rgba(100,116,139,0.08)", text: MUTED },
     "Pausado": { bg: "rgba(234,179,8,0.1)", text: "#b48200" },
+    "Pago": { bg: "rgba(0,200,83,0.08)", text: GREEN },
   };
   const c = colors[label] || colors["Nunca assinou"];
   return (
@@ -262,6 +263,74 @@ function SubscriptionsView({ email }) {
   );
 }
 
+function ConsultingView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [filter, setFilter] = useState("todos");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/consulting?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar as consultorias.</p>;
+
+  const statusLabels = { paid: "Pago", pending: "Pendente" };
+  const filtered = data.orders.filter((o) => filter === "todos" || o.status === filter);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Consultorias</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{data.totalOrders} pedidos no total.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="Receita Total" value={`R$ ${data.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos" />
+        <IndicatorCard label="Pagos" value={data.paidCount} />
+        <IndicatorCard label="Pendentes" value={data.pendingCount} />
+      </div>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
+          <option value="todos">Todos os status</option>
+          <option value="paid">Pago</option>
+          <option value="pending">Pendente</option>
+        </select>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+          {["Usuário", "Agendado para", "Status", "Valor"].map((h) => (
+            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+          ))}
+        </div>
+        {filtered.slice(0, 50).map((o) => (
+          <div key={o.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{o.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{o.userEmail}</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{o.scheduledDate ? `${new Date(o.scheduledDate).toLocaleDateString("pt-BR")} ${o.scheduledTime || ""}` : "—"}</p>
+            <StatusBadge label={statusLabels[o.status] || o.status} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{`R$ ${o.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}</p>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhum pedido encontrado.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [status, setStatus] = useState("loading"); // loading | denied | ready
   const [userEmail, setUserEmail] = useState("");
@@ -351,6 +420,7 @@ export default function AdminPage() {
           {view === "overview" && <OverviewView email={userEmail} />}
           {view === "users" && <UsersView email={userEmail} />}
           {view === "subscriptions" && <SubscriptionsView email={userEmail} />}
+          {view === "consulting" && <ConsultingView email={userEmail} />}
         </div>
       </div>
     </div>
