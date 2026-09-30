@@ -10,15 +10,17 @@ const BORDER = "#e2e8f0";
 const TEXT = "#0f172a";
 const MUTED = "#64748b";
 
+// Só essas duas telas já foram construídas — as outras aparecem no menu
+// (fiéis ao Figma), mas desativadas até serem implementadas de verdade.
 const NAV_ITEMS = [
-  ["Visão Geral", LayoutDashboard, "overview"],
-  ["Usuários", Users, "users"],
-  ["Roteiros", Map, "trips"],
-  ["Consultorias", CalendarDays, "consulting"],
-  ["Assinaturas", CreditCard, "subscriptions"],
-  ["Financeiro", Landmark, "finance"],
-  ["Gamificação", Trophy, "gamification"],
-  ["Configurações", Settings2, "settings"],
+  ["Visão Geral", LayoutDashboard, "overview", true],
+  ["Usuários", Users, "users", true],
+  ["Roteiros", Map, "trips", false],
+  ["Consultorias", CalendarDays, "consulting", false],
+  ["Assinaturas", CreditCard, "subscriptions", false],
+  ["Financeiro", Landmark, "finance", false],
+  ["Gamificação", Trophy, "gamification", false],
+  ["Configurações", Settings2, "settings", false],
 ];
 
 function IndicatorCard({ label, value, hint }) {
@@ -31,10 +33,166 @@ function IndicatorCard({ label, value, hint }) {
   );
 }
 
+function StatusBadge({ label }) {
+  const colors = {
+    "Ativo": { bg: "rgba(0,200,83,0.08)", text: GREEN },
+    "Cancelado": { bg: "rgba(239,68,68,0.08)", text: "#ef4444" },
+    "Pendente": { bg: "rgba(234,179,8,0.1)", text: "#b48200" },
+    "Legado (grátis)": { bg: "rgba(100,116,139,0.1)", text: MUTED },
+    "Nunca assinou": { bg: "rgba(100,116,139,0.08)", text: MUTED },
+  };
+  const c = colors[label] || colors["Nunca assinou"];
+  return (
+    <div style={{ background: c.bg, display: "inline-flex", padding: "4px 10px", borderRadius: 4 }}>
+      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: c.text, margin: 0 }}>{label.toUpperCase()}</p>
+    </div>
+  );
+}
+
+function OverviewView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar os dados.</p>;
+
+  const maxCount = Math.max(1, ...data.newUsersByDay.map((d) => d.count));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Visão Geral</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Números em tempo real, direto do banco.</p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff" }}>
+            <CalendarIcon size={14} color={MUTED} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Este mês</p>
+          </div>
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff", cursor: "pointer" }}>
+            <Download size={14} color={MUTED} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Exportar</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="Total de Usuários" value={data.totalUsers.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Assinantes Ativos" value={data.activeSubscribers.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Roteiros (mês)" value={data.tripsThisMonth.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Jogos Registrados (mês)" value={data.gamesThisMonth.toLocaleString("pt-BR")} />
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="MRR (Receita Recorrente)" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Soma das assinaturas ativas" />
+        <IndicatorCard label="Receita de Consultorias" value={`R$ ${data.consultingRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos, total histórico" />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: "0 0 20px" }}>Novos usuários — últimos 14 dias</p>
+        <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 120 }}>
+          {data.newUsersByDay.map((d) => (
+            <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{ width: "100%", height: Math.max(4, (d.count / maxCount) * 100), background: d.count > 0 ? GREEN : BORDER, borderRadius: 4 }} title={`${d.date}: ${d.count}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UsersView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [users, setUsers] = useState([]);
+  const [filter, setFilter] = useState("todos");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        const data = await res.json();
+        setUsers(data.users || []);
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar os usuários.</p>;
+
+  const filtered = users.filter((u) => {
+    const matchesFilter = filter === "todos" || u.subscriptionStatus === filter;
+    const matchesSearch = !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const statusOptions = ["todos", "Ativo", "Cancelado", "Pendente", "Legado (grátis)", "Nunca assinou"];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Usuários</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{filtered.length} de {users.length} usuários</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", flex: 1, maxWidth: 320 }}>
+          <Search size={16} color={MUTED} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+        </div>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
+          {statusOptions.map((s) => <option key={s} value={s}>{s === "todos" ? "Todos os status" : s}</option>)}
+        </select>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.4fr 1fr 1.2fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+          {["Usuário", "País", "Criado em", "Nível", "Assinatura"].map((h) => (
+            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+          ))}
+        </div>
+        {filtered.slice(0, 50).map((u) => (
+          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.4fr 1fr 1.2fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{u.name}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{u.email}</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{u.country || "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{new Date(u.createdAt).toLocaleDateString("pt-BR")}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{u.level}</p>
+            <StatusBadge label={u.subscriptionStatus} />
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhum usuário encontrado.</p>
+        )}
+      </div>
+      {filtered.length > 50 && (
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, textAlign: "center", margin: 0 }}>Mostrando os 50 primeiros — refine a busca pra ver outros.</p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [status, setStatus] = useState("loading"); // loading | denied | ready
-  const [data, setData] = useState(null);
   const [userEmail, setUserEmail] = useState("");
+  const [view, setView] = useState("overview");
 
   useEffect(() => {
     (async () => {
@@ -42,19 +200,10 @@ export default function AdminPage() {
       const { data: userData } = await supabase.auth.getUser();
       const email = userData.user?.email;
       setUserEmail(email || "");
-      if (!email) {
-        setStatus("denied");
-        return;
-      }
+      if (!email) { setStatus("denied"); return; }
       try {
         const res = await fetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
-        if (!res.ok) {
-          setStatus("denied");
-          return;
-        }
-        const json = await res.json();
-        setData(json);
-        setStatus("ready");
+        setStatus(res.ok ? "ready" : "denied");
       } catch {
         setStatus("denied");
       }
@@ -80,8 +229,6 @@ export default function AdminPage() {
     );
   }
 
-  const maxCount = Math.max(1, ...data.newUsersByDay.map((d) => d.count));
-
   return (
     <div style={{ background: BG, minHeight: "100vh", fontFamily: "Inter, sans-serif", display: "flex" }}>
       {/* Navegação lateral */}
@@ -96,10 +243,14 @@ export default function AdminPage() {
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {NAV_ITEMS.map(([label, Icon, key]) => {
-            const active = key === "overview";
+          {NAV_ITEMS.map(([label, Icon, key, enabled]) => {
+            const active = key === view;
             return (
-              <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: active ? GREEN_BG : "transparent", cursor: active ? "default" : "not-allowed", opacity: active ? 1 : 0.5 }}>
+              <div
+                key={key}
+                onClick={() => enabled && setView(key)}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: active ? GREEN_BG : "transparent", cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5 }}
+              >
                 <Icon size={16} color={active ? GREEN : MUTED} />
                 <p style={{ fontFamily: "Inter, sans-serif", fontWeight: active ? 700 : 500, fontSize: 14, color: active ? GREEN : TEXT, margin: 0 }}>{label}</p>
               </div>
@@ -123,50 +274,9 @@ export default function AdminPage() {
         </div>
 
         {/* Conteúdo */}
-        <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 24, overflowY: "auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Visão Geral</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Números em tempo real, direto do banco.</p>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff" }}>
-                <CalendarIcon size={14} color={MUTED} />
-                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Este mês</p>
-              </div>
-              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff", cursor: "pointer" }}>
-                <Download size={14} color={MUTED} />
-                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Exportar</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <IndicatorCard label="Total de Usuários" value={data.totalUsers.toLocaleString("pt-BR")} />
-            <IndicatorCard label="Assinantes Ativos" value={data.activeSubscribers.toLocaleString("pt-BR")} />
-            <IndicatorCard label="Roteiros (mês)" value={data.tripsThisMonth.toLocaleString("pt-BR")} />
-            <IndicatorCard label="Jogos Registrados (mês)" value={data.gamesThisMonth.toLocaleString("pt-BR")} />
-          </div>
-
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <IndicatorCard label="MRR (Receita Recorrente)" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Soma das assinaturas ativas" />
-            <IndicatorCard label="Receita de Consultorias" value={`R$ ${data.consultingRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos, total histórico" />
-          </div>
-
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
-            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: "0 0 20px" }}>Novos usuários — últimos 14 dias</p>
-            <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 120 }}>
-              {data.newUsersByDay.map((d) => (
-                <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{ width: "100%", height: Math.max(4, (d.count / maxCount) * 100), background: d.count > 0 ? GREEN : BORDER, borderRadius: 4 }} title={`${d.date}: ${d.count}`} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, textAlign: "center", margin: 0 }}>
-            Essa é a primeira tela do painel administrativo — as outras 7 (destacadas com opacidade reduzida no menu) ainda não foram construídas.
-          </p>
+        <div style={{ padding: 24, overflowY: "auto" }}>
+          {view === "overview" && <OverviewView email={userEmail} />}
+          {view === "users" && <UsersView email={userEmail} />}
         </div>
       </div>
     </div>
