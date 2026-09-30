@@ -1963,7 +1963,7 @@ function AuthedFooter() {
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 32 : 0, alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, width: isMobile ? "100%" : 360 }}>
           <Wordmark />
-          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>A plataforma entrega roteiros de futebol personalizados grátis. Se quiser, você pode contratar uma consultoria humana para ajudar com voos, hotéis e detalhes da viagem.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Somos uma plataforma pra montar roteiros de futebol e registrar seus jogos e estádios mundo afora. Ah, e se precisar, te ajudamos com consultoria pra voos, ingressos e hospedagem.</p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : 300 }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Fique por dentro</p>
