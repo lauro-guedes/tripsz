@@ -4824,6 +4824,14 @@ const SCREEN_TO_PATH = {
 const PATH_TO_SCREEN = Object.fromEntries(Object.entries(SCREEN_TO_PATH).map(([k, v]) => [v, k]));
 
 export default function App() {
+  // Remove a tela de carregamento estática (do layout.js) assim que o
+  // app de verdade termina de montar — é o sinal de que já passamos do
+  // momento "tela branca" que a demora de ~7s deixava aparecer.
+  useEffect(() => {
+    const el = document.getElementById("app-shell-loader");
+    if (el) el.remove();
+  }, []);
+
   const [screen, setScreen] = useState("landing");
   const [showGlobalLoginModal, setShowGlobalLoginModal] = useState(false);
   // Quando a pessoa já está logada e começa um roteiro novo, ela pula a
