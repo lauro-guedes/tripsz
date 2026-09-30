@@ -3,12 +3,17 @@ import { useState, useEffect } from "react";
 import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase";
 
-const GREEN = "#00c853";
-const GREEN_BG = "rgba(0,200,83,0.06)";
-const BG = "#f8fafc";
-const BORDER = "#e2e8f0";
-const TEXT = "#0f172a";
-const MUTED = "#64748b";
+const GREEN = "#00d66f";
+const GREEN_BG = "#ddf9ea";
+const BG = "#f4f7f6";
+const BORDER = "#dee7e2";
+const TEXT = "#102018";
+const MUTED = "#53645b";
+const MUTED_LIGHT = "#829087";
+const SIDEBAR_BG = "#101b2d";
+const SIDEBAR_ITEM_HOVER = "#233a35";
+const SIDEBAR_TEXT = "#b9c4bf";
+const BLUE = "#3178f6";
 
 // Só essas duas telas já foram construídas — as outras aparecem no menu
 // (fiéis ao Figma), mas desativadas até serem implementadas de verdade.
@@ -18,17 +23,17 @@ const NAV_ITEMS = [
   ["Roteiros", Map, "trips", true],
   ["Consultorias", CalendarDays, "consulting", true],
   ["Assinaturas", CreditCard, "subscriptions", true],
-  ["Financeiro", Landmark, "finance", false],
+  ["Financeiro", Landmark, "finance", true],
   ["Gamificação", Trophy, "gamification", true],
   ["Configurações", Settings2, "settings", false],
 ];
 
 function IndicatorCard({ label, value, hint }) {
   return (
-    <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 180 }}>
-      <p style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
-      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>{value}</p>
-      {hint && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{hint}</p>}
+    <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 15, display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 180, minHeight: 106 }}>
+      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0, width: "100%" }}>{label}</p>
+      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 22, color: TEXT, margin: 0 }}>{value}</p>
+      {hint && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0, width: "100%" }}>{hint}</p>}
     </div>
   );
 }
@@ -70,44 +75,50 @@ function OverviewView({ email }) {
   if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar os dados.</p>;
 
   const maxCount = Math.max(1, ...data.newUsersByDay.map((d) => d.count));
+  const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Visão Geral</p>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Números em tempo real, direto do banco.</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Visão geral</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Pulso da operação · {today}</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff" }}>
-            <CalendarIcon size={14} color={MUTED} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Este mês</p>
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "0 13px", height: 34, display: "flex", gap: 7, alignItems: "center", background: "#fff" }}>
+            <CalendarIcon size={14} color={TEXT} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: TEXT, margin: 0 }}>Este mês</p>
           </div>
-          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 14px", display: "flex", gap: 6, alignItems: "center", background: "#fff", cursor: "pointer" }}>
-            <Download size={14} color={MUTED} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>Exportar</p>
+          <div style={{ border: `1px solid ${GREEN}`, borderRadius: 8, padding: "0 13px", height: 34, display: "flex", gap: 7, alignItems: "center", background: GREEN, cursor: "pointer" }}>
+            <Download size={14} color={SIDEBAR_BG} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: SIDEBAR_BG, margin: 0 }}>Exportar relatório</p>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <IndicatorCard label="Total de Usuários" value={data.totalUsers.toLocaleString("pt-BR")} />
-        <IndicatorCard label="Assinantes Ativos" value={data.activeSubscribers.toLocaleString("pt-BR")} />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Usuários" value={data.totalUsers.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Assinantes ativos" value={data.activeSubscribers.toLocaleString("pt-BR")} />
         <IndicatorCard label="Roteiros (mês)" value={data.tripsThisMonth.toLocaleString("pt-BR")} />
-        <IndicatorCard label="Jogos Registrados (mês)" value={data.gamesThisMonth.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Jogos registrados (mês)" value={data.gamesThisMonth.toLocaleString("pt-BR")} />
       </div>
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <IndicatorCard label="MRR (Receita Recorrente)" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Soma das assinaturas ativas" />
-        <IndicatorCard label="Receita de Consultorias" value={`R$ ${data.consultingRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos, total histórico" />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Receita recorrente" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="MRR líquido, assinaturas ativas" />
+        <IndicatorCard label="Receita de consultorias" value={`R$ ${data.consultingRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Total histórico, pedidos pagos" />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: "0 0 20px" }}>Novos usuários — últimos 14 dias</p>
-        <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 120 }}>
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: TEXT, margin: 0 }}>Crescimento de usuários</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: "3px 0 0" }}>Novos cadastros — últimos 14 dias</p>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 140, paddingTop: 10 }}>
           {data.newUsersByDay.map((d) => (
-            <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{ width: "100%", height: Math.max(4, (d.count / maxCount) * 100), background: d.count > 0 ? GREEN : BORDER, borderRadius: 4 }} title={`${d.date}: ${d.count}`} />
+            <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%", justifyContent: "flex-end" }}>
+              <div style={{ width: "100%", height: Math.max(4, (d.count / maxCount) * 100), background: GREEN, borderRadius: "4px 4px 1px 1px" }} title={`${d.date}: ${d.count}`} />
             </div>
           ))}
         </div>
@@ -144,39 +155,58 @@ function UsersView({ email }) {
   });
 
   const statusOptions = ["todos", "Ativo", "Cancelado", "Pendente", "Legado (grátis)", "Nunca assinou"];
+  const counts = { todos: users.length };
+  statusOptions.slice(1).forEach((s) => { counts[s] = users.filter((u) => u.subscriptionStatus === s).length; });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Usuários</p>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{filtered.length} de {users.length} usuários</p>
-      </div>
-
-      <div style={{ display: "flex", gap: 12 }}>
-        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", flex: 1, maxWidth: 320 }}>
-          <Search size={16} color={MUTED} />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Usuários</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Gestão da base e jornada dos torcedores</p>
         </div>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
-          {statusOptions.map((s) => <option key={s} value={s}>{s === "todos" ? "Todos os status" : s}</option>)}
-        </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.4fr 1fr 1.2fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Base total" value={users.length.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Assinantes ativos" value={counts["Ativo"] || 0} />
+        <IndicatorCard label="Nunca assinaram" value={counts["Nunca assinou"] || 0} />
+        <IndicatorCard label="Cancelados" value={counts["Cancelado"] || 0} />
+      </div>
+
+      <div style={{ borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 20 }}>
+        {statusOptions.map((s) => (
+          <div key={s} onClick={() => setFilter(s)} style={{ borderBottom: filter === s ? `2px solid #008e4a` : "2px solid transparent", paddingBottom: 10, paddingTop: 4, cursor: "pointer" }}>
+            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: filter === s ? 700 : 500, fontSize: 11, color: filter === s ? TEXT : MUTED_LIGHT, margin: 0 }}>{s === "todos" ? "Todos" : s} {counts[s] ?? ""}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 34, padding: "0 10px", maxWidth: 320 }}>
+        <Search size={14} color={MUTED_LIGHT} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2.4fr 1fr 1.4fr 1fr 1.2fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "País", "Criado em", "Nível", "Assinatura"].map((h) => (
-            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+            <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
-        {filtered.slice(0, 50).map((u) => (
-          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.4fr 1fr 1.2fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
-            <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{u.name}</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{u.email}</p>
+        {filtered.slice(0, 50).map((u, i) => (
+          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2.4fr 1fr 1.4fr 1fr 1.2fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}` }}>
+            <div style={{ display: "flex", gap: 9, alignItems: "center" }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: i % 2 ? "#ddf9ea" : "#e8f0ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: i % 2 ? "#008e4a" : BLUE, margin: 0 }}>{u.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{u.name}</p>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{u.email}</p>
+              </div>
             </div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{u.country || "—"}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{new Date(u.createdAt).toLocaleDateString("pt-BR")}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{u.level}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{u.country || "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{new Date(u.createdAt).toLocaleDateString("pt-BR")}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{u.level}</p>
             <StatusBadge label={u.subscriptionStatus} />
           </div>
         ))}
@@ -456,6 +486,61 @@ function GamificationView({ email }) {
   );
 }
 
+function FinanceView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/finance?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar os dados financeiros.</p>;
+
+  const maxRevenue = Math.max(1, ...data.monthlyRevenue.map((m) => m.revenue));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Financeiro</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Resumo combinando assinaturas e consultorias.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="MRR" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Receita recorrente mensal" />
+        <IndicatorCard label="ARR" value={`R$ ${data.arr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="MRR × 12" />
+        <IndicatorCard label="Receita de Consultorias" value={`R$ ${data.consultingRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Total histórico, pedidos pagos" />
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="Assinantes Ativos" value={data.activeSubscribers} />
+        <IndicatorCard label="Assinantes Cancelados" value={data.cancelledSubscribers} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: "0 0 4px" }}>Receita — últimos 6 meses</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "0 0 20px" }}>Aproximação a partir de quando cada assinatura/pedido foi criado — não é um histórico de faturamento oficial.</p>
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-end", height: 140 }}>
+          {data.monthlyRevenue.map((m) => (
+            <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <p style={{ fontFamily: "monospace", fontSize: 10, color: MUTED, margin: 0 }}>{`R$ ${Math.round(m.revenue)}`}</p>
+              <div style={{ width: "100%", height: Math.max(4, (m.revenue / maxRevenue) * 100), background: GREEN, borderRadius: 4 }} />
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: TEXT, textTransform: "capitalize", margin: 0 }}>{m.month}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [status, setStatus] = useState("loading"); // loading | denied | ready
   const [userEmail, setUserEmail] = useState("");
@@ -499,55 +584,79 @@ export default function AdminPage() {
   return (
     <div style={{ background: BG, minHeight: "100vh", fontFamily: "Inter, sans-serif", display: "flex" }}>
       {/* Navegação lateral */}
-      <div style={{ width: 232, background: "#fff", borderRight: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", padding: "24px 16px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 8px", marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 8, background: GREEN_BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <LayoutDashboard size={18} color={GREEN} />
+      <div style={{ width: 232, background: SIDEBAR_BG, display: "flex", flexDirection: "column", gap: 22, padding: "24px 16px 20px", flexShrink: 0, minHeight: "100vh" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <LayoutDashboard size={18} color={SIDEBAR_BG} />
           </div>
           <div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 800, fontSize: 15, color: TEXT, margin: 0 }}>tripsz</p>
-            <p style={{ fontFamily: "monospace", fontSize: 10, color: MUTED, margin: 0 }}>Painel Admin</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 17, color: "#fff", margin: 0 }}>tripsz</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 9, color: GREEN, letterSpacing: 1, textTransform: "uppercase", margin: 0 }}>Admin console</p>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 9, color: MUTED_LIGHT, letterSpacing: 1, textTransform: "uppercase", padding: "0 0 6px 10px", margin: 0 }}>Workspace</p>
           {NAV_ITEMS.map(([label, Icon, key, enabled]) => {
             const active = key === view;
             return (
               <div
                 key={key}
                 onClick={() => enabled && setView(key)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, background: active ? GREEN_BG : "transparent", cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5 }}
+                style={{ display: "flex", alignItems: "center", gap: 10, height: 38, padding: "0 11px", borderRadius: 8, background: active ? SIDEBAR_ITEM_HOVER : "transparent", cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5 }}
               >
-                <Icon size={16} color={active ? GREEN : MUTED} />
-                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: active ? 700 : 500, fontSize: 14, color: active ? GREEN : TEXT, margin: 0 }}>{label}</p>
+                <Icon size={16} color={active ? "#fff" : SIDEBAR_TEXT} />
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: active ? 700 : 500, fontSize: 12, color: active ? "#fff" : SIDEBAR_TEXT, margin: 0, flex: 1 }}>{label}</p>
+                {active && <div style={{ width: 3, height: 18, borderRadius: 999, background: GREEN }} />}
               </div>
             );
           })}
+        </div>
+        <div style={{ background: "#18283a", border: "1px solid #2b3b4b", borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
+          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+            <div style={{ width: 7, height: 7, borderRadius: 4, background: GREEN }} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0 }}>Produção estável</p>
+          </div>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: 0 }}>tripsz · painel administrativo</p>
+        </div>
+        <div style={{ borderTop: "1px solid #293647", paddingTop: 14, display: "flex", gap: 9, alignItems: "center" }}>
+          <div style={{ width: 30, height: 30, borderRadius: "50%", background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: SIDEBAR_BG, margin: 0 }}>{(userEmail[0] || "A").toUpperCase()}</p>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>Admin</p>
+          </div>
         </div>
       </div>
 
       {/* Área principal */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Barra superior */}
-        <div style={{ height: 64, borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
-          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", width: 280 }}>
-            <Search size={16} color={MUTED} />
-            <input placeholder="Buscar..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+        <div style={{ height: 64, borderBottom: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 }}>
+          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 12px", width: 380 }}>
+            <Search size={15} color={MUTED_LIGHT} />
+            <input placeholder="Buscar usuário, roteiro, cobrança..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1, color: TEXT }} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>⌘ K</p>
           </div>
-          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <HelpCircle size={18} color={MUTED} />
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <HelpCircle size={16} color={MUTED} />
+            </div>
             <Bell size={18} color={MUTED} />
+            <div style={{ width: 1, height: 24, background: BORDER }} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: GREEN, margin: 0 }}>BR · Produção</p>
           </div>
         </div>
 
         {/* Conteúdo */}
-        <div style={{ padding: 24, overflowY: "auto" }}>
+        <div style={{ padding: "24px 28px 36px", overflowY: "auto" }}>
           {view === "overview" && <OverviewView email={userEmail} />}
           {view === "users" && <UsersView email={userEmail} />}
           {view === "subscriptions" && <SubscriptionsView email={userEmail} />}
           {view === "consulting" && <ConsultingView email={userEmail} />}
           {view === "trips" && <TripsView email={userEmail} />}
           {view === "gamification" && <GamificationView email={userEmail} />}
+          {view === "finance" && <FinanceView email={userEmail} />}
         </div>
       </div>
     </div>
