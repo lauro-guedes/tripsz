@@ -17,7 +17,7 @@ const NAV_ITEMS = [
   ["Usuários", Users, "users", true],
   ["Roteiros", Map, "trips", false],
   ["Consultorias", CalendarDays, "consulting", false],
-  ["Assinaturas", CreditCard, "subscriptions", false],
+  ["Assinaturas", CreditCard, "subscriptions", true],
   ["Financeiro", Landmark, "finance", false],
   ["Gamificação", Trophy, "gamification", false],
   ["Configurações", Settings2, "settings", false],
@@ -40,6 +40,7 @@ function StatusBadge({ label }) {
     "Pendente": { bg: "rgba(234,179,8,0.1)", text: "#b48200" },
     "Legado (grátis)": { bg: "rgba(100,116,139,0.1)", text: MUTED },
     "Nunca assinou": { bg: "rgba(100,116,139,0.08)", text: MUTED },
+    "Pausado": { bg: "rgba(234,179,8,0.1)", text: "#b48200" },
   };
   const c = colors[label] || colors["Nunca assinou"];
   return (
@@ -189,6 +190,78 @@ function UsersView({ email }) {
   );
 }
 
+function SubscriptionsView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [filter, setFilter] = useState("todos");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/subscriptions?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar as assinaturas.</p>;
+
+  const statusLabels = { active: "Ativo", pending: "Pendente", cancelled: "Cancelado", paused: "Pausado" };
+  const filtered = data.subscriptions.filter((s) => filter === "todos" || s.status === filter);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Assinaturas</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{data.subscriptions.length} assinaturas no total.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="MRR" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Receita recorrente mensal" />
+        <IndicatorCard label="Taxa de Cancelamento" value={`${data.churnRate}%`} hint="Cancelados ÷ (ativos + cancelados)" />
+        <IndicatorCard label="Plano Mensal" value={data.monthlyCount} hint="Assinantes ativos" />
+        <IndicatorCard label="Plano Anual" value={data.annualCount} hint="Assinantes ativos" />
+      </div>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
+          <option value="todos">Todos os status</option>
+          <option value="active">Ativo</option>
+          <option value="pending">Pendente</option>
+          <option value="cancelled">Cancelado</option>
+          <option value="paused">Pausado</option>
+        </select>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+          {["Usuário", "Plano", "Status", "Próxima Cobrança", "Cartão"].map((h) => (
+            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+          ))}
+        </div>
+        {filtered.slice(0, 50).map((s) => (
+          <div key={s.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{s.userEmail}</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.plan}</p>
+            <StatusBadge label={statusLabels[s.status] || s.status} />
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.paymentMethod}</p>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhuma assinatura encontrada.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [status, setStatus] = useState("loading"); // loading | denied | ready
   const [userEmail, setUserEmail] = useState("");
@@ -277,6 +350,7 @@ export default function AdminPage() {
         <div style={{ padding: 24, overflowY: "auto" }}>
           {view === "overview" && <OverviewView email={userEmail} />}
           {view === "users" && <UsersView email={userEmail} />}
+          {view === "subscriptions" && <SubscriptionsView email={userEmail} />}
         </div>
       </div>
     </div>
