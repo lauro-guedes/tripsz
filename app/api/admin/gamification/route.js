@@ -31,7 +31,7 @@ export async function GET(request) {
   try {
     const supabase = supabaseAdmin();
 
-    const { data: games } = await supabase.from("attended_games").select("user_id, stadium, country, competition");
+    const { data: games } = await supabase.from("attended_games").select("user_id, stadium, country, competition, home_team, away_team");
     const byUser = new Map();
     (games || []).forEach((g) => {
       if (!byUser.has(g.user_id)) byUser.set(g.user_id, []);
@@ -68,7 +68,20 @@ export async function GET(request) {
     ranking.sort((a, b) => b.xp - a.xp);
     ranking.forEach((r, i) => { r.position = i + 1; });
 
-    return Response.json({ ranking, total: ranking.length });
+    const totalXp = ranking.reduce((sum, r) => sum + r.xp, 0);
+    const totalGames = ranking.reduce((sum, r) => sum + r.gamesCount, 0);
+
+    // Confrontos mais registrados — conta o mesmo jogo (A×B e B×A) junto,
+    // já que é o mesmo confronto visto por quem foi na partida.
+    const matchupCounts = {};
+    (games || []).forEach((g) => {
+      if (!g.home_team || !g.away_team) return;
+      const key = [g.home_team, g.away_team].sort().join(" × ");
+      matchupCounts[key] = (matchupCounts[key] || 0) + 1;
+    });
+    const topMatchups = Object.entries(matchupCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    return Response.json({ ranking, total: ranking.length, totalXp, totalGames, topMatchups });
   } catch (e) {
     console.error("Erro em /api/admin/gamification:", e);
     return Response.json({ error: e.message || "Não foi possível carregar o ranking." }, { status: 500 });
