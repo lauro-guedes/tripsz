@@ -4288,6 +4288,8 @@ function MeuPerfil({ onNavigate, onLogout }) {
     setName(original.name);
     setEmail(original.email);
     setWhatsapp(original.whatsapp);
+    setCountry(original.country);
+    setFavoriteTeams(original.favoriteTeams || []);
     setPrefs(original.prefs);
     setCurrentPassword("");
     setNewPassword("");
@@ -4496,14 +4498,29 @@ function MeuPerfil({ onNavigate, onLogout }) {
             {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
             {success && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GREEN, margin: 0 }}>Alterações salvas com sucesso!</p>}
 
-            <div style={{ display: "flex", gap: 16, justifyContent: "flex-end", width: "100%" }}>
-              <div onClick={handleDiscard} style={{ background: BG_ALT, padding: "14px 24px", borderRadius: 8, cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>Descartar</p>
-              </div>
-              <div onClick={saving ? undefined : handleSave} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 28px", borderRadius: 8, cursor: saving ? "default" : "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : "Salvar Alterações"}</p>
-              </div>
-            </div>
+            {(() => {
+              const sameArray = (a = [], b = []) => a.length === b.length && a.every((x) => b.includes(x));
+              const hasChanges = !!original && (
+                name !== original.name ||
+                email !== original.email ||
+                whatsapp !== original.whatsapp ||
+                country !== original.country ||
+                !sameArray(favoriteTeams, original.favoriteTeams) ||
+                !sameArray(prefs, original.prefs) ||
+                !!currentPassword || !!newPassword || !!confirmPassword
+              );
+              const canSave = hasChanges && !saving;
+              return (
+                <div style={{ display: "flex", gap: 16, justifyContent: "flex-end", width: "100%" }}>
+                  <div onClick={hasChanges ? handleDiscard : undefined} style={{ background: BG_ALT, padding: "14px 24px", borderRadius: 8, cursor: hasChanges ? "pointer" : "default", opacity: hasChanges ? 1 : 0.5 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>Descartar</p>
+                  </div>
+                  <div onClick={canSave ? handleSave : undefined} style={{ background: GREEN_BUTTON, opacity: canSave ? 1 : 0.5, padding: "14px 28px", borderRadius: 8, cursor: canSave ? "pointer" : "default" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{saving ? "Salvando..." : "Salvar Alterações"}</p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div style={{ width: isMobile ? "100%" : 380 }}>
