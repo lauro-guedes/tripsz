@@ -1203,32 +1203,38 @@ function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Datas de viagem</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: isMobile ? "100%" : 800 }}>
-            <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? "14px 16px" : "16px 24px", borderRadius: 8 }}>
-              <Calendar size={20} color={TEXT} />
-              <input
-                type="date"
-                value={answers.dateStart || ""}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => {
-                  const newStart = e.target.value;
-                  setAnswers((a) => ({
-                    ...a,
-                    dateStart: newStart,
-                    dateEnd: a.dateEnd && a.dateEnd < newStart ? "" : a.dateEnd,
-                  }));
-                }}
-                style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
-              />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data de Ida</p>
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? "14px 16px" : "16px 24px", borderRadius: 8 }}>
+                <Calendar size={20} color={TEXT} />
+                <input
+                  type="date"
+                  value={answers.dateStart || ""}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    const newStart = e.target.value;
+                    setAnswers((a) => ({
+                      ...a,
+                      dateStart: newStart,
+                      dateEnd: a.dateEnd && a.dateEnd < newStart ? "" : a.dateEnd,
+                    }));
+                  }}
+                  style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
+                />
+              </div>
             </div>
-            <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? "14px 16px" : "16px 24px", borderRadius: 8 }}>
-              <Calendar size={20} color={TEXT} />
-              <input
-                type="date"
-                value={answers.dateEnd || ""}
-                min={answers.dateStart || new Date().toISOString().split("T")[0]}
-                onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
-                style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
-              />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data de Volta</p>
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? "14px 16px" : "16px 24px", borderRadius: 8 }}>
+                <Calendar size={20} color={TEXT} />
+                <input
+                  type="date"
+                  value={answers.dateEnd || ""}
+                  min={answers.dateStart || new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
+                  style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
+                />
+              </div>
             </div>
           </div>
         </div>
