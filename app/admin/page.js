@@ -244,21 +244,34 @@ function SubscriptionsView({ email }) {
   const filtered = data.subscriptions.filter((s) => filter === "todos" || s.status === filter);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Assinaturas</p>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{data.subscriptions.length} assinaturas no total.</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Assinaturas</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Planos, receita recorrente e ciclo de vida dos assinantes</p>
       </div>
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <IndicatorCard label="MRR" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Receita recorrente mensal" />
-        <IndicatorCard label="Taxa de Cancelamento" value={`${data.churnRate}%`} hint="Cancelados ÷ (ativos + cancelados)" />
-        <IndicatorCard label="Plano Mensal" value={data.monthlyCount} hint="Assinantes ativos" />
-        <IndicatorCard label="Plano Anual" value={data.annualCount} hint="Assinantes ativos" />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="MRR" value={`R$ ${data.mrr.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+        <IndicatorCard label="ARR projetado" value={`R$ ${(data.mrr * 12).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="MRR × 12" />
+        <IndicatorCard label="Taxa de cancelamento" value={`${data.churnRate}%`} hint="Cancelados ÷ (ativos + cancelados)" />
+        <IndicatorCard label="Assinantes ativos" value={data.activeCount} />
       </div>
 
       <div style={{ display: "flex", gap: 12 }}>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: TEXT, margin: 0 }}>Mensal</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 20, color: TEXT, margin: 0 }}>{data.monthlyCount}</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED, margin: 0 }}>R$ 19,90/mês</p>
+        </div>
+        <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 10, padding: 14, flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: TEXT, margin: 0 }}>Anual</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 20, color: TEXT, margin: 0 }}>{data.annualCount}</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED, margin: 0 }}>R$ 200,00/ano</p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, height: 34, padding: "0 10px", fontFamily: "Inter, sans-serif", fontSize: 11, color: TEXT }}>
           <option value="todos">Todos os status</option>
           <option value="active">Ativo</option>
           <option value="pending">Pendente</option>
@@ -267,22 +280,22 @@ function SubscriptionsView({ email }) {
         </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
-          {["Usuário", "Plano", "Status", "Próxima Cobrança", "Cartão"].map((h) => (
-            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
+          {["Assinante", "Plano", "Status", "Próxima cobrança", "Cartão"].map((h) => (
+            <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((s) => (
-          <div key={s.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+          <div key={s.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}` }}>
             <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.userName}</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{s.userEmail}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{s.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{s.userEmail}</p>
             </div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.plan}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{s.plan}</p>
             <StatusBadge label={statusLabels[s.status] || s.status} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{s.paymentMethod}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{s.paymentMethod}</p>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -316,41 +329,41 @@ function ConsultingView({ email }) {
   const filtered = data.orders.filter((o) => filter === "todos" || o.status === filter);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Consultorias</p>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{data.totalOrders} pedidos no total.</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Consultorias e agendamentos</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>{data.totalOrders} pedidos no total</p>
       </div>
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <IndicatorCard label="Receita Total" value={`R$ ${data.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos" />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Receita total" value={`R$ ${data.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} hint="Pedidos pagos" />
         <IndicatorCard label="Pagos" value={data.paidCount} />
         <IndicatorCard label="Pendentes" value={data.pendingCount} />
       </div>
 
       <div style={{ display: "flex", gap: 12 }}>
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "8px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT }}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, height: 34, padding: "0 10px", fontFamily: "Inter, sans-serif", fontSize: 11, color: TEXT }}>
           <option value="todos">Todos os status</option>
           <option value="paid">Pago</option>
           <option value="pending">Pendente</option>
         </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "Agendado para", "Status", "Valor"].map((h) => (
-            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+            <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((o) => (
-          <div key={o.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+          <div key={o.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "8px 14px", minHeight: 47, borderTop: `1px solid ${BORDER}`, alignItems: "center" }}>
             <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{o.userName}</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{o.userEmail}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{o.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{o.userEmail}</p>
             </div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{o.scheduledDate ? `${new Date(o.scheduledDate).toLocaleDateString("pt-BR")} ${o.scheduledTime || ""}` : "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{o.scheduledDate ? `${new Date(o.scheduledDate).toLocaleDateString("pt-BR")} ${o.scheduledTime || ""}` : "—"}</p>
             <StatusBadge label={statusLabels[o.status] || o.status} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{`R$ ${o.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{`R$ ${o.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}</p>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -382,39 +395,56 @@ function TripsView({ email }) {
 
   const filtered = data.trips.filter((t) => !search || t.userName.toLowerCase().includes(search.toLowerCase()) || t.userEmail.toLowerCase().includes(search.toLowerCase()));
 
+  const countryCounts = {};
+  data.trips.forEach((t) => t.countries.forEach((c) => { countryCounts[c] = (countryCounts[c] || 0) + 1; }));
+  const topDestinations = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Roteiros</p>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{filtered.length} de {data.total} roteiros — o roteiro em si é sempre grátis, essa tela é só uma visão.</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Roteiros</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Geração e destinos escolhidos — o roteiro em si é sempre grátis</p>
       </div>
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        <IndicatorCard label="Total de Roteiros" value={data.total} />
-        <IndicatorCard label="Com Consultoria Paga" value={data.withConsulting} />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Total de roteiros" value={data.total} />
+        <IndicatorCard label="Com consultoria paga" value={data.withConsulting} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", maxWidth: 320 }}>
-        <Search size={16} color={MUTED} />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+      <div style={{ display: "flex", gap: 14 }}>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: TEXT, margin: 0 }}>Destinos mais escolhidos</p>
+          {topDestinations.map(([country, count]) => (
+            <div key={country} style={{ display: "flex", justifyContent: "space-between" }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{country}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{count}</p>
+            </div>
+          ))}
+          {topDestinations.length === 0 && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>Ainda sem dados suficientes.</p>}
+        </div>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 34, padding: "0 10px", maxWidth: 320 }}>
+        <Search size={14} color={MUTED_LIGHT} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "Países", "Datas", "Prioridade", "Criado em"].map((h) => (
-            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+            <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((t) => (
-          <div key={t.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+          <div key={t.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "8px 14px", minHeight: 47, borderTop: `1px solid ${BORDER}`, alignItems: "center" }}>
             <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{t.userName}</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{t.userEmail}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{t.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{t.userEmail}</p>
             </div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.countries.join(", ") || "—"}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.dateStart ? `${new Date(t.dateStart).toLocaleDateString("pt-BR")} – ${new Date(t.dateEnd).toLocaleDateString("pt-BR")}` : "—"}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.priority}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{new Date(t.createdAt).toLocaleDateString("pt-BR")}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{t.countries.join(", ") || "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{t.dateStart ? `${new Date(t.dateStart).toLocaleDateString("pt-BR")} – ${new Date(t.dateEnd).toLocaleDateString("pt-BR")}` : "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{t.priority}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{new Date(t.createdAt).toLocaleDateString("pt-BR")}</p>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -447,35 +477,74 @@ function GamificationView({ email }) {
   const filtered = data.ranking.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Gamificação</p>
-        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Ranking completo, só leitura — {data.total} torcedores com jogo registrado.</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Gamificação</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Pontuação, conquistas e ranking da comunidade</p>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", maxWidth: 320 }}>
-        <Search size={16} color={MUTED} />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <IndicatorCard label="Torcedores no ranking" value={data.total} />
+        <IndicatorCard label="XP total distribuído" value={data.totalXp.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Jogos registrados" value={data.totalGames.toLocaleString("pt-BR")} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+      <div style={{ display: "flex", gap: 14 }}>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: TEXT, margin: 0 }}>Confrontos mais registrados</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: "3px 0 0" }}>Todo o histórico</p>
+          </div>
+          {data.topMatchups.map(([matchup, count], i) => (
+            <div key={matchup} style={{ display: "flex", gap: 9, alignItems: "center" }}>
+              <div style={{ background: "#ecf3ef", borderRadius: 999, padding: "4px 8px" }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 9, color: MUTED, margin: 0 }}>{i + 1}</p>
+              </div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0, flex: 1 }}>{matchup}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{count}</p>
+            </div>
+          ))}
+          {data.topMatchups.length === 0 && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>Ainda sem dados suficientes.</p>}
+        </div>
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: TEXT, margin: 0 }}>Regras de pontuação</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: "3px 0 0" }}>Fórmula real usada no XP</p>
+          </div>
+          <div style={{ display: "flex", gap: 9 }}>
+            {[["Jogo registrado", "+50 pts"], ["Estádio novo", "+100 pts"], ["País novo", "+200 pts"], ["Badge completa", "+150 pts"]].map(([label, val]) => (
+              <div key={label} style={{ background: "#f8faf9", borderRadius: 8, padding: 10, flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED, margin: 0 }}>{label}</p>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{val}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 34, padding: "0 10px", maxWidth: 320 }}>
+        <Search size={14} color={MUTED_LIGHT} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["#", "Usuário", "País", "Nível", "XP", "Estádios", "Países"].map((h) => (
-            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+            <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((r) => (
-          <div key={r.userId} style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
-            <p style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: MUTED, margin: 0 }}>#{r.position}</p>
+          <div key={r.userId} style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "8px 14px", minHeight: 47, borderTop: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: MUTED_LIGHT, margin: 0 }}>#{r.position}</p>
             <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{r.name}</p>
-              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{r.email}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{r.name}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{r.email}</p>
             </div>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.country}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.tier}</p>
-            <p style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{r.xp.toLocaleString("pt-BR")}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.stadiumsCount}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.countriesCount}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{r.country}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{r.tier}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: GREEN, margin: 0 }}>{r.xp.toLocaleString("pt-BR")}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{r.stadiumsCount}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{r.countriesCount}</p>
           </div>
         ))}
         {filtered.length === 0 && (
