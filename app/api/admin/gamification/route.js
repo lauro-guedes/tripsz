@@ -15,10 +15,59 @@ function tierName(xp) {
   return "Torcedor de Sofá";
 }
 
+// Calcula o XP/estatísticas de cada usuário a partir de uma lista de
+// jogos — usado duas vezes: uma com TODOS os jogos (hoje), outra só com
+// os jogos registrados até 30 dias atrás (pra comparar o crescimento
+// real, sem inventar nenhuma variação).
+function computeRanking(games, usersById) {
+  const byUser = new Map();
+  games.forEach((g) => {
+    if (!byUser.has(g.user_id)) byUser.set(g.user_id, []);
+    byUser.get(g.user_id).push(g);
+  });
+
+  const ranking = [];
+  for (const [uid, userGames] of byUser) {
+    const user = usersById.get(uid);
+    if (!user) continue;
+
+    const stadiums = new Set(userGames.map((g) => g.stadium).filter(Boolean));
+    const countries = new Set(userGames.map((g) => g.country).filter(Boolean));
+    const hasChampions = userGames.some((g) => /champions league/i.test(g.competition || ""));
+    const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
+    const xp = userGames.length * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
+
+    ranking.push({
+      userId: uid,
+      name: user.user_metadata?.name || "Sem nome",
+      email: user.email,
+      country: user.user_metadata?.country || "—",
+      tier: tierName(xp),
+      xp,
+      gamesCount: userGames.length,
+      stadiumsCount: stadiums.size,
+      countriesCount: countries.size,
+    });
+  }
+
+  ranking.sort((a, b) => b.xp - a.xp);
+  ranking.forEach((r, i) => { r.position = i + 1; });
+  return ranking;
+}
+
+// Variação percentual real entre dois valores — devolve null quando não
+// dá pra calcular direito (era zero antes), em vez de mostrar um número
+// enganoso tipo "∞%".
+function growthPct(now, before) {
+  if (before === 0) return null;
+  return Math.round(((now - before) / before) * 1000) / 10;
+}
+
 /**
  * GET /api/admin/gamification?email=admin@tripsz.com
- * Painel administrativo — ranking completo, só leitura, pra conferência.
- * Mesma fórmula de XP usada no Ranking que os usuários veem.
+ * Painel administrativo — ranking completo, pódio e crescimento real
+ * (comparado com 30 dias atrás, usando a data em que cada jogo foi
+ * registrado — nunca um número inventado).
  */
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -31,57 +80,48 @@ export async function GET(request) {
   try {
     const supabase = supabaseAdmin();
 
-    const { data: games } = await supabase.from("attended_games").select("user_id, stadium, country, competition, home_team, away_team");
-    const byUser = new Map();
-    (games || []).forEach((g) => {
-      if (!byUser.has(g.user_id)) byUser.set(g.user_id, []);
-      byUser.get(g.user_id).push(g);
-    });
+    const { data: allGames } = await supabase
+      .from("attended_games")
+      .select("user_id, stadium, country, competition, home_team, away_team, created_at");
+    const games = allGames || [];
 
     const { data: userList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const usersById = new Map((userList?.users || []).map((u) => [u.id, u]));
 
-    const ranking = [];
-    for (const [uid, userGames] of byUser) {
-      const user = usersById.get(uid);
-      if (!user) continue;
+    const ranking = computeRanking(games, usersById);
 
-      const stadiums = new Set(userGames.map((g) => g.stadium).filter(Boolean));
-      const countries = new Set(userGames.map((g) => g.country).filter(Boolean));
-      const hasChampions = userGames.some((g) => /champions league/i.test(g.competition || ""));
-      const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
-      const xp = userGames.length * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
-
-      ranking.push({
-        userId: uid,
-        name: user.user_metadata?.name || "Sem nome",
-        email: user.email,
-        country: user.user_metadata?.country || "—",
-        tier: tierName(xp),
-        xp,
-        gamesCount: userGames.length,
-        stadiumsCount: stadiums.size,
-        countriesCount: countries.size,
-      });
-    }
-
-    ranking.sort((a, b) => b.xp - a.xp);
-    ranking.forEach((r, i) => { r.position = i + 1; });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+    const gamesBefore = games.filter((g) => g.created_at && g.created_at <= thirtyDaysAgo);
+    const rankingBefore = computeRanking(gamesBefore, usersById);
 
     const totalXp = ranking.reduce((sum, r) => sum + r.xp, 0);
+    const totalXpBefore = rankingBefore.reduce((sum, r) => sum + r.xp, 0);
     const totalGames = ranking.reduce((sum, r) => sum + r.gamesCount, 0);
+    const totalGamesBefore = gamesBefore.length;
 
-    // Confrontos mais registrados — conta o mesmo jogo (A×B e B×A) junto,
-    // já que é o mesmo confronto visto por quem foi na partida.
+    const membersGrowth = growthPct(ranking.length, rankingBefore.length);
+    const xpGrowth = growthPct(totalXp, totalXpBefore);
+    const gamesGrowth = growthPct(totalGames, totalGamesBefore);
+
     const matchupCounts = {};
-    (games || []).forEach((g) => {
+    games.forEach((g) => {
       if (!g.home_team || !g.away_team) return;
       const key = [g.home_team, g.away_team].sort().join(" × ");
       matchupCounts[key] = (matchupCounts[key] || 0) + 1;
     });
     const topMatchups = Object.entries(matchupCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    return Response.json({ ranking, total: ranking.length, totalXp, totalGames, topMatchups });
+    return Response.json({
+      ranking,
+      total: ranking.length,
+      totalXp,
+      totalGames,
+      topMatchups,
+      membersGrowth,
+      xpGrowth,
+      gamesGrowth,
+      podium: ranking.slice(0, 3),
+    });
   } catch (e) {
     console.error("Erro em /api/admin/gamification:", e);
     return Response.json({ error: e.message || "Não foi possível carregar o ranking." }, { status: 500 });
