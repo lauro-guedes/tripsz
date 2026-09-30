@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -91,6 +91,7 @@ function FontImports() {
 
 /* ---- Real icon path data you uploaded, recolored per use ---- */
 const RAW_ICONS = {
+  stadium: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 3L1 5V1L5 3ZM16 1V5L20 3L16 1ZM9 0V4L13 2L9 0ZM11 16H9V20C3.95 19.85 0 18.56 0 17V8C0 6.34 4.48 5 10 5C15.52 5 20 6.34 20 8V17C20 18.56 16.05 19.85 11 20V16ZM3 8.04C4.38 8.53 6.77 9 10 9C13.23 9 15.62 8.53 17 8.04C17 7.86 14.22 7 10 7C5.78 7 3 7.86 3 8.04ZM18 9.8C16.18 10.53 13.27 11 10 11C6.73 11 3.82 10.53 2 9.8V16.58C2.61 16.99 4.36 17.59 7 17.86V14H13V17.86C15.64 17.59 17.39 16.99 18 16.58V9.8Z" fill="COLOR"/></svg>`,
   arrowRight: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M3.3328 7.99996H12.6672M8 12.6672L12.6672 7.99996L8 3.33276" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   circleX: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_2_578)"> <path d="M12.5002 7.49978L7.49982 12.5002M7.49982 7.49978L12.5002 12.5002M18.334 9.99998C18.334 14.6027 14.6028 18.334 10 18.334C5.39727 18.334 1.66602 14.6027 1.66602 9.99998C1.66602 5.39724 5.39727 1.66599 10 1.66599C14.6028 1.66599 18.334 5.39724 18.334 9.99998Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </g> </svg>`,
   lockKeyhole: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.33333 13.333V9.33273C9.33333 7.56448 10.0357 5.86865 11.286 4.61831C12.5362 3.36796 14.2319 2.66553 16 2.66553C17.7681 2.66553 19.4638 3.36796 20.714 4.61831C21.9643 5.86865 22.6667 7.56448 22.6667 9.33273V13.333M17.3333 21.3337C17.3333 22.0701 16.7364 22.6671 16 22.6671C15.2636 22.6671 14.6667 22.0701 14.6667 21.3337C14.6667 20.5972 15.2636 20.0002 16 20.0002C16.7364 20.0002 17.3333 20.5972 17.3333 21.3337ZM6.66667 13.333H25.3333C26.8061 13.333 28 14.5271 28 15.9999V26.6674C28 28.1403 26.8061 29.3343 25.3333 29.3343H6.66667C5.19391 29.3343 4 28.1403 4 26.6674V15.9999C4 14.5271 5.19391 13.333 6.66667 13.333Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
@@ -2329,14 +2330,21 @@ function computeBadgeCategories(ctx) {
     {
       title: "Estádios & Geografia",
       badges: [
-        { id: "est5", label: "5 Estádios", tier: "bronze", ...b(stadiumsSet.size >= 5) },
-        { id: "est15", label: "15 Estádios", tier: "silver", ...b(stadiumsSet.size >= 15) },
-        { id: "est30", label: "30 Estádios", tier: "gold", ...b(stadiumsSet.size >= 30) },
+        { id: "est5", label: "5 Estádios", ...b(stadiumsSet.size >= 5) },
+        { id: "est15", label: "15 Estádios", ...b(stadiumsSet.size >= 15) },
+        { id: "est25", label: "25 Estádios", ...b(stadiumsSet.size >= 25) },
+        { id: "est50", label: "50 Estádios", ...b(stadiumsSet.size >= 50) },
+        { id: "est100", label: "100 Estádios", ...b(stadiumsSet.size >= 100) },
         { id: "pais3", label: "3 Países", ...b(countriesSet.size >= 3) },
-        { id: "pais6", label: "6 Países", ...b(countriesSet.size >= 6) },
+        { id: "pais5", label: "5 Países", ...b(countriesSet.size >= 5) },
         { id: "pais10", label: "10 Países", ...b(countriesSet.size >= 10) },
-        { id: "templos", label: "Colecionador de Templos", ...b(hasIconicStadium) },
-        { id: "continentes", label: "2 Continentes", ...b(hasEU && hasSA) },
+        { id: "continentes2", label: "2 Continentes", ...b(hasEU && hasSA) },
+        // "5 Continentes" fica sempre bloqueada por enquanto — hoje o
+        // app só cobre 13 países em 2 continentes (Europa e América do
+        // Sul), então não tem como isso ser desbloqueado de verdade
+        // ainda. Mantemos o card pra bater com o design, mas sem
+        // fingir que é alcançável.
+        { id: "continentes5", label: "5 Continentes", ...b(false) },
       ],
     },
     {
@@ -2351,6 +2359,7 @@ function computeBadgeCategories(ctx) {
         { id: "ligue1", label: "Ligue 1", ...b(hasCompetition(/ligue 1/i)) },
         { id: "brasileirao", label: "Brasileirão", ...b(hasCompetition(/brasileir/i) || hasCompetition(/serie a/i, "Brazil")) },
         { id: "libertadores", label: "Libertadores", ...b(hasCompetition(/libertadores/i)) },
+        { id: "mundialclubes", label: "Mundial de Clubes", ...b(hasCompetition(/club world cup|mundial de clubes/i)) },
         { id: "classico", label: "Clássico", ...b(hasDerby) },
       ],
     },
@@ -2359,9 +2368,14 @@ function computeBadgeCategories(ctx) {
       badges: [
         { id: "primeiro", label: "Primeiro Jogo", ...b(totalGames >= 1, firstGameDate) },
         { id: "jogos5", label: "5 Jogos", ...b(totalGames >= 5) },
-        { id: "jogos10", label: "10 Jogos", tier: "silver", ...b(totalGames >= 10) },
+        { id: "jogos10", label: "10 Jogos", ...b(totalGames >= 10) },
         { id: "jogos25", label: "25 Jogos", ...b(totalGames >= 25) },
         { id: "jogos50", label: "50 Jogos", ...b(totalGames >= 50) },
+        { id: "jogos100", label: "100 Jogos", ...b(totalGames >= 100) },
+        { id: "jogos150", label: "150 Jogos", ...b(totalGames >= 150) },
+        { id: "jogos200", label: "200 Jogos", ...b(totalGames >= 200) },
+        { id: "jogos250", label: "250 Jogos", ...b(totalGames >= 250) },
+        { id: "jogos500", label: "500 Jogos", ...b(totalGames >= 500) },
         { id: "maratonista", label: "Maratonista", ...b(hasMarathon) },
       ],
     },
@@ -2369,8 +2383,8 @@ function computeBadgeCategories(ctx) {
       title: "Times Favoritos",
       badges: [
         { id: "torcedorfiel", label: "Torcedor Fiel", ...b(hasFavoriteGame) },
-        { id: "multitorcida", label: "Multi-Torcida", ...b(favoriteLeagues.size >= 3) },
         { id: "selecaonacional", label: "Seleção Nacional", ...b(hasNationalTeamGame) },
+        { id: "multitorcida", label: "Multi-Torcida", ...b(favoriteLeagues.size >= 3) },
         { id: "rivalhistorico", label: "Rival Histórico", ...b(hasFavoriteDerby) },
         { id: "coracaodividido", label: "Coração Dividido", ...b(hasDividedHeart) },
       ],
@@ -2380,8 +2394,9 @@ function computeBadgeCategories(ctx) {
       badges: [
         { id: "fundador", label: "Membro Fundador", ...b(isLegacy, userCreatedAt) },
         { id: "detetive", label: "Detetive de Campo", ...b(manualCount >= 1) },
-        { id: "verificado", label: "Verificado", ...b(apiCount >= 10) },
         { id: "perfilcompartilhado", label: "Perfil Compartilhado", ...b(!!hasPublicProfile) },
+        { id: "assinante", label: "Assinante", ...b(!!ctx.isSubscriber) },
+        { id: "verificado", label: "Verificado", ...b(apiCount >= 10) },
         { id: "veteranoconta", label: "Veterano de Conta", ...b(isVeteranAccount) },
       ],
     },
@@ -2424,6 +2439,15 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     // um rascunho não gerado ainda não é uma "conquista".
     const unlocked = trips.filter((r) => r.orders?.some((o) => o.status === "paid"));
     const source = unlocked.length ? unlocked : trips; // fallback pra não ficar tudo zerado em conta nova
+
+    // Assinante — precisa ser uma assinatura de verdade (paga), não
+    // só acesso de graça por ser conta legada.
+    const { data: activeSub } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("status", "active")
+      .maybeSingle();
+    const isSubscriber = !!activeSub;
 
     const { data: attendedRows } = await supabase
       .from("attended_games")
@@ -2469,6 +2493,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       countriesSet: countries,
       favoriteTeamsSet: favoriteTeams,
       hasPublicProfile: !!publicProfileRow,
+      isSubscriber,
       manualCount: attended.filter((g) => g.source === "manual").length,
       apiCount: attended.filter((g) => g.source === "api").length,
       userCreatedAt: user?.created_at ? new Date(user.created_at) : null,
@@ -2567,18 +2592,19 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
                 {cat.badges.map((bdg) => {
                   const dateLabel = bdg.unlocked ? (fmtDate(bdg.detail) || "Desbloqueado") : "Bloqueado";
                   // Mesmo ícone que o Figma usa por categoria: Globe pra
-                  // país/continente, MapPin pra estádio, Trophy pra
-                  // competição, Award pro resto.
+                  // país/continente, estádio de verdade (ícone próprio)
+                  // pros estádios, Trophy pra competição, Award pro resto.
+                  const isStadiumBadge = cat.title === "Estádios & Geografia" && !/país|continente/i.test(bdg.label);
                   let BadgeIcon = Award;
                   if (cat.title === "Estádios & Geografia") {
-                    BadgeIcon = /país|continente/i.test(bdg.label) ? Globe : MapPin;
+                    BadgeIcon = Globe;
                   } else if (cat.title === "Competições") {
                     BadgeIcon = Trophy;
                   }
                   return (
                     <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
                       <div style={{ background: bdg.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />
+                        {isStadiumBadge ? <Icon name="stadium" size={20} color={bdg.unlocked ? GREEN : MUTED} /> : <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />}
                       </div>
                       <div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: bdg.unlocked ? TEXT : MUTED, margin: 0 }}>{bdg.label}</p>
