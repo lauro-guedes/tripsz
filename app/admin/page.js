@@ -15,11 +15,11 @@ const MUTED = "#64748b";
 const NAV_ITEMS = [
   ["Visão Geral", LayoutDashboard, "overview", true],
   ["Usuários", Users, "users", true],
-  ["Roteiros", Map, "trips", false],
+  ["Roteiros", Map, "trips", true],
   ["Consultorias", CalendarDays, "consulting", true],
   ["Assinaturas", CreditCard, "subscriptions", true],
   ["Financeiro", Landmark, "finance", false],
-  ["Gamificação", Trophy, "gamification", false],
+  ["Gamificação", Trophy, "gamification", true],
   ["Configurações", Settings2, "settings", false],
 ];
 
@@ -331,6 +331,131 @@ function ConsultingView({ email }) {
   );
 }
 
+function TripsView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/trips?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar os roteiros.</p>;
+
+  const filtered = data.trips.filter((t) => !search || t.userName.toLowerCase().includes(search.toLowerCase()) || t.userEmail.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Roteiros</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>{filtered.length} de {data.total} roteiros — o roteiro em si é sempre grátis, essa tela é só uma visão.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <IndicatorCard label="Total de Roteiros" value={data.total} />
+        <IndicatorCard label="Com Consultoria Paga" value={data.withConsulting} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", maxWidth: 320 }}>
+        <Search size={16} color={MUTED} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+          {["Usuário", "Países", "Datas", "Prioridade", "Criado em"].map((h) => (
+            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+          ))}
+        </div>
+        {filtered.slice(0, 50).map((t) => (
+          <div key={t.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{t.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{t.userEmail}</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.countries.join(", ") || "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.dateStart ? `${new Date(t.dateStart).toLocaleDateString("pt-BR")} – ${new Date(t.dateEnd).toLocaleDateString("pt-BR")}` : "—"}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{t.priority}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{new Date(t.createdAt).toLocaleDateString("pt-BR")}</p>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhum roteiro encontrado.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GamificationView({ email }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/gamification?email=${encodeURIComponent(email)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email]);
+
+  if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
+  if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar o ranking.</p>;
+
+  const filtered = data.ranking.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>Gamificação</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Ranking completo, só leitura — {data.total} torcedores com jogo registrado.</p>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", maxWidth: 320 }}>
+        <Search size={16} color={MUTED} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 13, flex: 1 }} />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "12px 20px", borderBottom: `1px solid ${BORDER}`, background: BG }}>
+          {["#", "Usuário", "País", "Nível", "XP", "Estádios", "Países"].map((h) => (
+            <p key={h} style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{h}</p>
+          ))}
+        </div>
+        {filtered.slice(0, 50).map((r) => (
+          <div key={r.userId} style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "14px 20px", borderBottom: `1px solid ${BORDER}`, alignItems: "center" }}>
+            <p style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: MUTED, margin: 0 }}>#{r.position}</p>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{r.name}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{r.email}</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.country}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.tier}</p>
+            <p style={{ fontFamily: "monospace", fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{r.xp.toLocaleString("pt-BR")}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.stadiumsCount}</p>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>{r.countriesCount}</p>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhum torcedor encontrado.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [status, setStatus] = useState("loading"); // loading | denied | ready
   const [userEmail, setUserEmail] = useState("");
@@ -421,6 +546,8 @@ export default function AdminPage() {
           {view === "users" && <UsersView email={userEmail} />}
           {view === "subscriptions" && <SubscriptionsView email={userEmail} />}
           {view === "consulting" && <ConsultingView email={userEmail} />}
+          {view === "trips" && <TripsView email={userEmail} />}
+          {view === "gamification" && <GamificationView email={userEmail} />}
         </div>
       </div>
     </div>
