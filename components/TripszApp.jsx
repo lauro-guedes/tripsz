@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -2236,7 +2236,7 @@ const TIER_COLORS = { bronze: "#cd7f32", silver: "#c0c0c0", gold: "#ffd700" };
 
 function computeBadgeCategories(ctx) {
   if (!ctx) return [];
-  const { allGames: games, stadiumsSet, countriesSet, favoriteTeamsSet, manualCount, apiCount, userCreatedAt } = ctx;
+  const { allGames: games, stadiumsSet, countriesSet, favoriteTeamsSet, manualCount, apiCount, userCreatedAt, hasPublicProfile } = ctx;
   const totalGames = games.length;
 
   const hasCompetition = (regex, countryFilter) =>
@@ -2283,6 +2283,48 @@ function computeBadgeCategories(ctx) {
   const isLegacy = !!(userCreatedAt && userCreatedAt < PASSPORT_LAUNCH_DATE);
   const b = (unlocked, detail) => ({ unlocked, detail: detail || null });
 
+  // Seleção Nacional — o nome do time bate com o de uma seleção (times
+  // de país, não de clube).
+  const NATIONAL_TEAM_NAMES = new Set([
+    "Brazil", "Argentina", "England", "Spain", "Italy", "Germany", "France",
+    "Portugal", "Netherlands", "Turkey", "Uruguay", "Chile", "Colombia",
+    "USA", "Mexico", "Japan", "South Korea", "Morocco", "Croatia", "Serbia",
+    "Poland", "Belgium", "Switzerland", "Austria", "Denmark", "Sweden",
+    "Norway", "Egypt", "Russia", "Greece", "Scotland", "Ukraine",
+  ]);
+  const hasNationalTeamGame = games.some((g) => NATIONAL_TEAM_NAMES.has(g.home) || NATIONAL_TEAM_NAMES.has(g.away));
+
+  // Rival Histórico — foi a um clássico envolvendo um dos times favoritos.
+  const hasFavoriteDerby = games.some((g) => (favoriteTeamsSet.has(g.home) || favoriteTeamsSet.has(g.away)) && isDerby(g.home, g.away));
+
+  // Coração Dividido — times favoritos de 2+ ligas diferentes (cada liga
+  // doméstica é de um país só, então isso é um bom indício de torcida
+  // em mais de um país).
+  const hasDividedHeart = favoriteLeagues.size >= 2;
+
+  // Veterano de Conta — conta criada há mais de 1 ano.
+  const isVeteranAccount = !!(userCreatedAt && (Date.now() - userCreatedAt.getTime()) > 365 * 86400000);
+
+  // Verão Sul-Americano — jogo na América do Sul entre dezembro e
+  // fevereiro (é verão lá, oposto do Inverno Europeu).
+  const hasSummerSA = games.some((g) => {
+    const d = new Date(g.date);
+    const m = d.getMonth() + 1;
+    return saSet.has(g.country) && (m === 12 || m === 1 || m === 2);
+  });
+
+  // Ano de Copa — jogo (de qualquer competição) durante uma janela real
+  // de Copa do Mundo. 2022 foi em nov-dez (por causa do calor no Catar);
+  // 2026 é o padrão jun-jul.
+  const WORLD_CUP_WINDOWS = [
+    { start: new Date("2022-11-20"), end: new Date("2022-12-18") },
+    { start: new Date("2026-06-11"), end: new Date("2026-07-19") },
+  ];
+  const hasWorldCupYear = games.some((g) => {
+    const d = new Date(g.date);
+    return WORLD_CUP_WINDOWS.some((w) => d >= w.start && d <= w.end);
+  });
+
   return [
     {
       title: "Estádios & Geografia",
@@ -2328,6 +2370,9 @@ function computeBadgeCategories(ctx) {
       badges: [
         { id: "torcedorfiel", label: "Torcedor Fiel", ...b(hasFavoriteGame) },
         { id: "multitorcida", label: "Multi-Torcida", ...b(favoriteLeagues.size >= 3) },
+        { id: "selecaonacional", label: "Seleção Nacional", ...b(hasNationalTeamGame) },
+        { id: "rivalhistorico", label: "Rival Histórico", ...b(hasFavoriteDerby) },
+        { id: "coracaodividido", label: "Coração Dividido", ...b(hasDividedHeart) },
       ],
     },
     {
@@ -2336,6 +2381,8 @@ function computeBadgeCategories(ctx) {
         { id: "fundador", label: "Membro Fundador", ...b(isLegacy, userCreatedAt) },
         { id: "detetive", label: "Detetive de Campo", ...b(manualCount >= 1) },
         { id: "verificado", label: "Verificado", ...b(apiCount >= 10) },
+        { id: "perfilcompartilhado", label: "Perfil Compartilhado", ...b(!!hasPublicProfile) },
+        { id: "veteranoconta", label: "Veterano de Conta", ...b(isVeteranAccount) },
       ],
     },
     {
@@ -2343,6 +2390,8 @@ function computeBadgeCategories(ctx) {
       badges: [
         { id: "invernoeuropeu", label: "Inverno Europeu", ...b(hasWinterEU) },
         { id: "reveillon", label: "Réveillon do Futebol", ...b(hasNewYear) },
+        { id: "veraosulamericano", label: "Verão Sul-Americano", ...b(hasSummerSA) },
+        { id: "anodecopa", label: "Ano de Copa", ...b(hasWorldCupYear) },
       ],
     },
   ];
@@ -2393,9 +2442,17 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
     const hasChampions = allGames.some((g) => looksLikeChampions(g.competition));
 
-    // Times favoritos combinados de TODOS os roteiros que a pessoa já
-    // preencheu — hoje isso já fica salvo de verdade em trip_answers.
-    const favoriteTeams = new Set(trips.flatMap((r) => r.favorite_teams || []));
+    // Times favoritos declarados de verdade em Meu Perfil — campo
+    // estável, não muda a cada roteiro que a pessoa preenche.
+    const favoriteTeams = new Set(user?.user_metadata?.favorite_teams || []);
+
+    // Perfil Compartilhado — a pessoa já gerou o link do Football
+    // Passport público (tabela public_profiles).
+    const { data: publicProfileRow } = await supabase
+      .from("public_profiles")
+      .select("slug")
+      .eq("user_id", user?.id)
+      .maybeSingle();
 
     setStats({
       stadiums: stadiums.size,
@@ -2411,6 +2468,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       stadiumsSet: stadiums,
       countriesSet: countries,
       favoriteTeamsSet: favoriteTeams,
+      hasPublicProfile: !!publicProfileRow,
       manualCount: attended.filter((g) => g.source === "manual").length,
       apiCount: attended.filter((g) => g.source === "api").length,
       userCreatedAt: user?.created_at ? new Date(user.created_at) : null,
@@ -2507,16 +2565,24 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
                 {cat.badges.map((bdg) => {
-                  const tierColor = bdg.tier ? TIER_COLORS[bdg.tier] : GREEN;
                   const dateLabel = bdg.unlocked ? (fmtDate(bdg.detail) || "Desbloqueado") : "Bloqueado";
+                  // Mesmo ícone que o Figma usa por categoria: Globe pra
+                  // país/continente, MapPin pra estádio, Trophy pra
+                  // competição, Award pro resto.
+                  let BadgeIcon = Award;
+                  if (cat.title === "Estádios & Geografia") {
+                    BadgeIcon = /país|continente/i.test(bdg.label) ? Globe : MapPin;
+                  } else if (cat.title === "Competições") {
+                    BadgeIcon = Trophy;
+                  }
                   return (
-                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? tierColor : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
-                      <div style={{ background: bdg.unlocked ? `${tierColor}1a` : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Award size={20} color={bdg.unlocked ? tierColor : MUTED} />
+                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
+                      <div style={{ background: bdg.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />
                       </div>
                       <div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: bdg.unlocked ? TEXT : MUTED, margin: 0 }}>{bdg.label}</p>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: bdg.unlocked ? tierColor : MUTED, textTransform: "uppercase", margin: 0 }}>{dateLabel}</p>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: bdg.unlocked ? GREEN : MUTED, textTransform: "uppercase", margin: 0 }}>{dateLabel}</p>
                       </div>
                     </div>
                   );
