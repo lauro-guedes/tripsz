@@ -28,11 +28,20 @@ const NAV_ITEMS = [
   ["Configurações", Settings2, "settings", false],
 ];
 
-function IndicatorCard({ label, value, hint }) {
+function IndicatorCard({ label, value, hint, growth }) {
+  const hasGrowth = growth !== undefined && growth !== null;
+  const isUp = hasGrowth && growth >= 0;
   return (
     <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 15, display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 180, minHeight: 106 }}>
       <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0, width: "100%" }}>{label}</p>
-      <p style={{ fontFamily: "Inter, sans-serif", fontSize: 22, color: TEXT, margin: 0 }}>{value}</p>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", width: "100%" }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 22, color: TEXT, margin: 0 }}>{value}</p>
+        {hasGrowth && (
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 9, color: isUp ? "#008e4a" : "#d94b4b", margin: 0 }}>
+            {isUp ? "↑" : "↓"} {Math.abs(growth).toLocaleString("pt-BR")}%
+          </p>
+        )}
+      </div>
       {hint && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0, width: "100%" }}>{hint}</p>}
     </div>
   );
@@ -484,9 +493,39 @@ function GamificationView({ email }) {
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <IndicatorCard label="Torcedores no ranking" value={data.total} />
-        <IndicatorCard label="XP total distribuído" value={data.totalXp.toLocaleString("pt-BR")} />
-        <IndicatorCard label="Jogos registrados" value={data.totalGames.toLocaleString("pt-BR")} />
+        <IndicatorCard label="Torcedores no ranking" value={data.total} growth={data.membersGrowth} hint="vs. 30 dias atrás" />
+        <IndicatorCard label="XP total distribuído" value={data.totalXp.toLocaleString("pt-BR")} growth={data.xpGrowth} hint="vs. 30 dias atrás" />
+        <IndicatorCard label="Jogos registrados" value={data.totalGames.toLocaleString("pt-BR")} growth={data.gamesGrowth} hint="vs. 30 dias atrás" />
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16 }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: TEXT, margin: "0 0 4px" }}>Ranking da comunidade</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: "0 0 16px" }}>Top 3 por XP</p>
+        {data.podium.length === 0 ? (
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED }}>Ainda sem torcedores suficientes pro pódio.</p>
+        ) : (
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+            {[data.podium[1], data.podium[0], data.podium[2]].map((p, i) => {
+              if (!p) return <div key={i} style={{ flex: 1 }} />;
+              const position = p === data.podium[0] ? 1 : p === data.podium[1] ? 2 : 3;
+              const isFirst = position === 1;
+              const heights = { 1: 112, 2: 88, 3: 74 };
+              const initials = p.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+              return (
+                <div key={p.userId} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: isFirst ? GREEN : "#e8f0ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: isFirst ? SIDEBAR_BG : BLUE, margin: 0 }}>{initials}</p>
+                  </div>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: TEXT, margin: 0 }}>{p.name}</p>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{p.xp.toLocaleString("pt-BR")} pts</p>
+                  <div style={{ background: isFirst ? GREEN : "#ecf3ef", width: "100%", height: heights[position], borderRadius: "8px 8px 2px 2px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontSize: 18, color: isFirst ? SIDEBAR_BG : MUTED, margin: 0 }}>{position}º</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 14 }}>
@@ -680,20 +719,22 @@ export default function AdminPage() {
             );
           })}
         </div>
-        <div style={{ background: "#18283a", border: "1px solid #2b3b4b", borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8, marginTop: "auto" }}>
-          <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
-            <div style={{ width: 7, height: 7, borderRadius: 4, background: GREEN }} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0 }}>Produção estável</p>
+        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 14, width: "100%" }}>
+          <div style={{ background: "#18283a", border: "1px solid #2b3b4b", borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+              <div style={{ width: 7, height: 7, borderRadius: 4, background: GREEN }} />
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0 }}>Produção estável</p>
+            </div>
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: 0 }}>tripsz · painel administrativo</p>
           </div>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED_LIGHT, margin: 0 }}>tripsz · painel administrativo</p>
-        </div>
-        <div style={{ borderTop: "1px solid #293647", paddingTop: 14, display: "flex", gap: 9, alignItems: "center" }}>
-          <div style={{ width: 30, height: 30, borderRadius: "50%", background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: SIDEBAR_BG, margin: 0 }}>{(userEmail[0] || "A").toUpperCase()}</p>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>Admin</p>
+          <div style={{ borderTop: "1px solid #293647", paddingTop: 14, display: "flex", gap: 9, alignItems: "center" }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: SIDEBAR_BG, margin: 0 }}>{(userEmail[0] || "A").toUpperCase()}</p>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>Admin</p>
+            </div>
           </div>
         </div>
       </div>
