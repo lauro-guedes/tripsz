@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon } from "lucide-react";
+import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase";
 
 const GREEN = "#00d66f";
@@ -136,11 +136,106 @@ function OverviewView({ email }) {
   );
 }
 
+function UserDetailPanel({ email, userId, onClose }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email, userId]);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.4)" }} />
+      <div style={{ position: "relative", background: "#fff", width: 420, maxWidth: "100%", height: "100%", overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Perfil do usuário</p>
+          <div onClick={onClose} style={{ cursor: "pointer", padding: 4 }}><X size={18} color={MUTED} /></div>
+        </div>
+
+        {status === "loading" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED }}>Carregando...</p>}
+        {status === "error" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED }}>Não foi possível carregar esse perfil.</p>}
+
+        {data && (
+          <>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: GREEN_BG, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 16, color: "#008e4a", margin: 0 }}>{data.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{data.name}</p>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{data.email}</p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <StatusBadge label={data.subscriptionStatus} />
+              {!data.emailConfirmed && <StatusBadge label="Pendente" />}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <IndicatorCard label="XP" value={data.stats.xp.toLocaleString("pt-BR")} hint={data.stats.tier} />
+              <IndicatorCard label="Estádios" value={data.stats.stadiumsCount} />
+              <IndicatorCard label="Países" value={data.stats.countriesCount} />
+              <IndicatorCard label="Jogos" value={data.stats.gamesCount} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Dados</p>
+              {[
+                ["País", data.country || "—"],
+                ["Times favoritos", data.favoriteTeams.length ? data.favoriteTeams.join(", ") : "—"],
+                ["Criado em", new Date(data.createdAt).toLocaleDateString("pt-BR")],
+                ["Perfil público", data.publicProfileSlug ? `/u/${data.publicProfileSlug}` : "Não gerou ainda"],
+              ].map(([label, value]) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${BORDER}`, paddingBottom: 8 }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{label}</p>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0, textAlign: "right" }}>{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Últimos jogos registrados</p>
+              {data.games.length === 0 && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>Nenhum jogo registrado ainda.</p>}
+              {data.games.slice(0, 10).map((g) => (
+                <div key={g.id} style={{ background: BG, borderRadius: 8, padding: 10 }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>{g.home} {g.homeScore ?? ""}×{g.awayScore ?? ""} {g.away}</p>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: "2px 0 0" }}>{g.stadium || "—"} · {new Date(g.date).toLocaleDateString("pt-BR")}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Eventos</p>
+              {data.events.map((ev, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: TEXT, margin: 0 }}>{ev.label}</p>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: 0 }}>{new Date(ev.date).toLocaleDateString("pt-BR")}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function UsersView({ email }) {
   const [status, setStatus] = useState("loading");
   const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -196,14 +291,14 @@ function UsersView({ email }) {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2.4fr 1fr 1.4fr 1fr 1.2fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
-          {["Usuário", "País", "Criado em", "Nível", "Assinatura"].map((h) => (
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1.3fr 1fr 1.1fr 0.5fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
+          {["Usuário", "País", "Criado em", "Nível", "Assinatura", ""].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((u, i) => (
-          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2.4fr 1fr 1.4fr 1fr 1.2fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}` }}>
+          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1.3fr 1fr 1.1fr 0.5fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}`, position: "relative" }}>
             <div style={{ display: "flex", gap: 9, alignItems: "center" }}>
               <div style={{ width: 28, height: 28, borderRadius: "50%", background: i % 2 ? "#ddf9ea" : "#e8f0ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: i % 2 ? "#008e4a" : BLUE, margin: 0 }}>{u.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</p>
@@ -217,6 +312,18 @@ function UsersView({ email }) {
             <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{new Date(u.createdAt).toLocaleDateString("pt-BR")}</p>
             <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{u.level}</p>
             <StatusBadge label={u.subscriptionStatus} />
+            <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
+              <div onClick={() => setOpenMenuId(openMenuId === u.id ? null : u.id)} style={{ cursor: "pointer", padding: 4 }}>
+                <MoreHorizontal size={16} color={MUTED} />
+              </div>
+              {openMenuId === u.id && (
+                <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 20, minWidth: 180 }}>
+                  <div onClick={() => { setSelectedUserId(u.id); setOpenMenuId(null); }} style={{ padding: "10px 14px", cursor: "pointer" }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: TEXT, margin: 0 }}>Ver perfil completo</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -226,6 +333,7 @@ function UsersView({ email }) {
       {filtered.length > 50 && (
         <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, textAlign: "center", margin: 0 }}>Mostrando os 50 primeiros — refine a busca pra ver outros.</p>
       )}
+      {selectedUserId && <UserDetailPanel email={email} userId={selectedUserId} onClose={() => setSelectedUserId(null)} />}
     </div>
   );
 }
