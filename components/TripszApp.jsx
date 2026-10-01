@@ -102,8 +102,10 @@ const RAW_ICONS = {
   chevronDown: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M4 6L8 10L12 6" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   chevronRight: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6 4L10 8L6 12" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   pen: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M22.0008 4.81839C22.0007 5.56599 21.7036 6.28294 21.1749 6.8115L7.82666 20.1603C7.59481 20.3914 7.30978 20.562 6.99659 20.6573L2.6432 21.9772C2.55675 22.0032 2.46488 22.0053 2.37733 21.9833C2.28979 21.9613 2.20983 21.916 2.14595 21.8522C2.08207 21.7885 2.03664 21.7086 2.01449 21.6211C1.99234 21.5336 1.9943 21.4417 2.02014 21.3553L3.34126 17.0033C3.43738 16.6899 3.6091 16.4048 3.84131 16.1733L17.1885 2.82457C17.7173 2.29601 18.4343 1.99911 19.182 1.99921C19.9297 1.9993 20.6467 2.29637 21.1754 2.82507C21.704 3.35377 22.0009 4.07079 22.0008 4.81839Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  soccerBall: `<svg width="24" height="24" viewBox="4 4 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 10.25C18.0716 10.25 16.1866 10.8218 14.5832 11.8932C12.9798 12.9645 11.7301 14.4873 10.9922 16.2688C10.2542 18.0504 10.0611 20.0108 10.4373 21.9021C10.8136 23.7934 11.7422 25.5307 13.1057 26.8943C14.4693 28.2579 16.2066 29.1865 18.0979 29.5627C19.9892 29.9389 21.9496 29.7458 23.7312 29.0078C25.5127 28.2699 27.0355 27.0202 28.1068 25.4168C29.1782 23.8134 29.75 21.9284 29.75 20C29.7473 17.415 28.7192 14.9366 26.8913 13.1087C25.0634 11.2808 22.585 10.2527 20 10.25ZM20.75 13.9419L23.0741 12.3434C24.4047 12.8794 25.5734 13.7516 26.4659 14.8747L25.7159 17.4003C25.6972 17.4003 25.6775 17.4097 25.6588 17.4163L23.5194 18.1109C23.4873 18.1213 23.456 18.1338 23.4256 18.1484L20.75 16.3081V13.9419ZM16.9288 12.3434L19.25 13.9419V16.3081L16.5725 18.1522C16.5421 18.1376 16.5108 18.1251 16.4788 18.1147L14.3394 17.42C14.3206 17.4134 14.3009 17.4087 14.2822 17.4041L13.5322 14.8784C14.4255 13.7533 15.596 12.8798 16.9288 12.3434ZM15.71 24.4456H13.0531C12.2754 23.2364 11.8295 21.8439 11.7603 20.4078L13.8228 18.8253C13.8406 18.8331 13.8587 18.84 13.8772 18.8459L16.0175 19.5416C16.0461 19.5502 16.0752 19.5571 16.1047 19.5622L17.1163 22.5078C17.1022 22.5247 17.0881 22.5416 17.075 22.5594L15.7531 24.3791C15.7376 24.4005 15.7232 24.4227 15.71 24.4456ZM22.1272 27.9688C20.7334 28.34 19.2666 28.34 17.8728 27.9688L16.9297 25.3063C16.9419 25.2913 16.955 25.2772 16.9663 25.2612L18.2891 23.4406C18.3046 23.4195 18.319 23.3976 18.3322 23.375H21.6678C21.681 23.3976 21.6954 23.4195 21.7109 23.4406L23.0338 25.2612C23.045 25.2772 23.0581 25.2913 23.0703 25.3063L22.1272 27.9688ZM24.29 24.4428C24.2768 24.4199 24.2624 24.3977 24.2469 24.3762L22.9241 22.5594C22.9109 22.5416 22.8969 22.5247 22.8828 22.5078L23.8944 19.5622C23.9238 19.5571 23.9529 19.5502 23.9816 19.5416L26.1219 18.8459C26.1403 18.84 26.1585 18.8331 26.1763 18.8253L28.2388 20.4078C28.1695 21.8439 27.7237 23.2364 26.9459 24.4456L24.29 24.4428Z" fill="COLOR"/></svg>`,
+  shieldBadge: `<svg width="24" height="24" viewBox="9 9 22 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.342 16.4468L29.447 15.8938C29.5782 15.8285 29.6935 15.7352 29.7845 15.6204C29.8756 15.5056 29.9403 15.3722 29.974 15.2296C30.0077 15.087 30.0096 14.9387 29.9795 14.7953C29.9494 14.6519 29.8881 14.5168 29.8 14.3998L26.8 10.3998C26.7069 10.2756 26.5861 10.1748 26.4472 10.1053C26.3084 10.0359 26.1552 9.99976 26 9.99976H14C13.8448 9.99976 13.6916 10.0359 13.5528 10.1053C13.4139 10.1748 13.2931 10.2756 13.2 10.3998L10.2 14.3998C10.1122 14.5169 10.0511 14.6518 10.0212 14.7951C9.99122 14.9384 9.9931 15.0866 10.0267 15.2291C10.0602 15.3716 10.1247 15.5049 10.2155 15.6198C10.3062 15.7346 10.4211 15.8282 10.552 15.8938L11.657 16.4468L10.526 18.7088C10.1814 19.4035 10.0014 20.1683 10 20.9438V21.5348C10.0043 22.7552 10.3788 23.9457 11.0741 24.9488C11.7693 25.9519 12.7526 26.7204 13.894 27.1528L17.325 28.4388C18.0648 28.7152 18.7363 29.1476 19.294 29.7068C19.3866 29.7998 19.4967 29.8736 19.618 29.924C19.7392 29.9744 19.8692 30.0003 20.0005 30.0003C20.1318 30.0003 20.2618 29.9744 20.383 29.924C20.5043 29.8736 20.6144 29.7998 20.707 29.7068C21.2648 29.148 21.9363 28.7159 22.676 28.4398L26.108 27.1528C27.249 26.7201 28.2319 25.9515 28.9268 24.9484C29.6217 23.9453 29.9959 22.755 30 21.5348V20.9438C30 20.1728 29.817 19.3988 29.473 18.7078L28.342 16.4468ZM28 21.5348C27.9971 22.3484 27.7474 23.1419 27.2839 23.8106C26.8204 24.4793 26.1649 24.9916 25.404 25.2798L21.973 26.5668C21.2632 26.8319 20.5976 27.2031 19.999 27.6678C19.4005 27.2028 18.7349 26.8312 18.025 26.5658L14.596 25.2798C13.8351 24.9916 13.1796 24.4793 12.7161 23.8106C12.2526 23.1419 12.0029 22.3484 12 21.5348V20.9438C12 20.4808 12.109 20.0158 12.316 19.6018L13.447 17.3408C13.6836 16.866 13.7222 16.3169 13.5544 15.8137C13.3867 15.3105 13.0261 14.8945 12.552 14.6568L12.519 14.6418L14.5 11.9998H25.5L27.481 14.6418L27.447 14.6588C26.973 14.8967 26.6127 15.3128 26.445 15.8158C26.2772 16.3189 26.3157 16.868 26.552 17.3428L27.683 19.6028C27.891 20.0168 28 20.4808 28 20.9438V21.5348Z" fill="COLOR"/></svg>`,
   fileText: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M13.9998 1.99921H6.00059C5.47021 1.99921 4.96156 2.20994 4.58652 2.58504C4.21149 2.96015 4.00079 3.46889 4.00079 3.99937V20.0006C4.00079 20.5311 4.21149 21.0399 4.58652 21.415C4.96156 21.7901 5.47021 22.0008 6.00059 22.0008H17.9994C18.5298 22.0008 19.0384 21.7901 19.4135 21.415C19.7885 21.0399 19.9992 20.5311 19.9992 20.0006V7.99969M13.9998 1.99921C14.3163 1.9987 14.6298 2.06082 14.9222 2.18199C15.2146 2.30317 15.4802 2.48101 15.7036 2.70527L19.2913 6.29355C19.5161 6.51708 19.6944 6.78294 19.8159 7.07578C19.9374 7.36862 19.9997 7.68263 19.9992 7.99969M13.9998 1.99921V6.99961C13.9998 7.26484 14.1051 7.51922 14.2927 7.70677C14.4802 7.89432 14.7345 7.99969 14.9997 7.99969L19.9992 7.99969M10.0002 8.99977H8.00039M15.9996 13.0001H8.00039M15.9996 17.0004H8.00039" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
-  planeTakeoff: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M1.99921 22.0001H21.9992M6.35921 17.4002L3.99921 17.0002L1.99921 13.0002L3.09921 12.4502C3.37836 12.3095 3.68661 12.2362 3.99921 12.2362C4.3118 12.2362 4.62005 12.3095 4.89921 12.4502L5.06921 12.5502C5.34836 12.6909 5.65661 12.7641 5.96921 12.7641C6.2818 12.7641 6.59005 12.6909 6.86921 12.5502L7.99921 12.0002L4.99921 6.00019L5.89921 5.55019C6.23188 5.38653 6.6035 5.31857 6.97256 5.35388C7.34162 5.3892 7.69361 5.52641 7.98921 5.75019L12.0092 8.75019C12.3058 8.9759 12.6596 9.11423 13.0307 9.14957C13.4018 9.18491 13.7753 9.11585 14.1092 8.95019L18.2992 6.89019C18.8346 6.62028 19.4515 6.55966 20.0292 6.72019L20.9992 7.00019C21.1996 7.05584 21.3851 7.15546 21.5422 7.29179C21.6993 7.42812 21.824 7.59774 21.9074 7.78833C21.9907 7.97891 22.0305 8.18567 22.0239 8.39356C22.0173 8.60146 21.9644 8.80527 21.8692 8.99019L21.4892 9.75019C21.2592 10.2102 20.8892 10.5902 20.4192 10.8302L7.57921 17.2002C7.20165 17.3872 6.77468 17.4502 6.35921 17.3802V17.4002Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
+  planeTakeoff: `<svg width="24" height="24" viewBox="10 10 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.212 14.271L22.544 16.512L15.597 15.677C15.1712 15.644 14.7446 15.7302 14.365 15.926L13.252 16.575L18.514 18.735L13.768 21.546L12.364 21.346C11.856 21.2068 11.3138 21.2695 10.851 21.521L10 22L13.47 24.044L19.644 22.724L30 16.687L28.972 14.97C28.442 14.047 27.202 13.715 26.212 14.271ZM14 27H26" stroke="COLOR" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   google: `<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>`,
   search: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M9.16667 16.6667C13.3088 16.6667 16.6667 13.3088 16.6667 9.16667C16.6667 5.02453 13.3088 1.66667 9.16667 1.66667C5.02453 1.66667 1.66667 5.02453 1.66667 9.16667C1.66667 13.3088 5.02453 16.6667 9.16667 16.6667Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M18.3333 18.3333L14.1667 14.1667" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
   globe: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22.0008C17.5228 22.0008 22 17.5236 22 12.0008C22 6.47792 17.5228 2.00076 12 2.00076C6.47715 2.00076 2 6.47792 2 12.0008C2 17.5236 6.47715 22.0008 12 22.0008Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M2 12.0008H22" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> <path d="M12 2.00076C14.5013 4.73866 15.9228 8.29331 16 12.0008C15.9228 15.7082 14.5013 19.2629 12 22.0008C9.49872 19.2629 8.07725 15.7082 8 12.0008C8.07725 8.29331 9.49872 4.73866 12 2.00076Z" stroke="COLOR" stroke-width="2" stroke-linecap="round"/> </svg>`,
@@ -219,8 +221,8 @@ function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         {onLogin && (
-          <div onClick={onLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, width: 120, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 8, cursor: "pointer" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Entrar</p>
+          <div onClick={onLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 8, cursor: "pointer", whiteSpace: "nowrap" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Entrar ou Criar Conta</p>
           </div>
         )}
         <Button variant="primaryDark" onClick={onStart}>Montar minha viagem</Button>
@@ -322,8 +324,8 @@ function LandingPage({ onStart, onLogin }) {
   };
 
   const steps = [
-    { n: "01", icon: "pen", title: "Defina países, datas e times", body: "Selecione os países, datas e times que você quer ver. A plataforma usa esses filtros para montar seu roteiro." },
-    { n: "02", icon: "fileText", title: "Receba o roteiro de jogos", body: "A plataforma cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem." },
+    { n: "01", icon: "shieldBadge", title: "Defina países, datas e times", body: "Selecione os países, datas e times que você quer ver. A plataforma usa esses filtros para montar seu roteiro." },
+    { n: "02", icon: "soccerBall", title: "Receba o roteiro de jogos", body: "A plataforma cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem." },
     { n: "03", icon: "planeTakeoff", title: "Organize o restante da viagem", body: "Use o roteiro como base e, se precisar, contrate uma consultoria humana para ajudar com voos, hotéis e detalhes da viagem." },
   ];
   const stats = [["450+", "Estádios Mapeados"], ["1.2k+", "Jogos por Temporada"], ["15", "Países Cobertos"], ["100%", "De Ingressos Entregues"]];
@@ -366,7 +368,7 @@ function LandingPage({ onStart, onLogin }) {
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 16 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Escolha países, datas e times. Nossa plataforma cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem.</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 16, width: isMobile ? "100%" : "auto" }}>
             <Button onClick={onStart} icon={<Icon name="arrowRight" size={16} color={TEXT} />}>Montar meu roteiro</Button>
-            <div style={{ background: BG_ALT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "14px 24px", cursor: "pointer", textAlign: "center" }}>
+            <div onClick={() => handleNavItem("como-funciona")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "14px 24px", cursor: "pointer", textAlign: "center" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Ver como funciona</p>
             </div>
           </div>
@@ -380,7 +382,7 @@ function LandingPage({ onStart, onLogin }) {
       <div id="como-funciona" style={{ background: BG_ALT, padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
           <Badge>O Caminho até a Arquibancada</Badge>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>Como a plataforma ajuda você</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>Como a plataforma ajuda você a montar o melhor roteiro</p>
         </div>
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 16 : 32 }}>
           {steps.map((s) => (
@@ -412,7 +414,7 @@ function LandingPage({ onStart, onLogin }) {
           <Badge>Alma de Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, margin: 0 }}>Como a plataforma ajuda você a planejar sua viagem</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 18, lineHeight: 1.6, color: BODY, margin: 0 }}>A plataforma foca no que importa: encontrar os jogos possíveis e a melhor sequência de cidades. Depois, você decide se quer ajuda humana para fechar voos, hotéis e detalhes da viagem.</p>
-          {!isMobile && <div style={{ paddingTop: 16 }}><Button variant="outline">Ver como funciona</Button></div>}
+          {!isMobile && <div style={{ paddingTop: 16 }}><Button variant="outline" onClick={() => handleNavItem("como-funciona")}>Ver como funciona</Button></div>}
         </div>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: isMobile ? 12 : 24 }}>
           {diffs.map(([title, body]) => (
@@ -426,6 +428,51 @@ function LandingPage({ onStart, onLogin }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* passport-section */}
+      <div style={{ background: "#fff", padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64, alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", maxWidth: 900 }}>
+          <Badge>Football Passport</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>O passaporte que transforma sua jornada em uma história pessoal</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.6, color: BODY, textAlign: "center", margin: 0 }}>O Football Passport é a ferramenta da plataforma para registrar jogos, estádios, conquistas e progresso. Ele ajuda a planejar viagens, acompanhar o histórico e compartilhar sua paixão por futebol de forma única.</p>
+        </div>
+        <div style={{ background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <Award size={20} color={GREEN} />
+          </div>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: "#fff", margin: 0 }}>GS</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Titular</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Gabriel Silva</p>
+              </div>
+              <div>
+                <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nível de Acesso</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>VIP GROUNDHOPPER</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>ID: #9284-MD</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: 2026</p>
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            {[["stadium", "Estádios", "5 visitados"], ["award", "Conquistas", "3 badges"], ["trophy", "Progresso", "10 jogos"]].map(([iconKey, label, value]) => (
+              <div key={label} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ background: GREEN_BG, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {iconKey === "stadium" ? <Icon name="stadium" size={20} color={GREEN} /> : iconKey === "award" ? <Award size={20} color={GREEN} /> : <Trophy size={20} color={GREEN} />}
+                </div>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: GREEN, margin: 0 }}>{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -3641,6 +3688,71 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     URL.revokeObjectURL(url);
   };
 
+  // Alguns exports (como o do Futbology) vêm com letras "disfarçadas" de
+  // outros alfabetos (cirílico, armênio) que parecem idênticas a letras
+  // latinas de olho nu, mas são tecnicamente diferentes — sem trocar de
+  // volta, nenhuma busca por nome bate. Troca pela letra latina real.
+  const HOMOGLYPH_MAP = {
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x",
+    "і": "i", "ѕ": "s", "һ": "h", "ո": "n", "ս": "u", "ի": "i", "ց": "g",
+    "ր": "r", "ա": "a", "Ա": "A", "Ѕ": "S", "А": "A", "Е": "E", "О": "O",
+    "Р": "P", "С": "C",
+  };
+  const normalizeHomoglyphs = (text) =>
+    (text || "").split("").map((c) => HOMOGLYPH_MAP[c] || c).join("");
+
+  const PORTUGUESE_MONTHS = { jan: "01", fev: "02", mar: "03", abr: "04", mai: "05", jun: "06", jul: "07", ago: "08", set: "09", out: "10", nov: "11", dez: "12" };
+
+  // Parser específico pro formato do Futbology: sem cabeçalho de
+  // coluna, "estádio + mandante + visitante" tudo junto num texto só
+  // (sem separador confiável entre eles), separado da competição por
+  // ";", com um ".%" sobrando no final de cada linha.
+  const parseFutbologyLine = (rawLine, rowId) => {
+    const line = normalizeHomoglyphs(rawLine);
+    const [blobPart, compPart] = line.split(";");
+    if (!blobPart || !compPart) return null;
+
+    const dateMatch = blobPart.match(/^(\d{1,2}) de (\w{3})\.? de (\d{4})/i);
+    let date = null;
+    let rawDate = "";
+    let rest = blobPart;
+    if (dateMatch) {
+      rawDate = dateMatch[0];
+      const month = PORTUGUESE_MONTHS[dateMatch[2].toLowerCase()];
+      if (month) date = `${dateMatch[3]}-${month}-${dateMatch[1].padStart(2, "0")}`;
+      rest = blobPart.slice(dateMatch[0].length).trim();
+    }
+
+    const scoreMatch = rest.match(/(\d+)\s+(\d+):?\s*$/);
+    let homeScore = "";
+    let awayScore = "";
+    let combinedText = rest;
+    if (scoreMatch) {
+      homeScore = scoreMatch[1];
+      awayScore = scoreMatch[2];
+      combinedText = rest.slice(0, scoreMatch.index).trim();
+    }
+
+    const competition = compPart.replace(/\.%\s*$/, "").trim();
+
+    return {
+      rowId,
+      include: true,
+      date,
+      rawDate: rawDate || "(confira a data)",
+      stadium: "",
+      city: "",
+      country: "",
+      home: "",
+      away: "",
+      combinedText, // estádio + mandante + visitante juntos — a pessoa separa
+      homeScore,
+      awayScore,
+      competition,
+      needsManualSplit: true,
+    };
+  };
+
   const HEADER_ALIASES = {
     data: ["data", "date"],
     estadio: ["estadio", "estádio", "stadium", "venue"],
@@ -3681,7 +3793,21 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         const idx = rawHeaders.findIndex((h) => aliases.includes(h));
         if (idx !== -1) colIndex[key] = idx;
       });
+
+      // Sem cabeçalho reconhecido, mas com o padrão "texto ; competição.%"
+      // em pelo menos uma linha? Provavelmente é um export tipo
+      // Futbology — usa o parser específico pra esse formato.
       if (colIndex.mandante === undefined || colIndex.visitante === undefined || colIndex.data === undefined) {
+        const looksLikeFutbology = lines.some((l) => /;.*\.%\s*$/.test(l));
+        if (looksLikeFutbology) {
+          const rows = lines.map((line, i) => parseFutbologyLine(line, i)).filter(Boolean);
+          if (rows.length === 0) {
+            setCsvError("Reconhecemos o formato Futbology, mas não conseguimos ler nenhuma linha dele. Confere se o arquivo não foi alterado.");
+            return;
+          }
+          setCsvRows(rows);
+          return;
+        }
         setCsvError('O arquivo precisa ter pelo menos as colunas "data", "mandante" e "visitante". Baixe nosso modelo pra ver o formato certo.');
         return;
       }
@@ -3882,7 +4008,21 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                               </div>
                               {!isValid && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#dc2626", textTransform: "uppercase", margin: 0 }}>Falta dado</p>}
                             </div>
+                            {row.needsManualSplit && (
+                              <div style={{ background: "#fff9e6", border: "1px solid #b78103", borderRadius: 6, padding: 8 }}>
+                                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: "#b78103", margin: 0 }}>
+                                  Texto original (separe abaixo em Estádio, Mandante e Visitante): <strong>{row.combinedText}</strong>
+                                  {row.homeScore && ` · Placar lido: ${row.homeScore}×${row.awayScore}`}
+                                </p>
+                              </div>
+                            )}
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                              {row.needsManualSplit && (
+                                <>
+                                  <input value={row.home} onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)} placeholder="Mandante (obrigatório)" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.home ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                                  <input value={row.away} onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)} placeholder="Visitante (obrigatório)" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.away ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                                </>
+                              )}
                               <input value={row.rawDate || ""} readOnly placeholder="Data" style={{ width: 110, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.date ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
                               <input value={row.country} onChange={(e) => updateCsvRow(row.rowId, "country", e.target.value)} placeholder="País (obrigatório)" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.country ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
                               <input value={row.city} onChange={(e) => updateCsvRow(row.rowId, "city", e.target.value)} placeholder="Cidade" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
