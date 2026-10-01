@@ -338,10 +338,86 @@ function UsersView({ email }) {
   );
 }
 
+function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
+  const [status, setStatus] = useState("loading");
+  const [data, setData] = useState(null);
+  const statusLabels = { active: "Ativo", pending: "Pendente", cancelled: "Cancelado", paused: "Pausado" };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/subscriptions/detail?email=${encodeURIComponent(email)}&subscriptionId=${encodeURIComponent(subscriptionId)}`);
+        if (!res.ok) { setStatus("error"); return; }
+        setData(await res.json());
+        setStatus("ready");
+      } catch { setStatus("error"); }
+    })();
+  }, [email, subscriptionId]);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", justifyContent: "flex-end" }}>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.4)" }} />
+      <div style={{ position: "relative", background: "#fff", width: 420, maxWidth: "100%", height: "100%", overflowY: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Detalhes da cobrança</p>
+          <div onClick={onClose} style={{ cursor: "pointer", padding: 4 }}><X size={18} color={MUTED} /></div>
+        </div>
+
+        {status === "loading" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED }}>Carregando...</p>}
+        {status === "error" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED }}>Não foi possível carregar essa assinatura.</p>}
+
+        {data && (
+          <>
+            <div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{data.userName}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{data.userEmail}</p>
+            </div>
+
+            <StatusBadge label={statusLabels[data.status] || data.status} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Resumo</p>
+              {[
+                ["Plano", data.plan],
+                ["Valor", `R$ ${data.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`],
+                ["Próxima cobrança", data.currentPeriodEnd ? new Date(data.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"],
+                ["Cartão", data.paymentMethod],
+                ["Assinante desde", new Date(data.createdAt).toLocaleDateString("pt-BR")],
+              ].map(([label, value]) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${BORDER}`, paddingBottom: 8 }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{label}</p>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Histórico de faturas</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED_LIGHT, margin: 0 }}>Direto do Mercado Pago, em tempo real.</p>
+              {data.invoices.length === 0 && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>Nenhuma fatura encontrada ainda.</p>}
+              {data.invoices.map((inv, i) => (
+                <div key={i} style={{ background: BG, borderRadius: 8, padding: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>R$ {inv.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: 0 }}>{new Date(inv.date).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: inv.status === "approved" ? "#008e4a" : MUTED, margin: 0 }}>{inv.status}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SubscriptionsView({ email }) {
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState("todos");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectedSubId, setSelectedSubId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -397,14 +473,14 @@ function SubscriptionsView({ email }) {
         </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
-          {["Assinante", "Plano", "Status", "Próxima cobrança", "Cartão"].map((h) => (
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1.2fr 1fr 0.5fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
+          {["Assinante", "Plano", "Status", "Próxima cobrança", "Cartão", ""].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
           ))}
         </div>
         {filtered.slice(0, 50).map((s) => (
-          <div key={s.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1.2fr 1fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}` }}>
+          <div key={s.id} style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1.2fr 1fr 0.5fr", padding: "8px 14px", minHeight: 47, alignItems: "center", borderTop: `1px solid ${BORDER}`, position: "relative" }}>
             <div>
               <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{s.userName}</p>
               <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{s.userEmail}</p>
@@ -413,12 +489,25 @@ function SubscriptionsView({ email }) {
             <StatusBadge label={statusLabels[s.status] || s.status} />
             <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{s.currentPeriodEnd ? new Date(s.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"}</p>
             <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{s.paymentMethod}</p>
+            <div style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
+              <div onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)} style={{ cursor: "pointer", padding: 4 }}>
+                <MoreHorizontal size={16} color={MUTED} />
+              </div>
+              {openMenuId === s.id && (
+                <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 20, minWidth: 180 }}>
+                  <div onClick={() => { setSelectedSubId(s.id); setOpenMenuId(null); }} style={{ padding: "10px 14px", cursor: "pointer" }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: TEXT, margin: 0 }}>Ver detalhes da cobrança</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {filtered.length === 0 && (
           <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, padding: 24, textAlign: "center" }}>Nenhuma assinatura encontrada.</p>
         )}
       </div>
+      {selectedSubId && <SubscriptionDetailPanel email={email} subscriptionId={selectedSubId} onClose={() => setSelectedSubId(null)} />}
     </div>
   );
 }
