@@ -3538,6 +3538,40 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [csvResult, setCsvResult] = useState(null);
   const [csvBatchIndex, setCsvBatchIndex] = useState(0);
   const CSV_BATCH_SIZE = 10;
+  // Autocomplete nos campos de cada card do lote — guarda qual
+  // linha+campo está em foco, e as sugestões pra ele, só um de cada vez.
+  const [csvActiveField, setCsvActiveField] = useState(null); // { rowId, field: 'stadium' | 'home' | 'away' }
+  const [csvSuggestions, setCsvSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (!csvActiveField) return;
+    const row = csvRows.find((r) => r.rowId === csvActiveField.rowId);
+    const query = row ? row[csvActiveField.field] : "";
+    if (!query || query.trim().length < 3) {
+      setCsvSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const url = csvActiveField.field === "stadium"
+          ? `/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(query)}`
+          : `/api/teams/suggest?q=${encodeURIComponent(query)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        setCsvSuggestions(data.suggestions || []);
+      } catch {
+        setCsvSuggestions([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [csvActiveField, csvRows]);
+
+  const pickCsvSuggestion = (rowId, field, value) => {
+    updateCsvRow(rowId, field, value);
+    setCsvActiveField(null);
+    setCsvSuggestions([]);
+  };
 
   // Autocomplete com debounce — só busca sugestões depois que a pessoa
   // parar de digitar por meio segundo, e só a partir de 3 letras, pra
@@ -4050,18 +4084,77 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>{row.home || "?"} {row.homeScore ?? ""}×{row.awayScore ?? ""} {row.away || "?"}</p>
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                <div>
+                                <div style={{ position: "relative" }}>
                                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Estádio</p>
-                                  <input value={row.stadium} onChange={(e) => updateCsvRow(row.rowId, "stadium", e.target.value)} placeholder="Selecione" style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                  <input
+                                    value={row.stadium}
+                                    onChange={(e) => updateCsvRow(row.rowId, "stadium", e.target.value)}
+                                    onFocus={() => setCsvActiveField({ rowId: row.rowId, field: "stadium" })}
+                                    onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
+                                    placeholder="Comece a digitar pra ver sugestões"
+                                    style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
+                                  />
+                                  {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "stadium" && csvSuggestions.length > 0 && (
+                                    <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
+                                      {csvSuggestions.map((s) => (
+                                        <div
+                                          key={s.name}
+                                          onMouseDown={() => {
+                                            updateCsvRow(row.rowId, "stadium", s.name);
+                                            if (s.country) updateCsvRow(row.rowId, "country", s.country);
+                                            if (s.city) updateCsvRow(row.rowId, "city", s.city);
+                                            setCsvActiveField(null);
+                                            setCsvSuggestions([]);
+                                          }}
+                                          style={{ padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
+                                        >
+                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                          {(s.city || s.country) && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>{[s.city, s.country].filter(Boolean).join(", ")}</p>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 <div style={{ display: "flex", gap: 8 }}>
-                                  <div style={{ flex: 1 }}>
+                                  <div style={{ flex: 1, position: "relative" }}>
                                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Mandante</p>
-                                    <input value={row.home} onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)} style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                    <input
+                                      value={row.home}
+                                      onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)}
+                                      onFocus={() => setCsvActiveField({ rowId: row.rowId, field: "home" })}
+                                      onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
+                                      style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
+                                    />
+                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "home" && csvSuggestions.length > 0 && (
+                                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
+                                        {csvSuggestions.map((s) => (
+                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "home", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                                            <TeamBadge name={s.name} url={s.logo} size={20} />
+                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
-                                  <div style={{ flex: 1 }}>
+                                  <div style={{ flex: 1, position: "relative" }}>
                                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Visitante</p>
-                                    <input value={row.away} onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)} style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                    <input
+                                      value={row.away}
+                                      onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)}
+                                      onFocus={() => setCsvActiveField({ rowId: row.rowId, field: "away" })}
+                                      onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
+                                      style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
+                                    />
+                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "away" && csvSuggestions.length > 0 && (
+                                      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
+                                        {csvSuggestions.map((s) => (
+                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "away", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                                            <TeamBadge name={s.name} url={s.logo} size={20} />
+                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 <div style={{ display: "flex", gap: 8 }}>
