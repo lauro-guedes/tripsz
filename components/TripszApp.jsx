@@ -3537,6 +3537,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [csvError, setCsvError] = useState(null);
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvResult, setCsvResult] = useState(null);
+  const [csvBatchIndex, setCsvBatchIndex] = useState(0);
+  const CSV_BATCH_SIZE = 10;
 
   // Autocomplete com debounce — só busca sugestões depois que a pessoa
   // parar de digitar por meio segundo, e só a partir de 3 letras, pra
@@ -3780,6 +3782,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     setCsvError(null);
     setCsvResult(null);
     setCsvFileName(file.name);
+    setCsvBatchIndex(0);
     try {
       const text = await file.text();
       const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -3840,10 +3843,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     setCsvRows((rows) => rows.map((r) => (r.rowId === rowId ? { ...r, [field]: value } : r)));
   };
 
-  const handleCsvImport = async () => {
-    const toImport = csvRows.filter((r) => r.include && r.date && r.home && r.away && r.country);
+  const handleCsvImport = async (uptoIndex) => {
+    const reviewedRows = uptoIndex !== undefined ? csvRows.slice(0, uptoIndex) : csvRows;
+    const toImport = reviewedRows.filter((r) => r.include && r.date && r.home && r.away && r.country);
+    const skippedCount = reviewedRows.length - toImport.length;
     if (toImport.length === 0) {
-      setCsvError("Nenhuma linha válida pra importar — confirma que todas têm pelo menos data, mandante, visitante e país preenchidos.");
+      setCsvError("Nenhum jogo revisado até aqui ficou pronto pra importar — confirma que pelo menos um tem data, mandante, visitante e país preenchidos, e não foi marcado como pulado.");
       return;
     }
     setCsvImporting(true);
@@ -3873,7 +3878,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         if (insertError) failCount += 1;
         else successCount += 1;
       }
-      setCsvResult({ successCount, failCount });
+      setCsvResult({ successCount, skippedCount: skippedCount + failCount });
       setCsvRows([]);
     } catch (e) {
       setCsvError(e.message || "Não foi possível importar os jogos.");
@@ -3989,55 +3994,113 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 </div>
                 {csvError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{csvError}</p>}
                 {csvResult && (
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: csvResult.failCount > 0 ? "#b48200" : GREEN, margin: 0 }}>
-                    {csvResult.successCount} jogo(s) importado(s) com sucesso{csvResult.failCount > 0 ? `, ${csvResult.failCount} falharam` : ""}.
-                  </p>
-                )}
-                {csvRows.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{csvFileName} — {csvRows.length} linha(s) encontrada(s). Confira antes de importar:</p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto" }}>
-                      {csvRows.map((row) => {
-                        const isValid = row.date && row.home && row.away && row.country;
-                        return (
-                          <div key={row.rowId} style={{ background: "#fff", border: `1px solid ${isValid ? BORDER : "#dc2626"}`, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <input type="checkbox" checked={row.include} onChange={(e) => updateCsvRow(row.rowId, "include", e.target.checked)} />
-                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{row.home} × {row.away}</p>
-                              </div>
-                              {!isValid && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#dc2626", textTransform: "uppercase", margin: 0 }}>Falta dado</p>}
-                            </div>
-                            {row.needsManualSplit && (
-                              <div style={{ background: "#fff9e6", border: "1px solid #b78103", borderRadius: 6, padding: 8 }}>
-                                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: "#b78103", margin: 0 }}>
-                                  Texto original (separe abaixo em Estádio, Mandante e Visitante): <strong>{row.combinedText}</strong>
-                                  {row.homeScore && ` · Placar lido: ${row.homeScore}×${row.awayScore}`}
-                                </p>
-                              </div>
-                            )}
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                              {row.needsManualSplit && (
-                                <>
-                                  <input value={row.home} onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)} placeholder="Mandante (obrigatório)" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.home ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                                  <input value={row.away} onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)} placeholder="Visitante (obrigatório)" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.away ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                                </>
-                              )}
-                              <input value={row.rawDate || ""} readOnly placeholder="Data" style={{ width: 110, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.date ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                              <input value={row.country} onChange={(e) => updateCsvRow(row.rowId, "country", e.target.value)} placeholder="País (obrigatório)" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.country ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                              <input value={row.city} onChange={(e) => updateCsvRow(row.rowId, "city", e.target.value)} placeholder="Cidade" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                              <input value={row.stadium} onChange={(e) => updateCsvRow(row.rowId, "stadium", e.target.value)} placeholder="Estádio" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                              <input value={row.competition} onChange={(e) => updateCsvRow(row.rowId, "competition", e.target.value)} placeholder="Competição" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Resumo final</p>
+                    <div style={{ display: "flex", gap: 16, flexDirection: isMobile ? "column" : "row" }}>
+                      <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Importados</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: "4px 0" }}>{csvResult.successCount}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Jogos adicionados ao seu histórico</p>
+                      </div>
+                      <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Pulados</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 32, color: TEXT, margin: "4px 0" }}>{csvResult.skippedCount}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Marcados como pular ou com dado faltando</p>
+                      </div>
                     </div>
-                    <div onClick={csvImporting ? undefined : handleCsvImport} style={{ background: GREEN_BUTTON, opacity: csvImporting ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: csvImporting ? "default" : "pointer", width: "fit-content" }}>
-                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{csvImporting ? "Importando..." : `Importar ${csvRows.filter((r) => r.include).length} jogo(s)`}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Os jogos importados foram adicionados ao seu Football Passport.</p>
+                    <div onClick={() => onNavigate("jogos")} style={{ background: GREEN, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: "pointer", width: "fit-content" }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Ver meus jogos</p>
                     </div>
                   </div>
                 )}
+                {csvRows.length > 0 && (() => {
+                  const totalRows = csvRows.length;
+                  const batchStart = csvBatchIndex * CSV_BATCH_SIZE;
+                  const batchEnd = Math.min(batchStart + CSV_BATCH_SIZE, totalRows);
+                  const currentBatch = csvRows.slice(batchStart, batchEnd);
+                  const isFirstBatch = csvBatchIndex === 0;
+                  const isLastBatch = batchEnd >= totalRows;
+                  const progressPct = Math.round((batchEnd / totalRows) * 1000) / 10;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Confirmando {batchStart + 1}–{batchEnd} de {totalRows} jogos</p>
+                          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>{progressPct}% ({batchEnd}/{totalRows})</p>
+                        </div>
+                        <div style={{ background: BG, border: `1px solid ${BORDER}`, height: 8, borderRadius: 999, overflow: "hidden" }}>
+                          <div style={{ background: GREEN, height: "100%", width: `${progressPct}%`, borderRadius: 999 }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        {currentBatch.map((row) => {
+                          const isValid = row.date && row.home && row.away && row.country;
+                          return (
+                            <div key={row.rowId} style={{ background: BG, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 16, opacity: row.include ? 1 : 0.5 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                <div>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data</p>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{row.rawDate || "—"}</p>
+                                </div>
+                                <div style={{ background: isValid ? BORDER : "#fecaca", borderRadius: 999, padding: "8px 12px" }}>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: isValid ? MUTED : "#dc2626", margin: 0 }}>{isValid ? "já identificado" : "falta dado"}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Competição</p>
+                                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "2px 0 0" }}>{row.competition || "—"}</p>
+                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>{row.home || "?"} {row.homeScore ?? ""}×{row.awayScore ?? ""} {row.away || "?"}</p>
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                <div>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Estádio</p>
+                                  <input value={row.stadium} onChange={(e) => updateCsvRow(row.rowId, "stadium", e.target.value)} placeholder="Selecione" style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                </div>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <div style={{ flex: 1 }}>
+                                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Mandante</p>
+                                    <input value={row.home} onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)} style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                  </div>
+                                  <div style={{ flex: 1 }}>
+                                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Visitante</p>
+                                    <input value={row.away} onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)} style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }} />
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <input value={row.country} onChange={(e) => updateCsvRow(row.rowId, "country", e.target.value)} placeholder="País (obrigatório)" style={{ flex: 1, background: "#fff", border: `1px solid ${row.country ? BORDER : "#dc2626"}`, borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, boxSizing: "border-box" }} />
+                                  <input value={row.city} onChange={(e) => updateCsvRow(row.rowId, "city", e.target.value)} placeholder="Cidade" style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, boxSizing: "border-box" }} />
+                                </div>
+                              </div>
+                              {row.needsManualSplit && (
+                                <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 10, padding: 12 }}>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#92400e", textTransform: "uppercase", margin: 0 }}>Texto original do Futbology</p>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#92400e", margin: "6px 0 0", lineHeight: 1.5 }}>{row.combinedText}{row.competition ? ` — ${row.competition}` : ""}</p>
+                                </div>
+                              )}
+                              <div onClick={() => updateCsvRow(row.rowId, "include", !row.include)} style={{ background: "#fff", padding: "10px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer", width: "fit-content" }}>
+                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{row.include ? "Pular este jogo" : "Desmarcar pular"}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12 }}>
+                        <div onClick={isFirstBatch ? undefined : () => setCsvBatchIndex((i) => i - 1)} style={{ background: "#fff", border: `1px solid ${BORDER}`, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: isFirstBatch ? "default" : "pointer", opacity: isFirstBatch ? 0.4 : 1 }}>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>← Lote anterior</p>
+                        </div>
+                        <div onClick={isLastBatch ? undefined : () => setCsvBatchIndex((i) => i + 1)} style={{ background: "#fff", border: `1px solid ${BORDER}`, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: isLastBatch ? "default" : "pointer", opacity: isLastBatch ? 0.4 : 1 }}>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Confirmar e ir pro próximo lote →</p>
+                        </div>
+                        <div onClick={csvImporting ? undefined : () => handleCsvImport(batchEnd)} style={{ background: GREEN_BUTTON, opacity: csvImporting ? 0.6 : 1, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: csvImporting ? "default" : "pointer" }}>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{csvImporting ? "Importando..." : "Importar os confirmados até aqui"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
             {!showCsvImport && (
