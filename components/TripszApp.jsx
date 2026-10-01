@@ -2728,6 +2728,16 @@ function seasonLabel(dateStr) {
    Registrar Jogo. --- */
 const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
 
+// E-mails com acesso completo liberado manualmente, sem precisar de
+// assinatura — configurado na Vercel (NEXT_PUBLIC_FREE_ACCESS_EMAILS,
+// separados por vírgula). De propósito não mexe na tabela de
+// assinaturas, pra não distorcer os números de receita/MRR no painel
+// administrativo.
+function isFreeAccessEmail(email) {
+  const allowed = (process.env.NEXT_PUBLIC_FREE_ACCESS_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return !!email && allowed.includes(email.toLowerCase());
+}
+
 async function checkPassportAccess() {
   const supabase = supabaseBrowser();
   const { data: userData } = await supabase.auth.getUser();
@@ -2735,6 +2745,9 @@ async function checkPassportAccess() {
   if (!user) return { hasAccess: false, legacy: false, userId: null, userEmail: null };
   if (new Date(user.created_at) < PASSPORT_LAUNCH_DATE) {
     return { hasAccess: true, legacy: true, userId: user.id, userEmail: user.email };
+  }
+  if (isFreeAccessEmail(user.email)) {
+    return { hasAccess: true, legacy: false, freeAccess: true, userId: user.id, userEmail: user.email };
   }
   const { data: sub } = await supabase
     .from("subscriptions")
