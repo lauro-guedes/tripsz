@@ -3531,7 +3531,6 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [access, setAccess] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showCsvImport, setShowCsvImport] = useState(false);
   const [csvRows, setCsvRows] = useState([]);
   const [csvFileName, setCsvFileName] = useState("");
   const [csvError, setCsvError] = useState(null);
@@ -3962,17 +3961,14 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: "6px 0 0" }}>Busque pelo estádio ou clube</p>
             </div>
             <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
-              {[["estadio", "Estádio"], ["clube", "Clube"], ["selecao", "Seleção"]].map(([mode, label]) => (
+              {[["estadio", "Estádio"], ["clube", "Clube"], ["selecao", "Seleção"], ["futbology", "Futbology"]].map(([mode, label]) => (
                 <div key={mode} onClick={() => { setSearchMode(mode); setStadiumQuery(""); setVenue(null); setGames([]); setShowManual(false); setError(null); }} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer" }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: searchMode === mode ? TEXT : MUTED, margin: 0 }}>{label}</p>
-                  <div style={{ background: searchMode === mode ? GREEN : BORDER, height: 2, borderRadius: 1, width: searchMode === mode ? 56 : 44 }} />
+                  <div style={{ background: searchMode === mode ? GREEN : BORDER, height: 2, borderRadius: 1, width: searchMode === mode ? 72 : 44 }} />
                 </div>
               ))}
             </div>
-            <p onClick={() => setShowCsvImport((v) => !v)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0, cursor: "pointer" }}>
-              {showCsvImport ? "← Voltar pra busca normal" : "Já tem uma lista de jogos em CSV? Importar aqui →"}
-            </p>
-            {showCsvImport && (
+            {searchMode === "futbology" && (
               <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
                 <div>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>Importar jogos de um arquivo CSV</p>
@@ -4103,7 +4099,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 })()}
               </div>
             )}
-            {!showCsvImport && (
+            {searchMode !== "futbology" && (
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: "100%" }}>
               <div style={{ position: "relative", flex: 1 }}>
                 <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 12 }}>
