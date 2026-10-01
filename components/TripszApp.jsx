@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark, Download } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -1974,6 +1974,32 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
     ["Meu perfil", "perfil"],
     ["Ranking", "ranking"],
   ];
+
+  // Lembrete de confirmação de e-mail — não bloqueia nada, só avisa e
+  // deixa reenviar o link de confirmação.
+  const [emailConfirmed, setEmailConfirmed] = useState(true);
+  const [userEmailForBanner, setUserEmailForBanner] = useState("");
+  const [resendStatus, setResendStatus] = useState("idle"); // idle | sending | sent
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase.auth.getUser();
+      setEmailConfirmed(!!data.user?.email_confirmed_at);
+      setUserEmailForBanner(data.user?.email || "");
+    })();
+  }, []);
+  const handleResendConfirmation = async () => {
+    setResendStatus("sending");
+    try {
+      const supabase = supabaseBrowser();
+      await supabase.auth.resend({ type: "signup", email: userEmailForBanner });
+    } catch {
+      // segue mesmo assim — não é crítico se falhar silenciosamente aqui
+    } finally {
+      setResendStatus("sent");
+    }
+  };
+
   return (
     <div>
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", position: "relative" }}>
@@ -2011,6 +2037,14 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
           )}
         </div>
       </div>
+      {!emailConfirmed && (
+        <div style={{ background: GOLD_BG, borderBottom: `1px solid ${GOLD}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", flexWrap: "wrap" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GOLD, margin: 0, textAlign: "center" }}>Confirme seu e-mail ({userEmailForBanner}) pra garantir o acesso à sua conta.</p>
+          <p onClick={resendStatus === "sending" ? undefined : handleResendConfirmation} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GOLD, textDecoration: "underline", margin: 0, cursor: resendStatus === "sending" ? "default" : "pointer" }}>
+            {resendStatus === "sent" ? "E-mail reenviado ✓" : resendStatus === "sending" ? "Enviando..." : "Reenviar e-mail"}
+          </p>
+        </div>
+      )}
       {isMobile && (
         <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 4, padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap" }}>
           {items.filter(([, key]) => key !== "perfil").map(([label, key]) => (
@@ -3450,6 +3484,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [access, setAccess] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
+  const [csvRows, setCsvRows] = useState([]);
+  const [csvFileName, setCsvFileName] = useState("");
+  const [csvError, setCsvError] = useState(null);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvResult, setCsvResult] = useState(null);
 
   // Autocomplete com debounce — só busca sugestões depois que a pessoa
   // parar de digitar por meio segundo, e só a partir de 3 letras, pra
@@ -3586,6 +3626,136 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     }
   };
 
+  // Importação de CSV — não chama a API-Football pra nada aqui de
+  // propósito (confirmar cada linha na API estouraria nossa cota de 100
+  // chamadas/dia rapidinho). Os dados vêm direto do que a pessoa trouxe.
+  const CSV_TEMPLATE_HEADER = "data,estadio,cidade,pais,mandante,visitante,placar_mandante,placar_visitante,competicao";
+  const downloadCsvTemplate = () => {
+    const example = "2024-08-24,Anfield,Liverpool,Inglaterra,Liverpool,Brentford,2,1,Premier League";
+    const blob = new Blob([`${CSV_TEMPLATE_HEADER}\n${example}\n`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "modelo-jogos-tripsz.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const HEADER_ALIASES = {
+    data: ["data", "date"],
+    estadio: ["estadio", "estádio", "stadium", "venue"],
+    cidade: ["cidade", "city"],
+    pais: ["pais", "país", "country"],
+    mandante: ["mandante", "home", "home_team", "mandante_time"],
+    visitante: ["visitante", "away", "away_team"],
+    placar_mandante: ["placar_mandante", "gols_mandante", "home_score"],
+    placar_visitante: ["placar_visitante", "gols_visitante", "away_score"],
+    competicao: ["competicao", "competição", "competition", "liga"],
+  };
+
+  const parseCsvDate = (raw) => {
+    if (!raw) return null;
+    const iso = /^\d{4}-\d{2}-\d{2}$/;
+    if (iso.test(raw.trim())) return raw.trim();
+    const br = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (br) return `${br[3]}-${br[2].padStart(2, "0")}-${br[1].padStart(2, "0")}`;
+    const d = new Date(raw);
+    if (!isNaN(d)) return d.toISOString().split("T")[0];
+    return null;
+  };
+
+  const handleCsvFile = async (file) => {
+    setCsvError(null);
+    setCsvResult(null);
+    setCsvFileName(file.name);
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      if (lines.length < 2) {
+        setCsvError("O arquivo está vazio ou só tem o cabeçalho.");
+        return;
+      }
+      const rawHeaders = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+      const colIndex = {};
+      Object.entries(HEADER_ALIASES).forEach(([key, aliases]) => {
+        const idx = rawHeaders.findIndex((h) => aliases.includes(h));
+        if (idx !== -1) colIndex[key] = idx;
+      });
+      if (colIndex.mandante === undefined || colIndex.visitante === undefined || colIndex.data === undefined) {
+        setCsvError('O arquivo precisa ter pelo menos as colunas "data", "mandante" e "visitante". Baixe nosso modelo pra ver o formato certo.');
+        return;
+      }
+
+      const rows = lines.slice(1).map((line, i) => {
+        const cells = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+        const get = (key) => (colIndex[key] !== undefined ? cells[colIndex[key]] || "" : "");
+        return {
+          rowId: i,
+          include: true,
+          date: parseCsvDate(get("data")),
+          rawDate: get("data"),
+          stadium: get("estadio"),
+          city: get("cidade"),
+          country: get("pais"),
+          home: get("mandante"),
+          away: get("visitante"),
+          homeScore: get("placar_mandante"),
+          awayScore: get("placar_visitante"),
+          competition: get("competicao"),
+        };
+      });
+      setCsvRows(rows);
+    } catch (e) {
+      setCsvError("Não foi possível ler esse arquivo. Confirma que é um .csv de verdade.");
+    }
+  };
+
+  const updateCsvRow = (rowId, field, value) => {
+    setCsvRows((rows) => rows.map((r) => (r.rowId === rowId ? { ...r, [field]: value } : r)));
+  };
+
+  const handleCsvImport = async () => {
+    const toImport = csvRows.filter((r) => r.include && r.date && r.home && r.away && r.country);
+    if (toImport.length === 0) {
+      setCsvError("Nenhuma linha válida pra importar — confirma que todas têm pelo menos data, mandante, visitante e país preenchidos.");
+      return;
+    }
+    setCsvImporting(true);
+    setCsvError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Entre novamente.");
+
+      let successCount = 0;
+      let failCount = 0;
+      for (const row of toImport) {
+        const { error: insertError } = await supabase.from("attended_games").insert({
+          user_id: userId,
+          source: "csv",
+          home_team: row.home,
+          away_team: row.away,
+          home_score: row.homeScore ? parseInt(row.homeScore, 10) : null,
+          away_score: row.awayScore ? parseInt(row.awayScore, 10) : null,
+          match_date: row.date,
+          stadium: row.stadium || null,
+          city: row.city || null,
+          country: row.country,
+          competition: row.competition || null,
+        });
+        if (insertError) failCount += 1;
+        else successCount += 1;
+      }
+      setCsvResult({ successCount, failCount });
+      setCsvRows([]);
+    } catch (e) {
+      setCsvError(e.message || "Não foi possível importar os jogos.");
+    } finally {
+      setCsvImporting(false);
+    }
+  };
+
   const handleManualSave = async () => {
     if (!manual.home || !manual.away || !manual.date || !manual.country) {
       return setError("Preencha pelo menos os times, a data e o país.");
@@ -3668,6 +3838,69 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 </div>
               ))}
             </div>
+            <p onClick={() => setShowCsvImport((v) => !v)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0, cursor: "pointer" }}>
+              {showCsvImport ? "← Voltar pra busca normal" : "Já tem uma lista de jogos em CSV? Importar aqui →"}
+            </p>
+            {showCsvImport && (
+              <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+                <div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>Importar jogos de um arquivo CSV</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "4px 0 0", lineHeight: 1.5 }}>
+                    Se você tem seus jogos num app tipo o Futbology, exporte como CSV e importe aqui. Isso não gasta nossa cota de busca ao vivo — usamos exatamente os dados que vierem no arquivo.
+                  </p>
+                </div>
+                <div onClick={downloadCsvTemplate} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer", width: "fit-content" }}>
+                  <Download size={14} color={GREEN} />
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Baixar modelo de CSV</p>
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => e.target.files?.[0] && handleCsvFile(e.target.files[0])}
+                    style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: TEXT }}
+                  />
+                </div>
+                {csvError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{csvError}</p>}
+                {csvResult && (
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: csvResult.failCount > 0 ? "#b48200" : GREEN, margin: 0 }}>
+                    {csvResult.successCount} jogo(s) importado(s) com sucesso{csvResult.failCount > 0 ? `, ${csvResult.failCount} falharam` : ""}.
+                  </p>
+                )}
+                {csvRows.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{csvFileName} — {csvRows.length} linha(s) encontrada(s). Confira antes de importar:</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto" }}>
+                      {csvRows.map((row) => {
+                        const isValid = row.date && row.home && row.away && row.country;
+                        return (
+                          <div key={row.rowId} style={{ background: "#fff", border: `1px solid ${isValid ? BORDER : "#dc2626"}`, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <input type="checkbox" checked={row.include} onChange={(e) => updateCsvRow(row.rowId, "include", e.target.checked)} />
+                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{row.home} × {row.away}</p>
+                              </div>
+                              {!isValid && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#dc2626", textTransform: "uppercase", margin: 0 }}>Falta dado</p>}
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                              <input value={row.rawDate || ""} readOnly placeholder="Data" style={{ width: 110, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.date ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                              <input value={row.country} onChange={(e) => updateCsvRow(row.rowId, "country", e.target.value)} placeholder="País (obrigatório)" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${row.country ? BORDER : "#dc2626"}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                              <input value={row.city} onChange={(e) => updateCsvRow(row.rowId, "city", e.target.value)} placeholder="Cidade" style={{ width: 140, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                              <input value={row.stadium} onChange={(e) => updateCsvRow(row.rowId, "stadium", e.target.value)} placeholder="Estádio" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                              <input value={row.competition} onChange={(e) => updateCsvRow(row.rowId, "competition", e.target.value)} placeholder="Competição" style={{ width: 160, fontSize: 12, padding: "6px 8px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: FONT_DISPLAY }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div onClick={csvImporting ? undefined : handleCsvImport} style={{ background: GREEN_BUTTON, opacity: csvImporting ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: csvImporting ? "default" : "pointer", width: "fit-content" }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{csvImporting ? "Importando..." : `Importar ${csvRows.filter((r) => r.include).length} jogo(s)`}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!showCsvImport && (
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: "100%" }}>
               <div style={{ position: "relative", flex: 1 }}>
                 <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 12 }}>
@@ -3708,6 +3941,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
               </div>
             </div>
+            )}
             {venue && (
               <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
