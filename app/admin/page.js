@@ -681,9 +681,14 @@ export default function AdminPage() {
   if (status === "denied") {
     return (
       <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
           <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso não autorizado</p>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: MUTED, margin: 0 }}>{userEmail ? `A conta ${userEmail} não tem acesso ao painel administrativo.` : "Entre com uma conta de administrador para continuar."}</p>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: MUTED, margin: 0 }}>{userEmail ? `A conta ${userEmail} não tem acesso ao painel administrativo.` : "Você não está logado nesse navegador — entre com uma conta de administrador para continuar."}</p>
+          {!userEmail && (
+            <a href="/" style={{ background: GREEN, borderRadius: 8, padding: "10px 20px", textDecoration: "none" }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>Ir pra página de login</p>
+            </a>
+          )}
         </div>
       </div>
     );
