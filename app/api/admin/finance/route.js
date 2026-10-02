@@ -30,7 +30,7 @@ export async function GET(request) {
     const allSubs = subs || [];
     const active = allSubs.filter((s) => s.status === "active");
     const cancelled = allSubs.filter((s) => s.status === "cancelled");
-    const mrr = active.reduce((sum, s) => sum + (s.plan === "annual" ? 200 / 12 : 19.9), 0);
+    const mrr = active.reduce((sum, s) => sum + (s.plan === "annual" ? 99.9 / 12 : 9.9), 0);
     const arr = mrr * 12;
 
     const { data: orders } = await supabase.from("orders").select("status, amount_cents, item_type, created_at");
@@ -52,7 +52,7 @@ export async function GET(request) {
       const monthLabel = d.toLocaleDateString("pt-BR", { month: "short" });
       const newSubsThisMonth = allSubs.filter((s) => (s.created_at || "").startsWith(monthKey));
       const ordersThisMonth = paidOrders.filter((o) => (o.created_at || "").startsWith(monthKey) && o.item_type === "consultoria");
-      const subsRevenue = newSubsThisMonth.reduce((sum, s) => sum + (s.plan === "annual" ? 200 : 19.9), 0);
+      const subsRevenue = newSubsThisMonth.reduce((sum, s) => sum + (s.plan === "annual" ? 99.9 : 9.9), 0);
       const consultRevenue = ordersThisMonth.reduce((sum, o) => sum + (o.amount_cents || 0), 0) / 100;
       monthly.push({ month: monthLabel, revenue: Math.round((subsRevenue + consultRevenue) * 100) / 100 });
     }
