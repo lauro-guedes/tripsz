@@ -508,7 +508,7 @@ function LandingPage({ onStart, onLogin }) {
           <div onClick={() => setBillingAnnual((v) => !v)} style={{ width: 44, height: 24, borderRadius: 12, background: GREEN, position: "relative", cursor: "pointer" }}>
             <div style={{ position: "absolute", top: 2, left: billingAnnual ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left .15s" }} />
           </div>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? TEXT : MUTED, margin: 0 }}>Anual (-17%)</p>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? TEXT : MUTED, margin: 0 }}>Anual (-16%)</p>
         </div>
 
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 32, width: "100%", maxWidth: 1000 }}>
@@ -526,7 +526,7 @@ function LandingPage({ onStart, onLogin }) {
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Filtros por país, liga e time", true], ["Visualização de prévia do roteiro", true], ["Football Passport", false], ["Sistema de gamificação e badges", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
+              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Football Passport (até 20 jogos)", true], ["Níveis, badges e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   {ok ? <Check size={16} color={GREEN} /> : <X size={16} color="#9ca3af" />}
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: ok ? TEXT : "#6b7280", margin: 0 }}>{label}</p>
@@ -545,14 +545,14 @@ function LandingPage({ onStart, onLogin }) {
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 99,90" : "R$ 9,90"}</p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>{billingAnnual ? "/ ano" : "/ mês"}</p>
               </div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 38,80/ano" : "ou R$ 200/ano e economize 17%"}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 18,90/ano" : "ou R$ 99,90/ano e economize 16%"}</p>
             </div>
             <div onClick={onStart} style={{ background: GREEN, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Assinar agora</p>
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {["Tudo do plano gratuito", "Football Passport completo", "Sistema de gamificação e badges", "Níveis de torcedor (5 categorias)", "Histórico completo de jogos", "Registre jogos manualmente", "15% de desconto em consultorias", "Alertas personalizados de jogos"].map((label) => (
+              {["Tudo do plano gratuito", "Jogos ilimitados no Football Passport", "Importação em massa de outros apps (Futbology)", "Histórico completo de jogos", "15% de desconto em consultorias", "Alertas personalizados de jogos"].map((label) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <Check size={16} color={GREEN} />
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
