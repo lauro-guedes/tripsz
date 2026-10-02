@@ -139,6 +139,81 @@ function OverviewView({ email }) {
 function UserDetailPanel({ email, userId, onClose }) {
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
+  const [resetStatus, setResetStatus] = useState("idle"); // idle | confirming | sending | sent | error
+  const [showXpModal, setShowXpModal] = useState(false);
+  const [xpAmount, setXpAmount] = useState("");
+  const [xpReason, setXpReason] = useState("");
+  const [xpSaving, setXpSaving] = useState(false);
+  const [xpError, setXpError] = useState(null);
+  const [suspendStatus, setSuspendStatus] = useState("idle"); // idle | confirming | saving | error
+
+  const handleToggleSuspend = async (suspend) => {
+    setSuspendStatus("saving");
+    try {
+      const res = await fetch("/api/admin/users/suspend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userId, suspend }),
+      });
+      if (!res.ok) throw new Error();
+      setSuspendStatus("idle");
+      await reloadData();
+    } catch {
+      setSuspendStatus("error");
+    }
+  };
+
+  const reloadData = async () => {
+    try {
+      const res = await fetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
+      if (res.ok) setData(await res.json());
+    } catch {}
+  };
+
+  const handleAdjustXp = async () => {
+    setXpError(null);
+    const parsed = parseInt(xpAmount, 10);
+    if (!parsed || isNaN(parsed)) {
+      setXpError("Digite um número (positivo pra somar, negativo pra tirar).");
+      return;
+    }
+    if (!xpReason.trim()) {
+      setXpError("Justificativa é obrigatória.");
+      return;
+    }
+    setXpSaving(true);
+    try {
+      const res = await fetch("/api/admin/users/adjust-xp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userId, adjustment: parsed, reason: xpReason }),
+      });
+      if (!res.ok) throw new Error();
+      setShowXpModal(false);
+      setXpAmount("");
+      setXpReason("");
+      await reloadData();
+    } catch {
+      setXpError("Não foi possível salvar o ajuste.");
+    } finally {
+      setXpSaving(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setResetStatus("sending");
+    try {
+      const res = await fetch("/api/admin/users/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userId }),
+      });
+      if (!res.ok) throw new Error();
+      setResetStatus("sent");
+    } catch {
+      setResetStatus("error");
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -178,6 +253,11 @@ function UserDetailPanel({ email, userId, onClose }) {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <StatusBadge label={data.subscriptionStatus} />
               {!data.emailConfirmed && <StatusBadge label="Pendente" />}
+              {data.isSuspended && (
+                <div style={{ background: "#fef2f2", borderRadius: 4, padding: "4px 10px" }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: "#dc2626", margin: 0 }}>SUSPENSA</p>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -222,7 +302,86 @@ function UserDetailPanel({ email, userId, onClose }) {
                 </div>
               ))}
             </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ações</p>
+              {resetStatus === "sent" ? (
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#008e4a", margin: 0 }}>E-mail de redefinição enviado para {data.email}.</p>
+              ) : resetStatus === "error" ? (
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#dc2626", margin: 0 }}>Não foi possível enviar — tenta de novo.</p>
+              ) : resetStatus === "confirming" ? (
+                <div style={{ background: "#fff9e6", border: "1px solid #b78103", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#92400e", margin: 0 }}>Isso envia um e-mail de redefinição de senha pra {data.email}. Confirma?</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div onClick={handleResetPassword} style={{ background: "#b78103", borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>Confirmar envio</p>
+                    </div>
+                    <div onClick={() => setResetStatus("idle")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: TEXT, margin: 0 }}>Cancelar</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div onClick={() => setResetStatus("confirming")} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer", width: "fit-content" }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>{resetStatus === "sending" ? "Enviando..." : "Redefinir senha"}</p>
+                </div>
+              )}
+              <div onClick={() => setShowXpModal(true)} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer", width: "fit-content" }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>Ajustar XP manualmente</p>
+              </div>
+              {data.stats.xpAdjustment !== 0 && (
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: 0 }}>
+                  Ajuste atual: {data.stats.xpAdjustment > 0 ? "+" : ""}{data.stats.xpAdjustment} XP — "{data.stats.xpAdjustmentReason}"
+                </p>
+              )}
+
+              {suspendStatus === "confirming" ? (
+                <div style={{ background: "#fef2f2", border: "1px solid #dc2626", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#991b1b", margin: 0 }}>
+                    {data.isSuspended ? `Isso reativa o login de ${data.name}.` : `Isso bloqueia o login de ${data.name} imediatamente. A conta e os dados continuam intactos.`}
+                  </p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div onClick={() => handleToggleSuspend(!data.isSuspended)} style={{ background: "#dc2626", borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>{data.isSuspended ? "Confirmar reativação" : "Confirmar suspensão"}</p>
+                    </div>
+                    <div onClick={() => setSuspendStatus("idle")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                      <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: TEXT, margin: 0 }}>Cancelar</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div onClick={() => setSuspendStatus("confirming")} style={{ background: data.isSuspended ? BG : "#fef2f2", border: `1px solid ${data.isSuspended ? BORDER : "#fecaca"}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer", width: "fit-content" }}>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: data.isSuspended ? TEXT : "#dc2626", margin: 0 }}>{suspendStatus === "saving" ? "Salvando..." : data.isSuspended ? "Reativar conta" : "Suspender conta"}</p>
+                </div>
+              )}
+              {suspendStatus === "error" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#dc2626", margin: 0 }}>Não foi possível alterar — tenta de novo.</p>}
+            </div>
           </>
+        )}
+
+        {showXpModal && data && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div onClick={() => setShowXpModal(false)} style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.5)" }} />
+            <div style={{ position: "relative", background: "#fff", borderRadius: 12, padding: 20, width: 360, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>Ajustar XP manualmente</p>
+                <div onClick={() => setShowXpModal(false)} style={{ cursor: "pointer" }}><X size={16} color={MUTED} /></div>
+              </div>
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{data.name} — XP atual: {data.stats.xp.toLocaleString("pt-BR")}</p>
+              <div>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: "0 0 4px" }}>Quantidade (use negativo pra tirar)</p>
+                <input value={xpAmount} onChange={(e) => setXpAmount(e.target.value)} placeholder="ex: 500 ou -200" style={{ width: "100%", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, fontSize: 13, fontFamily: "Inter, sans-serif", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: "0 0 4px" }}>Justificativa (obrigatória)</p>
+                <textarea value={xpReason} onChange={(e) => setXpReason(e.target.value)} placeholder="Por que esse ajuste está sendo feito?" style={{ width: "100%", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 10, fontSize: 13, fontFamily: "Inter, sans-serif", minHeight: 60, boxSizing: "border-box", resize: "vertical" }} />
+              </div>
+              {xpError && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#dc2626", margin: 0 }}>{xpError}</p>}
+              <div onClick={xpSaving ? undefined : handleAdjustXp} style={{ background: GREEN, opacity: xpSaving ? 0.6 : 1, borderRadius: 8, padding: "10px 16px", textAlign: "center", cursor: xpSaving ? "default" : "pointer" }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{xpSaving ? "Salvando..." : "Salvar ajuste"}</p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -341,7 +500,25 @@ function UsersView({ email }) {
 function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
+  const [cancelStatus, setCancelStatus] = useState("idle"); // idle | confirming | saving | done | error
   const statusLabels = { active: "Ativo", pending: "Pendente", cancelled: "Cancelado", paused: "Pausado" };
+
+  const handleCancelSubscription = async () => {
+    setCancelStatus("saving");
+    try {
+      const res = await fetch("/api/admin/subscriptions/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, subscriptionId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setCancelStatus("done");
+      setData((d) => ({ ...d, status: "cancelled" }));
+    } catch (e) {
+      setCancelStatus("error");
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -405,6 +582,32 @@ function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
                 </div>
               ))}
             </div>
+
+            {["active", "pending"].includes(data.status) && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ações</p>
+                {cancelStatus === "done" ? (
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#008e4a", margin: 0 }}>Assinatura cancelada com sucesso.</p>
+                ) : cancelStatus === "confirming" ? (
+                  <div style={{ background: "#fef2f2", border: "1px solid #dc2626", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "#991b1b", margin: 0 }}>Isso cancela a assinatura de {data.userName} no Mercado Pago agora mesmo. Confirma?</p>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <div onClick={handleCancelSubscription} style={{ background: "#dc2626", borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>Confirmar cancelamento</p>
+                      </div>
+                      <div onClick={() => setCancelStatus("idle")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "8px 14px", cursor: "pointer" }}>
+                        <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 11, color: TEXT, margin: 0 }}>Cancelar</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div onClick={() => setCancelStatus("confirming")} style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", cursor: "pointer", width: "fit-content" }}>
+                    <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: "#dc2626", margin: 0 }}>{cancelStatus === "saving" ? "Cancelando..." : "Cancelar assinatura"}</p>
+                  </div>
+                )}
+                {cancelStatus === "error" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#dc2626", margin: 0 }}>Não foi possível cancelar — tenta de novo.</p>}
+              </div>
+            )}
           </>
         )}
       </div>
