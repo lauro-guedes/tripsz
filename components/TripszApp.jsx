@@ -3542,25 +3542,35 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   // linha+campo está em foco, e as sugestões pra ele, só um de cada vez.
   const [csvActiveField, setCsvActiveField] = useState(null); // { rowId, field: 'stadium' | 'home' | 'away' }
   const [csvSuggestions, setCsvSuggestions] = useState([]);
+  const [csvSuggestLoading, setCsvSuggestLoading] = useState(false);
+  const [csvSuggestError, setCsvSuggestError] = useState(null);
 
   useEffect(() => {
     if (!csvActiveField) return;
     const row = csvRows.find((r) => r.rowId === csvActiveField.rowId);
-    const query = row ? row[csvActiveField.field] : "";
-    if (!query || query.trim().length < 3) {
+    const query = (row ? row[csvActiveField.field] : "").trim();
+    if (!query || query.length < 3) {
       setCsvSuggestions([]);
+      setCsvSuggestLoading(false);
+      setCsvSuggestError(null);
       return;
     }
+    setCsvSuggestLoading(true);
+    setCsvSuggestError(null);
     const timer = setTimeout(async () => {
       try {
         const url = csvActiveField.field === "stadium"
           ? `/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(query)}`
           : `/api/teams/suggest?q=${encodeURIComponent(query)}`;
         const res = await fetch(url);
+        if (!res.ok) throw new Error(`status ${res.status}`);
         const data = await res.json();
         setCsvSuggestions(data.suggestions || []);
-      } catch {
+      } catch (e) {
         setCsvSuggestions([]);
+        setCsvSuggestError("Erro ao buscar — tenta de novo em instantes.");
+      } finally {
+        setCsvSuggestLoading(false);
       }
     }, 400);
     return () => clearTimeout(timer);
@@ -4094,9 +4104,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                     placeholder="Comece a digitar pra ver sugestões"
                                     style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
                                   />
-                                  {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "stadium" && csvSuggestions.length > 0 && (
+                                  {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "stadium" && row.stadium.trim().length >= 3 && (
                                     <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
-                                      {csvSuggestions.map((s) => (
+                                      {csvSuggestLoading && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Buscando...</p>}
+                                      {!csvSuggestLoading && csvSuggestError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", padding: "10px 14px", margin: 0 }}>{csvSuggestError}</p>}
+                                      {!csvSuggestLoading && !csvSuggestError && csvSuggestions.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Nenhum resultado — confirma a grafia ou deixa assim mesmo.</p>}
+                                      {!csvSuggestLoading && csvSuggestions.map((s) => (
                                         <div
                                           key={s.name}
                                           onMouseDown={() => {
@@ -4125,9 +4138,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                       onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
                                       style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
                                     />
-                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "home" && csvSuggestions.length > 0 && (
+                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "home" && row.home.trim().length >= 3 && (
                                       <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
-                                        {csvSuggestions.map((s) => (
+                                        {csvSuggestLoading && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Buscando...</p>}
+                                        {!csvSuggestLoading && csvSuggestError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", padding: "10px 14px", margin: 0 }}>{csvSuggestError}</p>}
+                                        {!csvSuggestLoading && !csvSuggestError && csvSuggestions.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Nenhum resultado — confirma a grafia ou deixa assim mesmo.</p>}
+                                        {!csvSuggestLoading && csvSuggestions.map((s) => (
                                           <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "home", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
                                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
@@ -4145,9 +4161,12 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                       onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
                                       style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
                                     />
-                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "away" && csvSuggestions.length > 0 && (
+                                    {csvActiveField?.rowId === row.rowId && csvActiveField?.field === "away" && row.away.trim().length >= 3 && (
                                       <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", maxHeight: 200, overflowY: "auto", zIndex: 30 }}>
-                                        {csvSuggestions.map((s) => (
+                                        {csvSuggestLoading && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Buscando...</p>}
+                                        {!csvSuggestLoading && csvSuggestError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", padding: "10px 14px", margin: 0 }}>{csvSuggestError}</p>}
+                                        {!csvSuggestLoading && !csvSuggestError && csvSuggestions.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Nenhum resultado — confirma a grafia ou deixa assim mesmo.</p>}
+                                        {!csvSuggestLoading && csvSuggestions.map((s) => (
                                           <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "away", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
                                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
