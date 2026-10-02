@@ -1,3 +1,7 @@
+import { Globe, Landmark, Trophy, Award } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+
 const GREEN = "#00c853";
 const GREEN_BG = "rgba(0,200,83,0.06)";
 const BG = "#f8fafc";
@@ -124,17 +128,28 @@ export default async function PublicProfilePage({ params }) {
               <p style={{ fontWeight: 700, fontSize: 12, color: TEXT, textTransform: "uppercase", margin: 0 }}>{cat.title}</p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
-              {cat.badges.map((b) => (
-                <div key={b.label} style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-                  <div style={{ background: GREEN_BG, width: 36, height: 36, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <p style={{ color: GREEN, margin: 0 }}>🏆</p>
+              {cat.badges.map((b) => {
+                // Mesmo critério de ícone por categoria usado em "Minhas
+                // Conquistas": Globe pra país/continente, estádio pros
+                // estádios, Trophy pra competição, Award pro resto.
+                let BadgeIcon = Award;
+                if (cat.title === "Estádios & Geografia") {
+                  BadgeIcon = /país|continente/i.test(b.label) ? Globe : Landmark;
+                } else if (cat.title === "Competições") {
+                  BadgeIcon = Trophy;
+                }
+                return (
+                  <div key={b.label} style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+                    <div style={{ background: GREEN_BG, width: 36, height: 36, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <BadgeIcon size={18} color={GREEN} />
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{b.label}</p>
+                      {fmtDate(b.detail) && <p style={{ fontWeight: 700, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: "2px 0 0" }}>{fmtDate(b.detail)}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{b.label}</p>
-                    {fmtDate(b.detail) && <p style={{ fontWeight: 700, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: "2px 0 0" }}>{fmtDate(b.detail)}</p>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
