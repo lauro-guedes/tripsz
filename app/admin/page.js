@@ -147,6 +147,12 @@ function UserDetailPanel({ email, userId, onClose }) {
   const [xpError, setXpError] = useState(null);
   const [suspendStatus, setSuspendStatus] = useState("idle"); // idle | confirming | saving | error
 
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, []);
+
   const handleToggleSuspend = async (suspend) => {
     setSuspendStatus("saving");
     try {
@@ -502,6 +508,12 @@ function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
   const [data, setData] = useState(null);
   const [cancelStatus, setCancelStatus] = useState("idle"); // idle | confirming | saving | done | error
   const statusLabels = { active: "Ativo", pending: "Pendente", cancelled: "Cancelado", paused: "Pausado" };
+
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, []);
 
   const handleCancelSubscription = async () => {
     setCancelStatus("saving");
