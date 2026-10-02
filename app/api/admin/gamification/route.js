@@ -35,7 +35,8 @@ function computeRanking(games, usersById) {
     const countries = new Set(userGames.map((g) => g.country).filter(Boolean));
     const hasChampions = userGames.some((g) => /champions league/i.test(g.competition || ""));
     const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
-    const xp = userGames.length * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
+    const baseXp = userGames.length * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
+    const xp = baseXp + (user.user_metadata?.xp_adjustment || 0);
 
     ranking.push({
       userId: uid,
