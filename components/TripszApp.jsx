@@ -3046,25 +3046,62 @@ function isFreeAccessEmail(email) {
   return !!email && allowed.includes(email.toLowerCase());
 }
 
+// Limite de jogos pra quem não é assinante — Nível, Conquistas e
+// Ranking já são de graça pra todo mundo; isso só limita QUANTOS jogos
+// dá pra registrar sem assinar.
+const FREE_GAMES_LIMIT = 20;
+
 async function checkPassportAccess() {
   const supabase = supabaseBrowser();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
-  if (!user) return { hasAccess: false, legacy: false, userId: null, userEmail: null };
+  if (!user) {
+    return { hasAccess: false, isPaid: false, legacy: false, userId: null, userEmail: null, gamesCount: 0, gamesLimit: FREE_GAMES_LIMIT, canAddMoreGames: false };
+  }
+
+  let isPaid = false;
+  let legacy = false;
+  let freeAccess = false;
+  let subscription = null;
+
   if (new Date(user.created_at) < PASSPORT_LAUNCH_DATE) {
-    return { hasAccess: true, legacy: true, userId: user.id, userEmail: user.email };
+    isPaid = true;
+    legacy = true;
+  } else if (isFreeAccessEmail(user.email)) {
+    isPaid = true;
+    freeAccess = true;
+  } else {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (sub) {
+      isPaid = true;
+      subscription = sub;
+    }
   }
-  if (isFreeAccessEmail(user.email)) {
-    return { hasAccess: true, legacy: false, freeAccess: true, userId: user.id, userEmail: user.email };
-  }
-  const { data: sub } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return { hasAccess: !!sub, legacy: false, subscription: sub, userId: user.id, userEmail: user.email };
+
+  const { count: gamesCount } = await supabase
+    .from("attended_games")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+  const gamesLimit = isPaid ? Infinity : FREE_GAMES_LIMIT;
+
+  return {
+    hasAccess: true, // o Passport em si (Nível/Conquistas/Ranking) agora é sempre de graça
+    isPaid,
+    legacy,
+    freeAccess,
+    subscription,
+    userId: user.id,
+    userEmail: user.email,
+    gamesCount: gamesCount || 0,
+    gamesLimit,
+    canAddMoreGames: (gamesCount || 0) < gamesLimit,
+  };
 }
 
 function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew }) {
