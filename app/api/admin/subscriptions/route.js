@@ -50,7 +50,7 @@ export async function GET(request) {
 
     const active = allSubs.filter((s) => s.status === "active");
     const cancelled = allSubs.filter((s) => s.status === "cancelled");
-    const mrr = active.reduce((sum, s) => sum + (s.plan === "annual" ? 200 / 12 : 19.9), 0);
+    const mrr = active.reduce((sum, s) => sum + (s.plan === "annual" ? 99.9 / 12 : 9.9), 0);
     // Churn simples: cancelados sobre o total de assinaturas que já
     // existiram (ativas + canceladas) — não conta pendentes, que nunca
     // chegaram a virar assinante de verdade.
