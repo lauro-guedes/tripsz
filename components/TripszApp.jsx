@@ -444,13 +444,13 @@ function LandingPage({ onStart, onLogin }) {
             <Award size={20} color={GREEN} />
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: "#fff", margin: 0 }}>GS</p>
+            <div style={{ width: 80, height: 100, borderRadius: 8, border: `1px solid ${BORDER}`, overflow: "hidden", flexShrink: 0 }}>
+              <img src="/passport-exemplo.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
                 <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Titular</p>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Gabriel Silva</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Lauro Guedes</p>
               </div>
               <div>
                 <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nível de Acesso</p>
@@ -463,7 +463,7 @@ function LandingPage({ onStart, onLogin }) {
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: 2026</p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            {[["stadium", "Estádios", "5 visitados"], ["award", "Conquistas", "3 badges"], ["trophy", "Progresso", "10 jogos"]].map(([iconKey, label, value]) => (
+            {[["stadium", "Estádios", "109 visitados"], ["award", "Conquistas", "10 badges"], ["trophy", "Progresso", "158 jogos"]].map(([iconKey, label, value]) => (
               <div key={label} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ background: GREEN_BG, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {iconKey === "stadium" ? <Icon name="stadium" size={20} color={GREEN} /> : iconKey === "award" ? <Award size={20} color={GREEN} /> : <Trophy size={20} color={GREEN} />}
@@ -632,6 +632,15 @@ function LandingPage({ onStart, onLogin }) {
    ============================================================ */
 /* --- Modal de login independente — funciona sobre QUALQUER tela (landing,
    questionário etc), sem precisar trocar a tela de fundo pra "account". --- */
+function CriteriaDot({ ok, label }) {
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", width: "100%" }}>
+      <div style={{ width: 6, height: 6, borderRadius: 3, background: ok ? GREEN : BORDER, flexShrink: 0 }} />
+      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: ok ? GREEN : MUTED, margin: 0 }}>{label}</p>
+    </div>
+  );
+}
+
 function CriarConta({ onDone, onLogin }) {
   const isMobile = useIsMobile();
   const [name, setName] = useState("");
@@ -774,9 +783,9 @@ function CriarConta({ onDone, onLogin }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: BODY, margin: 0 }}>Critérios da senha</p>
-              <CriteriaDot met={passChecks.upper} label="Pelo menos 1 letra maiúscula" />
-              <CriteriaDot met={passChecks.lower} label="Pelo menos 1 letra minúscula" />
-              <CriteriaDot met={passChecks.len} label="No mínimo 8 caracteres" />
+              <CriteriaDot ok={passChecks.upper} label="Pelo menos 1 letra maiúscula" />
+              <CriteriaDot ok={passChecks.lower} label="Pelo menos 1 letra minúscula" />
+              <CriteriaDot ok={passChecks.len} label="No mínimo 8 caracteres" />
             </div>
 
             {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
@@ -1086,13 +1095,6 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
     color: TEXT,
     outline: "none",
   });
-
-  const CriteriaDot = ({ ok, label }) => (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", width: "100%" }}>
-      <div style={{ width: 6, height: 6, borderRadius: 3, background: ok ? GREEN : BORDER, flexShrink: 0 }} />
-      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: ok ? GREEN : MUTED, margin: 0 }}>{label}</p>
-    </div>
-  );
 
   return (
     <div style={{ background: BG, minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
