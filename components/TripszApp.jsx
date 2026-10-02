@@ -346,7 +346,7 @@ function LandingPage({ onStart, onLogin }) {
     ["Posso cancelar a assinatura a qualquer momento?", "Sim, sem multa. Seu acesso continua até o fim do período pago."],
     ["O que acontece com meu Passport se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar."],
     ["Preciso ser assinante para contratar a consultoria?", "Não, a consultoria é um add-on avulso. Mas assinantes ganham 15% de desconto."],
-    ["Como funciona o desconto anual?", "No plano anual você paga R$ 200/ano em vez de R$ 238,80 (12x R$ 19,90), economizando R$ 38,80."],
+    ["Como funciona o desconto anual?", "No plano anual você paga R$ 99,90/ano em vez de R$ 118,80 (12x R$ 9,90), economizando R$ 18,90."],
     ["É só futebol europeu ou inclui jogos no Brasil?", "A plataforma cobre 13 países, incluindo Brasil, Argentina, Uruguai, Chile e Colômbia, além das principais ligas europeias."],
   ];
 
@@ -542,7 +542,7 @@ function LandingPage({ onStart, onLogin }) {
                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#fff", margin: 0 }}>MAIS POPULAR</p>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "baseline" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 200" : "R$ 19,90"}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 99,90" : "R$ 9,90"}</p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>{billingAnnual ? "/ ano" : "/ mês"}</p>
               </div>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 38,80/ano" : "ou R$ 200/ano e economize 17%"}</p>
@@ -3030,10 +3030,11 @@ function seasonLabel(dateStr) {
   return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
 }
 
-/* --- Acesso ao Passport: usuários de antes do lançamento da assinatura
-   continuam com acesso livre ("legado"); usuários novos precisam
-   assinar (R$19,90/mês ou R$200/ano) pra ver Meu Nível, Meus Jogos e
-   Registrar Jogo. --- */
+/* --- Acesso ao Passport: Meu Nível, Minhas Conquistas e Registrar Jogo
+   são de graça pra todo mundo. O que é pago (R$9,90/mês ou R$99,90/ano)
+   é registrar mais de 20 jogos, e a importação em massa (Futbology).
+   Usuários de antes do lançamento da assinatura ("legado") não têm
+   nenhum desses limites. --- */
 const PASSPORT_LAUNCH_DATE = new Date("2026-09-25T00:00:00Z");
 
 // E-mails com acesso completo liberado manualmente, sem precisar de
@@ -3202,18 +3203,18 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 20, width: "100%", maxWidth: 720, margin: "0 auto" }}>
             <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>Plano Mensal</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 19,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/mês</span></p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 9,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/mês</span></p>
               <div onClick={loadingPlan ? undefined : () => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{loadingPlan === "monthly" ? "Redirecionando..." : "Assinar Mensal"}</p>
               </div>
             </div>
             <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
               <div style={{ position: "absolute", top: -12, right: 20, background: GREEN, padding: "4px 12px", borderRadius: 999 }}>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>ECONOMIZE 17%</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#fff", margin: 0 }}>ECONOMIZE 16%</p>
               </div>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Plano Anual</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 200<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/ano</span></p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 38,80/ano</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 99,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/ano</span></p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 18,90/ano</p>
               <div onClick={loadingPlan ? undefined : () => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loadingPlan === "annual" ? "Redirecionando..." : "Assinar Anual"}</p>
               </div>
@@ -3793,6 +3794,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ home: "", away: "", date: "", stadium: "", city: "", country: "", competition: "" });
   const [access, setAccess] = useState(null);
+  const [addedThisSession, setAddedThisSession] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [csvRows, setCsvRows] = useState([]);
@@ -3949,6 +3951,10 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   // que dava a impressão de que nada tinha sido salvo.
   const handleAddGame = async (g) => {
     if (selectedIds.has(g.apiFixtureId) || savingId) return;
+    if (access && !access.isPaid && access.gamesCount + addedThisSession >= access.gamesLimit) {
+      setError(`Você atingiu o limite de ${access.gamesLimit} jogos do plano grátis. Assine pra registrar mais.`);
+      return;
+    }
     setSavingId(g.apiFixtureId);
     setError(null);
     try {
@@ -3975,6 +3981,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       });
       if (insertError) throw insertError;
       setSelectedIds((prev) => new Set(prev).add(g.apiFixtureId));
+      setAddedThisSession((n) => n + 1);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -4198,6 +4205,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     if (!manual.home || !manual.away || !manual.date || !manual.country) {
       return setError("Preencha pelo menos os times, a data e o país.");
     }
+    if (access && !access.isPaid && access.gamesCount + addedThisSession >= access.gamesLimit) {
+      return setError(`Você atingiu o limite de ${access.gamesLimit} jogos do plano grátis. Assine pra registrar mais.`);
+    }
     setSaving(true);
     setError(null);
     try {
@@ -4217,6 +4227,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         competition: manual.competition || null,
       });
       if (insertError) throw insertError;
+      setAddedThisSession((n) => n + 1);
       onDone();
     } catch (e) {
       setError(e.message);
@@ -4259,6 +4270,20 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         <Badge>Novo Registro Manual</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Registre um Jogo</p>
         <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Adicione jogos que você já esteve para completar seu Football Passport e subir seu nível de torcedor.</p>
+        {!access.isPaid && (() => {
+          const used = Math.min(access.gamesCount + addedThisSession, access.gamesLimit);
+          const pct = Math.round((used / access.gamesLimit) * 100);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 360 }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: used >= access.gamesLimit ? "#dc2626" : MUTED, margin: 0 }}>
+                {used}/{access.gamesLimit} jogos do plano grátis
+              </p>
+              <div style={{ background: BG_ALT, height: 6, borderRadius: 999, overflow: "hidden" }}>
+                <div style={{ background: used >= access.gamesLimit ? "#dc2626" : GREEN, height: "100%", width: `${pct}%`, borderRadius: 999 }} />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div style={{ background: BG_ALT, display: "flex", flexDirection: "column", alignItems: "center", padding: isMobile ? `24px ${px}` : `80px ${px}` }}>
@@ -4271,12 +4296,29 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
             <div style={{ display: "flex", gap: 24, alignItems: "flex-end" }}>
               {[["estadio", "Estádio"], ["clube", "Clube"], ["selecao", "Seleção"], ["futbology", "Futbology"]].map(([mode, label]) => (
                 <div key={mode} onClick={() => { setSearchMode(mode); setStadiumQuery(""); setVenue(null); setGames([]); setShowManual(false); setError(null); }} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: searchMode === mode ? TEXT : MUTED, margin: 0 }}>{label}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: searchMode === mode ? TEXT : MUTED, margin: 0 }}>{label}</p>
+                    {mode === "futbology" && !access.isPaid && <Lock size={12} color={MUTED} />}
+                  </div>
                   <div style={{ background: searchMode === mode ? GREEN : BORDER, height: 2, borderRadius: 1, width: searchMode === mode ? 72 : 44 }} />
                 </div>
               ))}
             </div>
-            {searchMode === "futbology" && (
+            {searchMode === "futbology" && !access.isPaid && (
+              <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 12, width: "100%", alignItems: "flex-start" }}>
+                <div style={{ background: GREEN_BG, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Lock size={18} color={GREEN} />
+                </div>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Importação em massa é só pra assinantes</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, lineHeight: 1.5, maxWidth: 480 }}>
+                  Se você já tem um histórico grande de jogos (de outro app, tipo o Futbology), importar tudo de uma vez é um recurso da assinatura. No plano grátis, você pode registrar até {access.gamesLimit} jogos um por um nas outras abas.
+                </p>
+                <div onClick={() => onNavigate("assinatura")} style={{ background: GREEN, padding: "10px 20px", borderRadius: 8, cursor: "pointer" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", textTransform: "uppercase", margin: 0 }}>Ver planos</p>
+                </div>
+              </div>
+            )}
+            {searchMode === "futbology" && access.isPaid && (
               <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
                 <div>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>Importar jogos de um arquivo CSV</p>
@@ -4842,7 +4884,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
 
   const sub = access.subscription;
   const planLabel = sub?.plan === "annual" ? "Plano Assinante — Anual" : sub?.plan === "monthly" ? "Plano Assinante — Mensal" : null;
-  const planPrice = sub?.plan === "annual" ? "R$ 200,00/ano" : "R$ 19,90/mês";
+  const planPrice = sub?.plan === "annual" ? "R$ 99,90/ano" : "R$ 9,90/mês";
   // Próxima cobrança estimada a partir da data de início — o Mercado Pago
   // não devolve essa data pronta pra gente exibir, então calculamos com
   // base na frequência do plano (mensal = +1 mês, anual = +1 ano).
@@ -5451,7 +5493,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
                       <div style={{ width: 10, height: 10, borderRadius: 5, background: GREEN }} />
                       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{subAccess.subscription.plan === "annual" ? "Plano Assinante - Anual" : "Plano Assinante - Mensal"}</p>
                     </div>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: GREEN, margin: 0 }}>{subAccess.subscription.plan === "annual" ? "R$ 200,00/ano" : "R$ 19,90/mês"}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: GREEN, margin: 0 }}>{subAccess.subscription.plan === "annual" ? "R$ 99,90/ano" : "R$ 9,90/mês"}</p>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Gerenciar assinatura</p>
