@@ -2765,6 +2765,34 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const [ctx, setCtx] = useState(null);
   const [attendedGames, setAttendedGames] = useState([]);
   const [showAddGame, setShowAddGame] = useState(false);
+  const [shareLink, setShareLink] = useState(null);
+  const [loadingShareLink, setLoadingShareLink] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleGetShareLink = async () => {
+    setLoadingShareLink(true);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const res = await fetch("/api/profile/get-or-create-slug", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userData.user?.id, name: userData.user?.user_metadata?.name }),
+      });
+      const data = await res.json();
+      if (res.ok) setShareLink(`${window.location.origin}/u/${data.slug}`);
+    } catch {
+      // silencioso — não é uma ação crítica, a pessoa pode tentar de novo
+    } finally {
+      setLoadingShareLink(false);
+    }
+  };
+
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const looksLikeChampions = (name) => /champions league/i.test(name || "");
 
@@ -2821,6 +2849,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       .select("slug")
       .eq("user_id", user?.id)
       .maybeSingle();
+    if (publicProfileRow?.slug) setShareLink(`${window.location.origin}/u/${publicProfileRow.slug}`);
 
     setStats({
       stadiums: stadiums.size,
@@ -2911,6 +2940,29 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: {new Date().getFullYear()}</p>
           </div>
         </div>
+      </div>
+
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, boxShadow: "0px 8px 12px rgba(15,23,42,0.07)", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: 24, padding: isMobile ? 20 : "16px 24px", margin: isMobile ? `0 ${px}` : `0 80px` }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: isMobile ? "none" : "0 0 320px" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Perfil público</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Reúna jogos, estádios, badges e conquistas em uma página compartilhável para amigos.</p>
+        </div>
+        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, display: "flex", gap: 12, alignItems: "center", padding: 12, flex: 1, minWidth: 0 }}>
+          <Globe size={20} color={MUTED} style={{ flexShrink: 0 }} />
+          <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {shareLink ? shareLink.replace(/^https?:\/\//, "") : "Gere seu link abaixo para ver aqui"}
+          </p>
+          {shareLink && (
+            <div onClick={handleCopyShareLink} style={{ cursor: "pointer", flexShrink: 0, display: "flex" }} title="Copiar link">
+              <Clipboard size={16} color={copied ? GREEN : MUTED} />
+            </div>
+          )}
+        </div>
+        {!shareLink && (
+          <div onClick={loadingShareLink ? undefined : handleGetShareLink} style={{ background: GREEN, padding: "10px 20px", borderRadius: 8, textAlign: "center", cursor: loadingShareLink ? "default" : "pointer", flexShrink: 0 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>{loadingShareLink ? "Gerando..." : "Gerar perfil público"}</p>
+          </div>
+        )}
       </div>
 
       <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, display: "flex", flexWrap: "wrap", padding: isMobile ? `24px ${px}` : `48px ${px}` }}>
@@ -4988,34 +5040,6 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [prefs, setPrefs] = useState([]);
-  const [shareLink, setShareLink] = useState(null);
-  const [loadingShareLink, setLoadingShareLink] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleGetShareLink = async () => {
-    setLoadingShareLink(true);
-    try {
-      const supabase = supabaseBrowser();
-      const { data: userData } = await supabase.auth.getUser();
-      const res = await fetch("/api/profile/get-or-create-slug", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userData.user?.id, name: userData.user?.user_metadata?.name }),
-      });
-      const data = await res.json();
-      if (res.ok) setShareLink(`${window.location.origin}/u/${data.slug}`);
-    } catch {
-      // silencioso — não é uma ação crítica, a pessoa pode tentar de novo
-    } finally {
-      setLoadingShareLink(false);
-    }
-  };
-
-  const handleCopyShareLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
   const [original, setOriginal] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -5405,24 +5429,6 @@ function MeuPerfil({ onNavigate, onLogout }) {
               )}
             </div>
 
-            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16, marginTop: 24 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Perfil Público</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Gere um link pra mostrar seu Football Passport (nível, badges e estatísticas) pra quem você quiser — sem precisar fazer login pra ver.</p>
-              {shareLink ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12 }}>
-                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: TEXT, margin: 0, wordBreak: "break-all" }}>{shareLink}</p>
-                  </div>
-                  <div onClick={handleCopyShareLink} style={{ background: GREEN_BUTTON, padding: "10px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{copied ? "Copiado ✓" : "Copiar link"}</p>
-                  </div>
-                </div>
-              ) : (
-                <div onClick={loadingShareLink ? undefined : handleGetShareLink} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: loadingShareLink ? "default" : "pointer" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{loadingShareLink ? "Gerando link..." : "Gerar link do meu perfil"}</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
@@ -5442,33 +5448,52 @@ function Checkout({ answers, onBack, onDone, onHome }) {
     onHome();
   };
 
-  // Próximos 4 dias úteis a partir de amanhã — datas reais, não fixas no
-  // código, então nunca aparece uma data que já passou.
+  // Próximos dias em que a consultoria atende de verdade: segunda,
+  // quarta, sexta e sábado — datas reais, não fixas no código, então
+  // nunca aparece uma data que já passou.
+  const CONSULTORIA_DAYS_OF_WEEK = [1, 3, 5, 6];
   const availableDays = useMemo(() => {
     const days = [];
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    while (days.length < 4) {
-      const dow = d.getDay();
-      if (dow !== 0 && dow !== 6) {
+    while (days.length < 6) {
+      if (CONSULTORIA_DAYS_OF_WEEK.includes(d.getDay())) {
         days.push({
           date: new Date(d),
           label: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
           day: d.getDate(),
-          slots: 2 + (d.getDate() % 4),
         });
       }
       d.setDate(d.getDate() + 1);
     }
     return days;
   }, []);
-  const TIMES = ["09:00", "10:30", "14:00", "16:00", "17:30"];
 
-  const [selectedDayIdx, setSelectedDayIdx] = useState(Math.min(2, availableDays.length - 1));
-  const [selectedTime, setSelectedTime] = useState("14:00");
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(true);
 
   const selectedDay = availableDays[selectedDayIdx];
   const scheduledDateStr = selectedDay.date.toISOString().split("T")[0];
+
+  useEffect(() => {
+    (async () => {
+      setLoadingSlots(true);
+      setSelectedTime(null);
+      try {
+        const res = await fetch(`/api/consultoria/availability?date=${scheduledDateStr}`);
+        const data = await res.json();
+        setTimeSlots(data.slots || []);
+        const firstAvailable = (data.slots || []).find((s) => s.available);
+        if (firstAvailable) setSelectedTime(firstAvailable.time);
+      } catch {
+        setTimeSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    })();
+  }, [scheduledDateStr]);
 
   const handlePayConsultoria = async () => {
     setError(null);
@@ -5553,7 +5578,6 @@ function Checkout({ answers, onBack, onDone, onHome }) {
                       <div key={i} onClick={() => setSelectedDayIdx(i)} style={{ background: active ? GREEN_BUTTON2 : "#fff", border: `1px solid ${active ? GREEN_BUTTON2 : BORDER}`, borderRadius: 10, padding: isMobile ? 8 : 12, width: isMobile ? "calc(25% - 9px)" : 96, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, cursor: "pointer" }}>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: active ? "#fff" : MUTED, margin: 0, textTransform: "capitalize" }}>{d.label}</p>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: active ? "#fff" : TEXT, margin: 0 }}>{d.day}</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: active ? "rgba(255,255,255,0.8)" : MUTED, margin: 0 }}>{d.slots} vagas</p>
                       </div>
                     );
                   })}
@@ -5561,21 +5585,33 @@ function Checkout({ answers, onBack, onDone, onHome }) {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Horários disponíveis</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                  {TIMES.map((t) => {
-                    const active = t === selectedTime;
-                    return (
-                      <div key={t} onClick={() => setSelectedTime(t)} style={{ background: active ? GREEN_BUTTON2 : "#fff", border: `1px solid ${active ? GREEN_BUTTON2 : BORDER}`, borderRadius: 8, padding: "10px 14px", cursor: "pointer" }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: active ? "#fff" : TEXT, margin: 0 }}>{t}</p>
-                      </div>
-                    );
-                  })}
+                {loadingSlots ? (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Carregando horários...</p>
+                ) : timeSlots.length === 0 ? (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Sem atendimento nesse dia — escolha outra data.</p>
+                ) : (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                    {timeSlots.map((s) => {
+                      const active = s.time === selectedTime;
+                      return (
+                        <div
+                          key={s.time}
+                          onClick={() => s.available && setSelectedTime(s.time)}
+                          style={{ background: active ? GREEN_BUTTON2 : "#fff", border: `1px solid ${active ? GREEN_BUTTON2 : BORDER}`, borderRadius: 8, padding: "10px 14px", cursor: s.available ? "pointer" : "default", opacity: s.available ? 1 : 0.4 }}
+                        >
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: active ? "#fff" : TEXT, margin: 0, textDecoration: s.available ? "none" : "line-through" }}>{s.time}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              {selectedTime && (
+                <div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{selectedDay.date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })} · {selectedTime}</p>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: "4px 0 0" }}>Sessão de 30 minutos via vídeo. Você receberá o link de acesso após a confirmação do pagamento.</p>
                 </div>
-              </div>
-              <div>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{selectedDay.date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })} · {selectedTime}</p>
-                <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: "4px 0 0" }}>Sessão de 30 minutos via vídeo. Você receberá o link de acesso após a confirmação do pagamento.</p>
-              </div>
+              )}
             </div>
 
             <div style={{ height: 1, background: BORDER }} />
@@ -5626,7 +5662,7 @@ function Checkout({ answers, onBack, onDone, onHome }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Pagamento processado com segurança pelo Mercado Pago</p>
             </div>
             {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
-            <div onClick={loading ? undefined : handlePayConsultoria} style={{ background: GREEN, opacity: loading ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "16px 24px", borderRadius: 8, cursor: loading ? "default" : "pointer" }}>
+            <div onClick={loading || !selectedTime ? undefined : handlePayConsultoria} style={{ background: GREEN, opacity: loading || !selectedTime ? 0.5 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "16px 24px", borderRadius: 8, cursor: loading || !selectedTime ? "default" : "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase", margin: 0 }}>{loading ? "Redirecionando..." : "Confirmar e ir para o Mercado Pago"}</p>
               {!loading && <Icon name="arrowRight" size={16} color="#fff" />}
             </div>
