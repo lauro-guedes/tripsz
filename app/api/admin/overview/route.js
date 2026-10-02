@@ -37,7 +37,7 @@ export async function GET(request) {
 
     const { data: subs } = await supabase.from("subscriptions").select("status, plan");
     const activeSubs = (subs || []).filter((s) => s.status === "active");
-    const mrr = activeSubs.reduce((sum, s) => sum + (s.plan === "annual" ? 200 / 12 : 19.9), 0);
+    const mrr = activeSubs.reduce((sum, s) => sum + (s.plan === "annual" ? 99.9 / 12 : 9.9), 0);
 
     const { count: tripsThisMonth } = await supabase
       .from("trip_answers")
