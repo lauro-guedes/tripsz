@@ -15,29 +15,15 @@
  * uses lucide-react, since those specific files weren't uploaded.
  */
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark, Download, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
+import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
+import { initials } from "../lib/textUtils";
+import TeamBadge from "./TeamBadge";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
-const GREEN = "#00c853";
-const GREEN_BUTTON = "#00e676";
-const GREEN_BUTTON2 = "#46c572";
-const GREEN_BG = "rgba(0,200,83,0.06)";
-const GOLD = "#b78103";
-const GOLD_BG = "#fff9e6";
-const GOLD_BORDER = "#ffd700";
-const BG = "#f8fafc";
-const BG_ALT = "#f1f5f9";
-const BORDER = "#e2e8f0";
-const TEXT = "#0f172a";
-const BODY = "#334155";
-const MUTED = "#64748b";
-
-const FONT_DISPLAY = "'Inter', sans-serif";
-const FONT_BODY = "'Lora', serif";
-const FONT_MONO = "'JetBrains Mono', 'Courier New', monospace";
 
 // Detecta telas estreitas (celular) e reage a mudanças de tamanho/rotação,
 // pra todo componente poder alternar entre o layout desktop (Figma 95:*) e
@@ -1723,56 +1709,6 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, stepOff
    Business model differs: this flow has a FIXED unlock price
    (R$ 49,90), not a dynamically-computed consultancy quote.
    ============================================================ */
-// IDs de time na API-Football, usados só para montar a URL do escudo no
-// CDN público deles (media.api-sports.io/football/teams/{id}.png) — não
-// precisa de chave de API pra isso, é só uma imagem estática. Times que
-// não estão aqui (ou cujo ID estiver errado) caem automaticamente no
-// fallback de iniciais dentro de <TeamBadge>, então nunca aparece um
-// ícone quebrado na tela.
-const TEAM_LOGO_IDS = {
-  Arsenal: 42, Chelsea: 49, Liverpool: 40, "Manchester City": 50, Tottenham: 47,
-  "Real Madrid": 541, Barcelona: 529, "Atlético Madrid": 530, Sevilla: 536,
-  "Bayern München": 157, "Borussia Dortmund": 165, PSG: 85, Marseille: 81,
-  Porto: 212, Benfica: 211, Ajax: 194, Feyenoord: 209, PSV: 197,
-  Galatasaray: 645, Fenerbahçe: 611, "Boca Juniors": 451, "River Plate": 435,
-  Flamengo: 127, Fluminense: 124, Corinthians: 131, Palmeiras: 121,
-  Inter: 505, Milan: 489, Napoli: 492, Roma: 497, Lazio: 487,
-  "AZ Alkmaar": 201, Bologna: 500, "Colo-Colo": 2315, Millonarios: 1125,
-  Nacional: 2356, Newcastle: 34, "Peñarol": 2348, "Santa Fe": 1139, "Universidad de Chile": 2323,
-};
-
-function TeamBadge({ name, url, size = 32 }) {
-  const [broken, setBroken] = useState(false);
-  // Se o link mudar (ex: a lista recarrega com um dado novo), reseta o
-  // estado de "quebrado" — sem isso, o estado de uma falha antiga podia
-  // ficar grudado mesmo depois do link mudar pra um válido.
-  useEffect(() => {
-    setBroken(false);
-  }, [url, name]);
-  const id = TEAM_LOGO_IDS[name];
-  // Prioridade: link vindo direto da API (times "dinâmicos" achados numa
-  // busca ao vivo) > nossa cópia hospedada no Supabase Storage (times
-  // fixos conhecidos, imune a queda do CDN da API-Football) > iniciais.
-  const src = url || (id ? `https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos/${id}.png` : null);
-  if (!src || broken) {
-    return (
-      <div style={{ width: size, height: size, borderRadius: "50%", background: BG_ALT, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: size * 0.38, color: MUTED, margin: 0 }}>{initials(name)}</p>
-      </div>
-    );
-  }
-  return (
-    <img
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
-      onError={() => setBroken(true)}
-      style={{ objectFit: "contain", flexShrink: 0 }}
-    />
-  );
-}
-
 const FIXTURES_BY_COUNTRY = {
   "Itália": [
     { home: "Inter", away: "Milan", city: "Milão", stadium: "San Siro", tag: "Derby della Madonnina", rivalry: "derby", vibe: 9.5, dayOffset: 20 },
@@ -2157,14 +2093,6 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
 /* ============================================================
    9. ÁREA LOGADA — nav compartilhada + Meus Roteiros, Conquistas, Perfil
    ============================================================ */
-const INITIALS_SKIP_WORDS = new Set(["de", "da", "do", "das", "dos", "e", "di", "van", "der", "del", "la", "le", "fc", "cf", "ac", "sc", "ca"]);
-function initials(name) {
-  if (!name) return "?";
-  const parts = name.trim().split(/\s+/).filter((w) => !INITIALS_SKIP_WORDS.has(w.toLowerCase()));
-  if (parts.length === 0) return name.trim()[0]?.toUpperCase() || "?";
-  return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
-}
-
 function AvatarCircle({ url, name, size = 36, fontSize }) {
   const [broken, setBroken] = useState(false);
   if (url && !broken) {
@@ -2186,19 +2114,30 @@ function AvatarCircle({ url, name, size = 36, fontSize }) {
   );
 }
 
+// Menu principal: 4 itens. "Meu calendário" e "Meu nível" são grupos que
+// abrem a lista das telas deles. "Meu perfil" e "Minha assinatura" ficam no
+// menu da conta (a foto, no canto).
+const NAV_MAIN = [
+  { label: "Meus roteiros", key: "roteiros" },
+  { label: "Meus jogos", key: "jogos" },
+  { label: "Meu calendário", children: [["Calendário", "calendario"], ["Buscar jogos", "buscar"]] },
+  { label: "Meu nível", children: [["Nível", "nivel"], ["Minhas conquistas", "conquistas"], ["Ranking", "ranking"]] },
+];
+
 function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState(null); // label do grupo com a lista aberta
+  const closeTimer = useRef(null);
   const isMobile = useIsMobile();
-  const items = [
-    ["Meus roteiros", "roteiros"],
-    ["Meus jogos", "jogos"],
-    ["Buscar jogos", "buscar"],
-    ["Meu calendário", "calendario"],
-    ["Meu nível", "nivel"],
-    ["Minhas conquistas", "conquistas"],
-    ["Meu perfil", "perfil"],
-    ["Ranking", "ranking"],
-  ];
+
+  const groupActive = (it) => !!it.children && it.children.some(([, k]) => k === active);
+  const itemActive = (it) => (it.children ? groupActive(it) : active === it.key);
+  const go = (key) => {
+    clearTimeout(closeTimer.current);
+    setOpenGroup(null);
+    setMenuOpen(false);
+    onNavigate(key);
+  };
 
   // Lembrete de confirmação de e-mail — não bloqueia nada, só avisa e
   // deixa reenviar o link de confirmação.
@@ -2225,19 +2164,51 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
     }
   };
 
+  const dropdownItem = (label, key) => (
+    <div key={key} onClick={() => go(key)} style={{ padding: "10px 16px", cursor: "pointer", background: active === key ? GREEN_BG : "#fff" }}>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active === key ? 700 : 500, fontSize: 13, color: active === key ? GREEN : TEXT, margin: 0, whiteSpace: "nowrap" }}>{label}</p>
+    </div>
+  );
+
   return (
     <div>
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 48px", position: "relative" }}>
-        <div style={{ cursor: "pointer" }} onClick={() => onNavigate("roteiros")}><Wordmark /></div>
+        <div style={{ cursor: "pointer" }} onClick={() => go("roteiros")}><Wordmark /></div>
         {!isMobile && (
-          <div style={{ display: "flex", gap: 22, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 13 }}>
-            {items.map(([label, key]) => (
-              <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</p>
-            ))}
+          <div style={{ display: "flex", gap: 36, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
+            {NAV_MAIN.map((it) => {
+              const on = itemActive(it);
+              const color = on ? GREEN : MUTED;
+              if (!it.children) {
+                return (
+                  <p key={it.key} onClick={() => go(it.key)} style={{ color, fontWeight: on ? 700 : 500, margin: 0, cursor: "pointer", whiteSpace: "nowrap" }}>{it.label}</p>
+                );
+              }
+              return (
+                <div
+                  key={it.label}
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => { clearTimeout(closeTimer.current); setMenuOpen(false); setOpenGroup(it.label); }}
+                  onMouseLeave={() => { closeTimer.current = setTimeout(() => setOpenGroup((g) => (g === it.label ? null : g)), 150); }}
+                >
+                  <div onClick={() => go(it.children[0][1])} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                    <p style={{ color, fontWeight: on ? 700 : 500, margin: 0, whiteSpace: "nowrap" }}>{it.label}</p>
+                    <Icon name="chevronDown" size={14} color={color} />
+                  </div>
+                  {openGroup === it.label && (
+                    <div style={{ position: "absolute", top: "100%", left: -16, paddingTop: 14, zIndex: 20 }}>
+                      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", minWidth: 190, overflow: "hidden" }}>
+                        {it.children.map(([label, key]) => dropdownItem(label, key))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         <div style={{ position: "relative" }}>
-          <div onClick={() => setMenuOpen((v) => !v)} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
+          <div onClick={() => { setOpenGroup(null); setMenuOpen((v) => !v); }} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
             <AvatarCircle url={userAvatar} name={userName} size={isMobile ? 28 : 36} fontSize={isMobile ? 12 : 14} />
             {!isMobile && (
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -2249,12 +2220,12 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
             <Icon name="chevronDown" size={16} color={MUTED} />
           </div>
           {menuOpen && (
-            <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 180, overflow: "hidden", zIndex: 20 }}>
-              {isMobile && (
-                <div onClick={() => { setMenuOpen(false); onNavigate("perfil"); }} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === "perfil" ? GREEN : TEXT, fontWeight: active === "perfil" ? 700 : 500, margin: 0 }}>Meu perfil</p>
+            <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 200, overflow: "hidden", zIndex: 20 }}>
+              {[["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
+                <div key={key} onClick={() => go(key)} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
                 </div>
-              )}
+              ))}
               <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#dc2626", fontWeight: 700, margin: 0 }}>Sair</p>
               </div>
@@ -2271,12 +2242,33 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
         </div>
       )}
       {isMobile && (
-        <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 4, padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap" }}>
-          {items.filter(([, key]) => key !== "perfil").map(([label, key]) => (
-            <div key={key} onClick={() => onNavigate(key)} style={{ background: active === key ? GREEN_BG : "transparent", padding: "6px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active === key ? 700 : 500, fontSize: 12, color: active === key ? GREEN : "#63738c", margin: 0 }}>{label}</p>
+        <div>
+          <div style={{ background: "#fff", borderBottom: openGroup ? "none" : `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 4, padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap" }}>
+            {NAV_MAIN.map((it) => {
+              const on = itemActive(it);
+              const open = openGroup === it.label;
+              const color = on || open ? GREEN : "#63738c";
+              return (
+                <div
+                  key={it.label}
+                  onClick={() => (it.children ? setOpenGroup(open ? null : it.label) : go(it.key))}
+                  style={{ background: on || open ? GREEN_BG : "transparent", padding: "6px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}
+                >
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 500, fontSize: 12, color, margin: 0 }}>{it.label}</p>
+                  {it.children && <Icon name="chevronDown" size={12} color={color} style={{ transform: open ? "rotate(180deg)" : "none" }} />}
+                </div>
+              );
+            })}
+          </div>
+          {openGroup && (
+            <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, padding: "2px 8px 8px", display: "flex", flexDirection: "column" }}>
+              {NAV_MAIN.find((it) => it.label === openGroup).children.map(([label, key]) => (
+                <div key={key} onClick={() => go(key)} style={{ padding: "10px 12px", borderRadius: 6, cursor: "pointer", background: active === key ? GREEN_BG : "transparent" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active === key ? 700 : 500, fontSize: 13, color: active === key ? GREEN : TEXT, margin: 0 }}>{label}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -3917,7 +3909,11 @@ function BuscarJogos({ onNavigate, onLogout }) {
                       </div>
                       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                         <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                          <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
+                        </div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <MapPin size={14} color={MUTED} style={{ flexShrink: 0 }} />
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ")}</p>
@@ -4138,7 +4134,11 @@ function MeuCalendario({ onNavigate, onLogout }) {
                     ) : null}
                   </div>
                   <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{league}</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                    <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
+                  </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     {g.venue_name && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_name}</p>}
                     {g.venue_city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_city}</p>}
@@ -4310,9 +4310,9 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                         <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
                           <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
                           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                            <TeamBadge name={g.home_team} url={g.home_logo} size={22} />
+                            <TeamBadge name={g.home_team} url={g.home_logo} size={22} resolve />
                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
-                            <TeamBadge name={g.away_team} url={g.away_logo} size={22} />
+                            <TeamBadge name={g.away_team} url={g.away_logo} size={22} resolve />
                           </div>
                         </div>
                         <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
@@ -4421,8 +4421,10 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [csvActiveField, csvRows]);
 
-  const pickCsvSuggestion = (rowId, field, value) => {
+  const pickCsvSuggestion = (rowId, field, value, logo) => {
     updateCsvRow(rowId, field, value);
+    if (field === "home") updateCsvRow(rowId, "homeLogo", logo || null);
+    if (field === "away") updateCsvRow(rowId, "awayLogo", logo || null);
     setCsvActiveField(null);
     setCsvSuggestions([]);
   };
@@ -4759,6 +4761,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
           source: "csv",
           home_team: row.home,
           away_team: row.away,
+          home_logo: row.homeLogo || null,
+          away_logo: row.awayLogo || null,
           home_score: row.homeScore ? parseInt(row.homeScore, 10) : null,
           away_score: row.awayScore ? parseInt(row.awayScore, 10) : null,
           match_date: row.date,
@@ -5017,7 +5021,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Mandante</p>
                                     <input
                                       value={row.home}
-                                      onChange={(e) => updateCsvRow(row.rowId, "home", e.target.value)}
+                                      onChange={(e) => { updateCsvRow(row.rowId, "home", e.target.value); updateCsvRow(row.rowId, "homeLogo", null); }}
                                       onFocus={() => setCsvActiveField({ rowId: row.rowId, field: "home" })}
                                       onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
                                       style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
@@ -5028,7 +5032,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                         {!csvSuggestLoading && csvSuggestError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", padding: "10px 14px", margin: 0 }}>{csvSuggestError}</p>}
                                         {!csvSuggestLoading && !csvSuggestError && csvSuggestions.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Nenhum resultado — confirma a grafia ou deixa assim mesmo.</p>}
                                         {!csvSuggestLoading && csvSuggestions.map((s) => (
-                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "home", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "home", s.name, s.logo)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
                                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
                                           </div>
@@ -5040,7 +5044,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Visitante</p>
                                     <input
                                       value={row.away}
-                                      onChange={(e) => updateCsvRow(row.rowId, "away", e.target.value)}
+                                      onChange={(e) => { updateCsvRow(row.rowId, "away", e.target.value); updateCsvRow(row.rowId, "awayLogo", null); }}
                                       onFocus={() => setCsvActiveField({ rowId: row.rowId, field: "away" })}
                                       onBlur={() => setTimeout(() => setCsvActiveField(null), 150)}
                                       style={{ width: "100%", background: "#fff", border: "none", borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, marginTop: 4, boxSizing: "border-box" }}
@@ -5051,7 +5055,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                         {!csvSuggestLoading && csvSuggestError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", padding: "10px 14px", margin: 0 }}>{csvSuggestError}</p>}
                                         {!csvSuggestLoading && !csvSuggestError && csvSuggestions.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, padding: "10px 14px", margin: 0 }}>Nenhum resultado — confirma a grafia ou deixa assim mesmo.</p>}
                                         {!csvSuggestLoading && csvSuggestions.map((s) => (
-                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "away", s.name)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+                                          <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "away", s.name, s.logo)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
                                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
                                           </div>
