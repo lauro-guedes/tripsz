@@ -16,8 +16,9 @@
  */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark, Download } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark, Download, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
+import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
 const GREEN = "#00c853";
@@ -2191,6 +2192,8 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
   const items = [
     ["Meus roteiros", "roteiros"],
     ["Meus jogos", "jogos"],
+    ["Buscar jogos", "buscar"],
+    ["Meu calendário", "calendario"],
     ["Meu nível", "nivel"],
     ["Minhas conquistas", "conquistas"],
     ["Meu perfil", "perfil"],
@@ -2224,12 +2227,12 @@ function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
 
   return (
     <div>
-      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 80px", position: "relative" }}>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 48px", position: "relative" }}>
         <div style={{ cursor: "pointer" }} onClick={() => onNavigate("roteiros")}><Wordmark /></div>
         {!isMobile && (
-          <div style={{ display: "flex", gap: 40, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
+          <div style={{ display: "flex", gap: 22, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 13 }}>
             {items.map(([label, key]) => (
-              <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer" }}>{label}</p>
+              <p key={key} onClick={() => onNavigate(key)} style={{ color: active === key ? GREEN : MUTED, fontWeight: active === key ? 700 : 500, margin: 0, cursor: "pointer", whiteSpace: "nowrap" }}>{label}</p>
             ))}
           </div>
         )}
@@ -3608,6 +3611,546 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
             <div onClick={onCreateNew} style={{ background: GREEN_BUTTON, padding: "14px 24px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Montar meu roteiro →</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
+/* ============================================================
+   BUSCAR JOGOS + MEU CALENDÁRIO
+   Figma: 477:38637 (resultados), 477:39035 (jogo adicionado),
+   477:39438 (meu calendário).
+   A busca usa /api/cities/suggest e /api/games/search; os jogos
+   salvos ficam na tabela saved_games (ver 2-supabase-saved-games.sql).
+   ============================================================ */
+const BASE_CITY_KEY = "tripsz_base_city";
+
+function BuscarJogos({ onNavigate, onLogout }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [user, setUser] = useState({ id: null, name: "", avatar: null });
+  const [date, setDate] = useState(todayInSaoPaulo());
+  const [cityQuery, setCityQuery] = useState("");
+  const [city, setCity] = useState(null); // { label, name, lat, lon }
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [radius, setRadius] = useState(150);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [searchedWith, setSearchedWith] = useState(null);
+  const [error, setError] = useState(null);
+  const [savedIds, setSavedIds] = useState(new Set());
+  const [addingId, setAddingId] = useState(null);
+  const [lastAdded, setLastAdded] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      if (!u) {
+        onLogout();
+        return;
+      }
+      setUser({ id: u.id, name: u.user_metadata?.name || u.email || "", avatar: u.user_metadata?.avatar_url || null });
+      const { data: rows } = await supabase.from("saved_games").select("fixture_id").eq("user_id", u.id);
+      setSavedIds(new Set((rows || []).map((r) => r.fixture_id)));
+    })();
+    // Lembra a última cidade-base, pra pessoa não digitar toda vez.
+    try {
+      const raw = localStorage.getItem(BASE_CITY_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved && saved.label) {
+          setCity(saved);
+          setCityQuery(saved.label);
+        }
+      }
+    } catch {
+      // sem acesso ao armazenamento do navegador — segue sem lembrar
+    }
+  }, []);
+
+  // Autocomplete da cidade-base.
+  useEffect(() => {
+    const q = cityQuery.trim();
+    if ((city && q === city.label) || q.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cities/suggest?q=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        setSuggestions(json.suggestions || []);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [cityQuery, city]);
+
+  const pickCity = (s) => {
+    setCity(s);
+    setCityQuery(s.label);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    try {
+      localStorage.setItem(BASE_CITY_KEY, JSON.stringify(s));
+    } catch {
+      // idem
+    }
+  };
+
+  const handleSearch = async () => {
+    setError(null);
+    setLastAdded(null);
+    let chosen = city;
+    // Digitou mas não clicou na sugestão? Usa a primeira (a mais populosa).
+    if (!chosen && suggestions.length > 0) {
+      chosen = suggestions[0];
+      pickCity(chosen);
+    }
+    if (!chosen) {
+      setError("Escolha uma cidade-base da lista de sugestões.");
+      return;
+    }
+    if (!date) {
+      setError("Escolha a data do jogo.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ date, lat: String(chosen.lat), lon: String(chosen.lon), radius: String(radius) });
+      const res = await fetch(`/api/games/search?${params.toString()}`);
+      const json = await res.json();
+      if (!res.ok) {
+        setResult(null);
+        setSearchedWith(null);
+        setError(json.message || "Não foi possível buscar os jogos agora.");
+        return;
+      }
+      setResult(json);
+      setSearchedWith({ date, radius, cityLabel: chosen.label });
+    } catch {
+      setResult(null);
+      setError("Não foi possível buscar os jogos agora. Verifique sua conexão.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = async (g) => {
+    if (!user.id || savedIds.has(g.id) || addingId) return;
+    setAddingId(g.id);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { error: insertError } = await supabase.from("saved_games").insert({
+        user_id: user.id,
+        fixture_id: g.id,
+        kickoff: g.kickoff,
+        league_name: g.league,
+        league_country: g.leagueCountry,
+        home_team: g.home,
+        home_logo: g.homeLogo,
+        away_team: g.away,
+        away_logo: g.awayLogo,
+        venue_name: g.venue,
+        venue_city: g.city,
+      });
+      // 23505 = esse jogo já estava salvo — trata como sucesso.
+      if (insertError && insertError.code !== "23505") throw insertError;
+      setSavedIds((prev) => new Set(prev).add(g.id));
+      setLastAdded(`${g.home} × ${g.away}`);
+    } catch {
+      setError("Não foi possível adicionar ao calendário agora. Tente de novo.");
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const labelStyle = { fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 };
+  const fieldStyle = { background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, height: 48, padding: "0 14px", width: "100%", boxSizing: "border-box", fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT, outline: "none" };
+  const cityShort = searchedWith ? cityShortName(searchedWith.cityLabel) : "";
+
+  return (
+    <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+      <AuthedNav active="buscar" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ background: "linear-gradient(180deg, #e6f5ec 0%, #f8fafc 100%)", padding: isMobile ? `32px ${px}` : `56px ${px}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+          <div style={{ background: "#eafbf1", padding: "6px 12px", borderRadius: 4, width: "fit-content" }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#008a3a", margin: 0 }}>FUTEBOL PELO CAMINHO</p>
+          </div>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 36 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Buscar jogos</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 16 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Escolha uma data e uma cidade. Encontre sua próxima experiência de arquibancada.</p>
+        </div>
+        <div onClick={() => onNavigate("calendario")} style={{ background: BG_ALT, borderRadius: 8, padding: "13px 20px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer", flexShrink: 0 }}>
+          <Calendar size={20} color={TEXT} />
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0, whiteSpace: "nowrap" }}>Meu calendário</p>
+        </div>
+      </div>
+
+      <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: isMobile ? `24px ${px}` : `32px ${px}`, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end", gap: isMobile ? 16 : 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200 }}>
+            <p style={labelStyle}>Data do jogo</p>
+            <input type="date" value={date} min={todayInSaoPaulo()} onChange={(e) => setDate(e.target.value)} style={fieldStyle} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
+            <p style={labelStyle}>Cidade-base</p>
+            <input
+              value={cityQuery}
+              onChange={(e) => {
+                setCityQuery(e.target.value);
+                if (city && e.target.value !== city.label) setCity(null);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              placeholder="Digite uma cidade (ex: São Paulo)"
+              style={fieldStyle}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 30, overflow: "hidden" }}>
+                {suggestions.map((s) => (
+                  <div key={s.label} onMouseDown={() => pickCity(s)} style={{ padding: "12px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 10, alignItems: "center" }}>
+                    <MapPin size={14} color={MUTED} />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={labelStyle}>Raio de busca</p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {RADIUS_OPTIONS.map((r) => (
+                <div key={r} onClick={() => setRadius(r)} style={{ background: radius === r ? GREEN : BG_ALT, padding: "10px 16px", borderRadius: 999, cursor: "pointer" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: radius === r ? 700 : 500, fontSize: 13, color: radius === r ? "#fff" : BODY, margin: 0, whiteSpace: "nowrap" }}>{r} km</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div onClick={loading ? undefined : handleSearch} style={{ background: GREEN, opacity: loading ? 0.6 : 1, padding: "13px 20px", borderRadius: 8, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: loading ? "default" : "pointer", flexShrink: 0, height: 48, boxSizing: "border-box" }}>
+            <Icon name="search" size={18} color="#fff" />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{loading ? "Buscando..." : "Buscar jogos"}</p>
+          </div>
+        </div>
+        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, lineHeight: 1.4, color: MUTED, margin: 0 }}>
+          Distâncias aproximadas em linha reta, medidas a partir da cidade escolhida. Horários de Brasília.
+        </p>
+      </div>
+
+      <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `40px ${px}`, display: "flex", flexDirection: "column", gap: 24, minHeight: 240 }}>
+        {lastAdded && (
+          <div style={{ background: "#eafbf1", borderRadius: 8, padding: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ width: 22, height: 22, borderRadius: 11, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Check size={13} color="#fff" />
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0, flex: 1, minWidth: 200 }}>{lastAdded} foi adicionado ao seu calendário.</p>
+            <p onClick={() => onNavigate("calendario")} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#008a3a", margin: 0, cursor: "pointer", whiteSpace: "nowrap" }}>Ver Meu calendário →</p>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#991b1b", margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        {loading && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Buscando jogos...</p>}
+
+        {!loading && !result && !error && (
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Escolha a data, a cidade-base e o raio, e toque em “Buscar jogos”.</p>
+        )}
+
+        {!loading && result && searchedWith && (
+          <>
+            <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: TEXT, margin: 0 }}>
+                  {result.total} {result.total === 1 ? "jogo encontrado" : "jogos encontrados"}
+                </p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>
+                  {formatLongDate(searchedWith.date)} • Até {searchedWith.radius} km de {cityWithoutCountry(searchedWith.cityLabel)}
+                </p>
+              </div>
+              {result.total > 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Mais perto da cidade-base</p>}
+            </div>
+
+            <div style={{ background: GOLD_BG, borderRadius: 8, padding: "12px 16px", display: "flex", gap: 10, alignItems: "center" }}>
+              <Info size={18} color={GOLD} style={{ flexShrink: 0 }} />
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, lineHeight: 1.5, color: BODY, margin: 0 }}>
+                Datas e horários podem mudar — confira no site oficial do clube antes de ir. Salvar um jogo não reserva ingressos.
+              </p>
+            </div>
+
+            {result.stale && (
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: GOLD, margin: 0 }}>Nossa fonte de dados está instável agora — esses jogos podem estar um pouco desatualizados.</p>
+            )}
+
+            {result.total === 0 ? (
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 6 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Nenhum jogo encontrado nesse raio</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Tente aumentar o raio de busca ou escolher outra data.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {result.games.map((g) => {
+                  const p = kickoffParts(g.kickoff);
+                  const saved = savedIds.has(g.id);
+                  const noTime = g.status === "PST" || g.status === "TBD";
+                  const league = g.leagueCountry && g.leagueCountry !== "World" ? `${g.league} • ${g.leagueCountry}` : g.league;
+                  return (
+                    <div key={g.id} style={{ background: "#fff", border: `${saved ? 1.5 : 1}px solid ${saved ? GREEN : BORDER}`, borderRadius: 12, padding: isMobile ? 16 : "20px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 12 : 32 }}>
+                      <div style={{ width: isMobile ? "auto" : 96, flexShrink: 0, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "baseline" : "flex-start", gap: isMobile ? 10 : 2 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>{p.dayMonthYear}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>{noTime ? "A definir" : p.time}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{p.weekdayLong}</p>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <MapPin size={14} color={MUTED} style={{ flexShrink: 0 }} />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ")}</p>
+                        </div>
+                      </div>
+                      <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{g.distanceKm} km</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, color: MUTED, margin: 0 }}>de {cityShort}</p>
+                      </div>
+                      {saved ? (
+                        <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Check size={16} color="#008a3a" />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
+                        </div>
+                      ) : (
+                        <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", flexShrink: 0 }}>
+                          <Plus size={16} color="#fff" />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{addingId === g.id ? "Adicionando..." : "Adicionar ao calendário"}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {result.unlocated > 0 && (
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>
+                {result.unlocated} {result.unlocated === 1 ? "jogo dessa data ficou" : "jogos dessa data ficaram"} de fora porque a localização do estádio não está disponível.
+              </p>
+            )}
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, textAlign: "center", margin: 0 }}>
+              TODOS OS JOGOS DESTA BUSCA • Ajuste a data ou o raio para explorar mais.
+            </p>
+          </>
+        )}
+      </div>
+
+      <AuthedFooter />
+    </div>
+  );
+}
+
+function MeuCalendario({ onNavigate, onLogout }) {
+  const isMobile = useIsMobile();
+  const px = isMobile ? "16px" : "80px";
+  const [user, setUser] = useState({ id: null, name: "", avatar: null });
+  const [games, setGames] = useState(null); // null = carregando
+  const [view, setView] = useState(() => {
+    const [y, m] = todayInSaoPaulo().split("-").map(Number);
+    return { year: y, month: m - 1 };
+  });
+  const [removingId, setRemovingId] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      if (!u) {
+        onLogout();
+        return;
+      }
+      setUser({ id: u.id, name: u.user_metadata?.name || u.email || "", avatar: u.user_metadata?.avatar_url || null });
+      const { data: rows, error: loadError } = await supabase
+        .from("saved_games")
+        .select("*")
+        .eq("user_id", u.id)
+        .order("kickoff", { ascending: true });
+      if (loadError) {
+        setError("Não foi possível carregar seu calendário agora.");
+        setGames([]);
+        return;
+      }
+      const list = (rows || []).map((g) => ({ ...g, parts: kickoffParts(g.kickoff) }));
+      setGames(list);
+      // Se o mês atual está vazio mas existe um jogo futuro, já abre no mês dele.
+      const today = todayInSaoPaulo();
+      const [ty, tm] = today.split("-").map(Number);
+      const hasThisMonth = list.some((g) => g.parts.year === ty && g.parts.month === tm - 1);
+      const nextGame = list.find((g) => g.parts.dateKey >= today);
+      if (!hasThisMonth && nextGame) setView({ year: nextGame.parts.year, month: nextGame.parts.month });
+    })();
+  }, []);
+
+  const handleRemove = async (g) => {
+    if (removingId) return;
+    setRemovingId(g.id);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { error: deleteError } = await supabase.from("saved_games").delete().eq("id", g.id);
+      if (deleteError) throw deleteError;
+      setGames((prev) => prev.filter((x) => x.id !== g.id));
+    } catch {
+      setError("Não foi possível remover o jogo agora. Tente de novo.");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const loaded = games !== null;
+  const daysWithGames = useMemo(() => new Set((games || []).map((g) => g.parts.dateKey)), [games]);
+  const monthGames = useMemo(
+    () => (games || []).filter((g) => g.parts.year === view.year && g.parts.month === view.month),
+    [games, view]
+  );
+  const stadiumsCount = new Set(monthGames.map((g) => g.venue_name).filter(Boolean)).size;
+  const grid = useMemo(() => buildMonthGrid(view.year, view.month), [view]);
+  const nowMs = Date.now();
+  const goMonth = (delta) => setView((v) => shiftMonth(v.year, v.month, delta));
+
+  return (
+    <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
+      <AuthedNav active="calendario" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />
+
+      <div style={{ background: "linear-gradient(180deg, #e6f5ec 0%, #f8fafc 100%)", padding: isMobile ? `32px ${px}` : `56px ${px}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+          <div style={{ background: "#eafbf1", padding: "6px 12px", borderRadius: 4, width: "fit-content" }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#008a3a", margin: 0 }}>SUA PRÓXIMA ARQUIBANCADA</p>
+          </div>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 36 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Meu calendário</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 16 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Os jogos que você quer viver, organizados em um só lugar.</p>
+        </div>
+        <div onClick={() => onNavigate("buscar")} style={{ background: GREEN, borderRadius: 8, padding: "13px 20px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer", flexShrink: 0 }}>
+          <Icon name="search" size={18} color="#fff" />
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>Buscar jogos</p>
+        </div>
+      </div>
+
+      <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `40px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 8 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 24, color: TEXT, margin: 0 }}>Sua agenda de {monthName(view.month)}</p>
+          <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>
+            {monthGames.length} {monthGames.length === 1 ? "jogo salvo" : "jogos salvos"} • {stadiumsCount} {stadiumsCount === 1 ? "estádio" : "estádios"}
+          </p>
+        </div>
+
+        {error && (
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#991b1b", margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, alignItems: "flex-start" }}>
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 16 : 24, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, width: isMobile ? "100%" : "auto", flex: isMobile ? "none" : "1.3 1 0", minWidth: 0, boxSizing: "border-box" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{monthTitle(view.year, view.month)}</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div onClick={() => goMonth(-1)} style={{ background: BG_ALT, width: 36, height: 36, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <ChevronLeft size={20} color={TEXT} />
+                </div>
+                <div onClick={() => goMonth(1)} style={{ background: BG_ALT, width: 36, height: 36, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <ChevronRight size={20} color={TEXT} />
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex" }}>
+              {WEEKDAY_HEADERS.map((d) => (
+                <p key={d} style={{ flex: 1, fontFamily: FONT_MONO, fontSize: 11, color: MUTED, textAlign: "center", margin: 0 }}>{d}</p>
+              ))}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {grid.map((week, wi) => (
+                <div key={wi} style={{ display: "flex", gap: 6 }}>
+                  {week.map((cell) => {
+                    const marked = daysWithGames.has(cell.dateKey);
+                    return (
+                      <div key={cell.dateKey} style={{ flex: 1, minWidth: 0, height: isMobile ? 48 : 76, borderRadius: 8, background: marked ? "#eafbf1" : cell.inMonth ? BG : "#fff", display: "flex", flexDirection: "column", gap: 8, alignItems: "center", justifyContent: "center" }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: marked ? 700 : 400, fontSize: 15, color: marked ? "#008a3a" : cell.inMonth ? TEXT : "#94a3b8", margin: 0 }}>{cell.day}</p>
+                        {marked && <div style={{ width: 6, height: 6, borderRadius: 3, background: GREEN }} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, background: GREEN }} />
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Dia com jogo no seu calendário</p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: isMobile ? "none" : "1 1 0", width: isMobile ? "100%" : "auto", minWidth: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 4 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Próximos jogos que quero ir</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{monthTitle(view.year, view.month)}</p>
+            </div>
+
+            {!loaded && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Carregando seu calendário...</p>}
+
+            {loaded && monthGames.length === 0 && (
+              <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 20, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Você ainda não salvou nenhum jogo em {monthName(view.month)}.</p>
+                <p onClick={() => onNavigate("buscar")} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Buscar jogos →</p>
+              </div>
+            )}
+
+            {monthGames.map((g) => {
+              const past = new Date(g.kickoff).getTime() < nowMs;
+              const recent = nowMs - new Date(g.created_at).getTime() < 24 * 3600 * 1000;
+              const league = g.league_country && g.league_country !== "World" ? `${g.league_name} • ${g.league_country}` : g.league_name;
+              return (
+                <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 18, display: "flex", flexDirection: "column", gap: 10, opacity: past ? 0.7 : 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>
+                      {g.parts.weekdayAbbr}, {String(g.parts.day).padStart(2, "0")} {g.parts.monthAbbr} • {g.parts.time}
+                    </p>
+                    {past ? (
+                      <div style={{ background: BG_ALT, padding: "4px 8px", borderRadius: 4 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, color: MUTED, margin: 0 }}>JÁ PASSOU</p>
+                      </div>
+                    ) : recent ? (
+                      <div style={{ background: "#eafbf1", padding: "4px 8px", borderRadius: 4 }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, color: "#008a3a", margin: 0 }}>RECÉM-ADICIONADO</p>
+                      </div>
+                    ) : null}
+                  </div>
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{league}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    {g.venue_name && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_name}</p>}
+                    {g.venue_city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_city}</p>}
+                  </div>
+                  <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, textDecoration: "underline", margin: 0, cursor: removingId ? "default" : "pointer", width: "fit-content" }}>
+                    {removingId === g.id ? "Removendo..." : "Remover do calendário"}
+                  </p>
+                </div>
+              );
+            })}
+
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, lineHeight: 1.5, color: MUTED, margin: 0 }}>Horários de Brasília. Salvar um jogo não reserva ingressos.</p>
           </div>
         </div>
       </div>
@@ -5974,6 +6517,8 @@ const SCREEN_TO_PATH = {
   roteiros: "/conta/roteiros",
   roteiro: "/conta/roteiros/detalhe",
   jogos: "/conta/jogos",
+  buscar: "/conta/buscar-jogos",
+  calendario: "/conta/calendario",
   "registrar-jogo": "/conta/jogos/registrar",
   nivel: "/conta/nivel",
   conquistas: "/conta/conquistas",
@@ -6244,6 +6789,8 @@ export default function App() {
           onRegisterNew={() => setScreen("registrar-jogo")}
         />
       )}
+      {screen === "buscar" && <BuscarJogos onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "calendario" && <MeuCalendario onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "registrar-jogo" && (
         <RegistrarJogo
           onNavigate={(key) => setScreen(key)}
