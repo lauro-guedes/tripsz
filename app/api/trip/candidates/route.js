@@ -22,7 +22,7 @@ export async function GET(request) {
     const supabase = supabaseAdmin();
     const leagueIds = leagueIdsForCountries(params.labels);
     const sync = await ensureCalendar(supabase, leagueIds, { requiredTo: params.to });
-    const { games, unlocated } = await getCandidates(supabase, { labels: params.labels, from: params.from, to: params.to });
+    const { games, unlocated, unlocatedGames } = await getCandidates(supabase, { labels: params.labels, from: params.from, to: params.to });
     const nearest = games.length === 0 ? await getNearest(supabase, { labels: params.labels, from: params.from, to: params.to }) : null;
 
     const failed = sync.filter((s) => s.source === "error");
@@ -32,6 +32,7 @@ export async function GET(request) {
         countries: params.labels,
         total: games.length,
         unlocated,
+        unlocatedSample: unlocatedGames.slice(0, 25),
         games,
         nearest,
         sync: {
