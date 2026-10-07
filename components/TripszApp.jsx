@@ -1711,6 +1711,8 @@ function planToTrip(plan, fallbackCountries) {
     id: g.id,
     home: g.home?.name || "",
     away: g.away?.name || "",
+    homeLogo: g.home?.logo || null,
+    awayLogo: g.away?.logo || null,
     city: g.venue?.city || "",
     stadium: g.venue?.name || g.venue?.city || "",
     country: g.country,
@@ -1951,12 +1953,13 @@ function ResultadoRoteiro({ trip, planLoading, planError, onRetryPlan, onHireCon
                     {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", height: 44, flexWrap: "wrap" }}>
-                    <TeamBadge name={f.home} size={28} />
+                    <TeamBadge name={f.home} url={f.homeLogo} size={28} resolve />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.home}</p>
                     <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>VS</p>
-                    <TeamBadge name={f.away} size={28} />
+                    <TeamBadge name={f.away} url={f.awayLogo} size={28} resolve />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.away}</p>
                   </div>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{[f.stadium, f.city && f.city !== f.stadium ? f.city : null].filter(Boolean).join(" • ")}</p>
                   {isMobile ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
@@ -2417,9 +2420,9 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                     {preview.games.slice(0, 2).map((g, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <TeamBadge name={g.home} size={18} />
+                          <TeamBadge name={g.home} url={g.homeLogo} size={18} resolve />
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
-                          <TeamBadge name={g.away} size={18} />
+                          <TeamBadge name={g.away} url={g.awayLogo} size={18} resolve />
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
                       </div>
@@ -6287,9 +6290,9 @@ function RoteiroDetalhe({ trip, planLoading, planError, onRetryPlan, onNavigate,
                   </div>
                   <div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                      <TeamBadge name={f.home} size={isMobile ? 24 : 32} />
+                      <TeamBadge name={f.home} url={f.homeLogo} size={isMobile ? 24 : 32} resolve />
                       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 22, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
-                      <TeamBadge name={f.away} size={isMobile ? 24 : 32} />
+                      <TeamBadge name={f.away} url={f.awayLogo} size={isMobile ? 24 : 32} resolve />
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{f.stadium}</p>
