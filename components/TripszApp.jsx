@@ -1492,11 +1492,11 @@ function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 56, alignItems: isMobile ? "flex-start" : "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: isMobile ? "flex-start" : "center", textAlign: isMobile ? "left" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quando você quer viajar?</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Escolha as datas e diga o quanto pode flexibilizar</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Escolha a data de ida, a data de volta e diga o quanto pode flexibilizar</p>
         </div>
         {isMobile && <MobileProgress step={4 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
-          <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Datas de viagem</p>
+          <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Data de Ida e Data de Volta</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: isMobile ? "100%" : 800 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data de Ida</p>
@@ -6566,6 +6566,17 @@ export default function App() {
     // sessão passa a existir. Se a pessoa estava parada na tela de conta
     // esperando login, avança sozinho pro próximo passo do questionário.
     const supabase = supabaseBrowser();
+
+    // App instalado na tela de início (iPhone/Android): abre sempre em "/", que é a
+    // página inicial. Se a pessoa já tem sessão, leva direto pra Meus Roteiros em vez
+    // de mostrar o "Entrar" de novo. No navegador comum a página inicial continua igual.
+    const isInstalledApp = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    if (isInstalledApp && (pathScreen || restoredScreen || "landing") === "landing") {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data?.session) setScreen((current) => (current === "landing" ? "roteiros" : current));
+      });
+    }
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
         setAnswers((a) => ({ ...a, userId: session.user.id }));
@@ -6706,7 +6717,16 @@ export default function App() {
               setScreen("criarconta");
             }
           }}
-          onLogin={() => { setPostLoginTarget("roteiros"); setShowGlobalLoginModal(true); }}
+          onLogin={async () => {
+            const supabase = supabaseBrowser();
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+              setScreen("roteiros");
+              return;
+            }
+            setPostLoginTarget("roteiros");
+            setShowGlobalLoginModal(true);
+          }}
         />
       )}
       {screen === "criarconta" && (
