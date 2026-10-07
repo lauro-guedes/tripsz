@@ -1691,235 +1691,146 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, stepOff
 }
 
 /* ============================================================
-   MATCHING ENGINE — same principle as the earlier dark-theme
-   prototype, adapted to this flow's fields (continents/countries,
-   dateStart/dateEnd/flexLevel, adults/kids/budget, priority/pace).
-   Business model differs: this flow has a FIXED unlock price
-   (R$ 49,90), not a dynamically-computed consultancy quote.
+   ROTEIRO — adapta o plano REAL (lib/tripPlanner.js, montado por
+   /api/trip/plan com jogos de verdade) ao formato que as telas usam.
+   Nada aqui inventa jogo, preço ou nota: tudo vem do plano.
    ============================================================ */
-const FIXTURES_BY_COUNTRY = {
-  "Itália": [
-    { home: "Inter", away: "Milan", city: "Milão", stadium: "San Siro", tag: "Derby della Madonnina", rivalry: "derby", vibe: 9.5, dayOffset: 20 },
-    { home: "Napoli", away: "Bologna", city: "Nápoles", stadium: "Diego Armando Maradona", tag: "Confronto direto pela liderança", rivalry: "title", vibe: 9.2, dayOffset: 27 },
-    { home: "Roma", away: "Lazio", city: "Roma", stadium: "Stadio Olimpico", tag: "Derby histórico de paixão", rivalry: "derby", vibe: 8.8, dayOffset: 35 },
-    { home: "Inter", away: "Arsenal", city: "Milão", stadium: "San Siro", tag: "Champions League", rivalry: null, competition: "champions", vibe: 8.7, dayOffset: 16 },
-  ],
-  "Inglaterra": [
-    { home: "Arsenal", away: "Chelsea", city: "Londres", stadium: "Emirates Stadium", tag: "Grande clássico de Londres", rivalry: "derby", vibe: 9.0, dayOffset: 18 },
-    { home: "Liverpool", away: "Manchester City", city: "Liverpool", stadium: "Anfield", tag: "A maior atmosfera atual", rivalry: "title", vibe: 10.0, dayOffset: 25 },
-    { home: "Tottenham", away: "Newcastle", city: "Londres", stadium: "Tottenham Hotspur Stadium", tag: "Estádio ultramoderno", rivalry: null, vibe: 8.0, dayOffset: 32 },
-    { home: "Manchester City", away: "Real Madrid", city: "Manchester", stadium: "Etihad Stadium", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.3, dayOffset: 14 },
-  ],
-  "Espanha": [
-    { home: "Real Madrid", away: "Barcelona", city: "Madri", stadium: "Santiago Bernabéu", tag: "El Clásico", rivalry: "derby", vibe: 10.0, dayOffset: 22 },
-    { home: "Atlético Madrid", away: "Sevilla", city: "Madri", stadium: "Metropolitano", tag: "Força da torcida colchonera", rivalry: null, vibe: 8.0, dayOffset: 30 },
-    { home: "Barcelona", away: "Bayern München", city: "Barcelona", stadium: "Camp Nou", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.1, dayOffset: 17 },
-  ],
-  "Alemanha": [
-    { home: "Bayern München", away: "Borussia Dortmund", city: "Munique", stadium: "Allianz Arena", tag: "Der Klassiker", rivalry: "derby", vibe: 10.0, dayOffset: 24 },
-    { home: "Bayern München", away: "PSG", city: "Munique", stadium: "Allianz Arena", tag: "Champions League", rivalry: null, competition: "champions", vibe: 9.0, dayOffset: 15 },
-  ],
-  "França": [{ home: "PSG", away: "Marseille", city: "Paris", stadium: "Parc des Princes", tag: "Le Classique", rivalry: "derby", vibe: 9.0, dayOffset: 26 }],
-  "Portugal": [{ home: "Porto", away: "Benfica", city: "Porto", stadium: "Estádio do Dragão", tag: "O Clássico português", rivalry: "derby", vibe: 9.0, dayOffset: 28 }],
-  "Holanda": [
-    { home: "Ajax", away: "Feyenoord", city: "Amsterdã", stadium: "Johan Cruyff Arena", tag: "De Klassieker", rivalry: "derby", vibe: 9.0, dayOffset: 29 },
-    { home: "PSV", away: "AZ Alkmaar", city: "Eindhoven", stadium: "Philips Stadion", tag: "Disputa pelo topo da Eredivisie", rivalry: "title", vibe: 8.0, dayOffset: 21 },
-    { home: "Ajax", away: "Inter", city: "Amsterdã", stadium: "Johan Cruyff Arena", tag: "Champions League", rivalry: null, competition: "champions", vibe: 8.5, dayOffset: 13 },
-  ],
-  "Turquia": [{ home: "Galatasaray", away: "Fenerbahçe", city: "Istambul", stadium: "Ali Sami Yen", tag: "Derby intercontinental", rivalry: "derby", vibe: 10.0, dayOffset: 33 }],
-  "Argentina": [{ home: "Boca Juniors", away: "River Plate", city: "Buenos Aires", stadium: "La Bombonera", tag: "El Superclásico", rivalry: "derby", vibe: 10.0, dayOffset: 21 }],
-  "Brasil": [
-    { home: "Flamengo", away: "Fluminense", city: "Rio de Janeiro", stadium: "Maracanã", tag: "Clássico Fla-Flu", rivalry: "derby", vibe: 9.0, dayOffset: 19 },
-    { home: "Corinthians", away: "Palmeiras", city: "São Paulo", stadium: "Neo Química Arena", tag: "Derby paulista", rivalry: "derby", vibe: 9.0, dayOffset: 26 },
-  ],
-  "Uruguai": [{ home: "Peñarol", away: "Nacional", city: "Montevidéu", stadium: "Campeón del Siglo", tag: "Clásico uruguayo", rivalry: "derby", vibe: 9.0, dayOffset: 23 }],
-  "Chile": [{ home: "Colo-Colo", away: "Universidad de Chile", city: "Santiago", stadium: "Monumental", tag: "Súper Clásico chileno", rivalry: "derby", vibe: 9.0, dayOffset: 27 }],
-  "Colômbia": [{ home: "Millonarios", away: "Santa Fe", city: "Bogotá", stadium: "El Campín", tag: "El Clásico Capitalino", rivalry: "derby", vibe: 8.0, dayOffset: 25 }],
-};
+const EMPTY_TRIP = { countries: [], games: [], cities: [], stadiums: [], days: 0, itinerary: [], notes: [], stats: null };
 
-const TICKET_RANGE = { derby: "£65–£140", title: "£80–£210", null: "£45–£95" };
-
-function scoreFixture(f, answers) {
-  let score = f.vibe;
-  const priority = answers.priority || "classics";
-  if (priority === "classics" && (f.rivalry === "derby" || f.rivalry === "title")) score += 3;
-  if (priority === "international" && f.competition === "champions") score += 4;
-  // "maxgames" e "stadiums" não dão peso extra por rivalidade — a seleção
-  // deles acontece depois, no buildTrip, priorizando quantidade/variedade
-  // de estádios em vez de reordenar por score.
-
-  // Jogos dos times favoritos escolhidos no questionário sobem bastante
-  // no ranking — a pessoa disse explicitamente que quer acompanhar esses
-  // times, então isso pesa mais que qualquer prioridade de estilo.
-  const favorites = answers.favoriteTeams || [];
-  if (favorites.includes(f.home) || favorites.includes(f.away)) score += 10;
-
-  return score;
+// "2026-10-07" -> Date em horário local (evita o dia voltar 1 por causa do fuso)
+function parseISODate(s) {
+  if (typeof s !== "string") return null;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
 }
 
-function buildTrip(answers) {
-  const countries = answers.countries?.length ? answers.countries : ["Inglaterra"];
-  const now = Date.now();
-  let candidates = countries.flatMap((c) => (FIXTURES_BY_COUNTRY[c] || []).map((f) => ({ ...f, country: c, date: new Date(now + f.dayOffset * 86400000) })));
+function planToTrip(plan, fallbackCountries) {
+  if (!plan) return EMPTY_TRIP;
+  const games = (plan.selected || []).map((g) => ({
+    id: g.id,
+    home: g.home?.name || "",
+    away: g.away?.name || "",
+    city: g.venue?.city || "",
+    stadium: g.venue?.name || g.venue?.city || "",
+    country: g.country,
+    date: parseISODate(g.matchDate),
+    competition: g.competition?.name || "",
+    // clássico (nome da rivalidade) quando existe; senão a competição
+    tag: g.rivalry || g.competition?.name || "Jogo",
+    rivalry: g.rivalry || null,
+    favorite: !!g.favorite,
+    approxLocation: !!g.approxLocation,
+    insideDates: g.insideDates !== false,
+  }));
+  const countries = plan.countries?.length ? plan.countries : fallbackCountries || [];
+  return {
+    countries,
+    games,
+    cities: plan.cities || [],
+    stadiums: plan.stadiums || [],
+    days: plan.stats?.days || 0,
+    itinerary: plan.itinerary || [],
+    notes: plan.notes || [],
+    stats: plan.stats || null,
+  };
+}
 
-  if (answers.dateStart) {
-    const padDays = { fixed: 0, some: 7, flex: 21 }[answers.flexLevel || "some"] ?? 7;
-    const start = new Date(new Date(answers.dateStart).getTime() - padDays * 86400000);
-    const end = answers.dateEnd ? new Date(new Date(answers.dateEnd).getTime() + padDays * 86400000) : new Date(start.getTime() + 30 * 86400000);
-    const filtered = candidates.filter((f) => f.date >= start && f.date <= end);
-    if (filtered.length) candidates = filtered;
-  }
+// A "foto" que vai pro banco: sem a lista completa de jogos possíveis (pesada,
+// e as telas só usam o roteiro escolhido, o dia a dia e os avisos).
+function slimPlan(plan) {
+  if (!plan) return null;
+  const { possible, ...rest } = plan;
+  return rest;
+}
 
-  const priority = answers.priority || "classics";
-
-  // "Competições internacionais": mostra só jogos de competições
-  // internacionais (Champions League etc). Se não sobrar nenhum jogo
-  // assim no recorte de países/datas escolhido, volta pros jogos normais
-  // em vez de devolver um roteiro vazio.
-  if (priority === "international") {
-    const intl = candidates.filter((f) => f.competition === "champions");
-    if (intl.length) candidates = intl;
-  }
-
-  // O "ritmo da viagem" (pace) define um teto confortável de jogos por
-  // padrão. Mas quando a prioridade é "Máximo de jogos", esse teto é
-  // ignorado — a pessoa pediu pra ver o máximo possível de partidas no
-  // período, então tentamos encaixar todos os candidatos disponíveis
-  // (com um limite de segurança de 10, pra não virar uma maratona
-  // impossível de cumprir numa única viagem).
-  const paceCap = { compact: 4, balanced: 3, spaced: 2, relaxed: 2 }[answers.pace || "spaced"] ?? 3;
-  const maxGames = priority === "maxgames" ? Math.min(candidates.length, 10) : Math.min(paceCap, candidates.length);
-
-  // Escolhe os jogos finais em RODÍZIO por país — isso garante que, se a
-  // pessoa escolheu 2+ países, o roteiro final realmente cruza jogos dos
-  // dois, em vez de simplesmente pegar os jogos com maior pontuação
-  // (o que poderia acabar devolvendo um roteiro só de um país, mesmo com
-  // vários selecionados). Com 1 país só, isso se comporta exatamente como
-  // um ranking normal por pontuação.
-  function pickAcrossCountries(pool, limit) {
-    const scored = pool.map((f) => ({ ...f, score: scoreFixture(f, answers) }));
-    const byCountry = {};
-    scored.forEach((f) => {
-      (byCountry[f.country] = byCountry[f.country] || []).push(f);
+// Pede ao servidor o roteiro com jogos reais pras respostas do questionário.
+async function fetchPlan(answers) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 70000);
+  try {
+    const res = await fetch("/api/trip/plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        countries: answers.countries,
+        dateStart: answers.dateStart,
+        dateEnd: answers.dateEnd,
+        flexLevel: answers.flexLevel,
+        favoriteTeams: answers.favoriteTeams || [],
+        priority: answers.priority,
+        pace: answers.pace,
+        adults: answers.adults,
+        kids: answers.kids,
+        budget: answers.budget,
+      }),
     });
-    Object.values(byCountry).forEach((arr) => arr.sort((a, b) => b.score - a.score || a.date - b.date));
-
-    const countryKeys = Object.keys(byCountry);
-    const selected = [];
-    let round = 0;
-    while (selected.length < limit) {
-      let addedThisRound = false;
-      for (const country of countryKeys) {
-        if (selected.length >= limit) break;
-        const candidate = byCountry[country][round];
-        if (candidate) {
-          selected.push(candidate);
-          addedThisRound = true;
-        }
-      }
-      if (!addedThisRound) break;
-      round++;
-    }
-    return selected;
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.plan) throw new Error(json?.message || "Não foi possível montar o roteiro agora.");
+    return json.plan;
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("A busca de jogos demorou demais. Tente de novo em instantes.");
+    throw e;
+  } finally {
+    clearTimeout(timer);
   }
+}
 
-  let ranked;
-  if (priority === "stadiums") {
-    // "Mais estádios": primeiro reduz a 1 melhor jogo por cidade (evita
-    // repetir a mesma cidade), e só então aplica o rodízio por país em
-    // cima disso — assim garante variedade de cidade E de país juntas.
-    const bestByCity = {};
-    candidates.forEach((f) => {
-      const current = bestByCity[f.city];
-      if (!current || scoreFixture(f, answers) > scoreFixture(current, answers)) bestByCity[f.city] = f;
-    });
-    ranked = pickAcrossCountries(Object.values(bestByCity), maxGames);
-  } else {
-    ranked = pickAcrossCountries(candidates, maxGames);
+// Avisos do plano (sem jogo nas datas, time favorito que não joga, local provável...)
+// + estados de carregando/erro. A plataforma diz o que fez e o que NÃO conseguiu.
+function PlanFeedback({ loading, error, notes, empty, onRetry }) {
+  if (loading) {
+    return <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Montando seu roteiro com os jogos reais...</p>;
   }
-  ranked.sort((a, b) => a.date - b.date);
-
-  // Reordena o roteiro final em BLOCOS geográficos, em vez de só pela
-  // data — sem isso, o rodízio por país podia devolver uma sequência
-  // tipo "Brasil → Argentina → Brasil → Argentina", o que não faz
-  // sentido logisticamente (ida e volta desnecessária entre países).
-  // Agora a viagem visita cada país uma vez só (bloco contínuo), e
-  // dentro do país visita cada cidade uma vez só também — os blocos em
-  // si continuam em ordem cronológica (o bloco com o jogo mais cedo
-  // vem primeiro), só os jogos DENTRO de cada bloco não ficam mais
-  // espalhados pelo resto da viagem.
-  function orderByGeographicBlocks(games) {
-    const byCountry = new Map();
-    games.forEach((g) => {
-      if (!byCountry.has(g.country)) byCountry.set(g.country, []);
-      byCountry.get(g.country).push(g);
-    });
-    const countryOrder = [...byCountry.keys()].sort(
-      (a, b) => Math.min(...byCountry.get(a).map((g) => g.date)) - Math.min(...byCountry.get(b).map((g) => g.date))
+  if (error) {
+    return (
+      <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#b91c1c", margin: 0 }}>{error}</p>
+        {onRetry && <Button variant="outline" small onClick={onRetry}>Tentar de novo</Button>}
+      </div>
     );
-    return countryOrder.flatMap((country) => {
-      const gamesInCountry = byCountry.get(country);
-      const byCity = new Map();
-      gamesInCountry.forEach((g) => {
-        if (!byCity.has(g.city)) byCity.set(g.city, []);
-        byCity.get(g.city).push(g);
-      });
-      const cityOrder = [...byCity.keys()].sort(
-        (a, b) => Math.min(...byCity.get(a).map((g) => g.date)) - Math.min(...byCity.get(b).map((g) => g.date))
-      );
-      return cityOrder.flatMap((city) => byCity.get(city).sort((a, b) => a.date - b.date));
-    });
   }
-  ranked = orderByGeographicBlocks(ranked);
-
-  const cities = [...new Set(ranked.map((f) => f.city))];
-  const stadiums = [...new Set(ranked.map((f) => f.stadium))];
-  const allDates = ranked.map((f) => f.date);
-  const firstDate = allDates.length ? new Date(Math.min(...allDates)) : new Date(now + 20 * 86400000);
-  const lastDate = allDates.length ? new Date(Math.max(...allDates)) : firstDate;
-  const days = answers.dateStart && answers.dateEnd
-    ? Math.max(3, Math.round((new Date(answers.dateEnd) - new Date(answers.dateStart)) / 86400000))
-    : Math.max(5, Math.round((lastDate - firstDate) / 86400000) + 4);
-
-  const itinerary = [];
-  let dayNum = 1;
-  itinerary.push({ day: `Dia ${dayNum}`, title: `Chegada em ${ranked[0]?.city || cities[0] || "destino"}`, body: `Explore a cidade e se prepare para o jogo do dia seguinte.` });
-  dayNum++;
-  let lastCity = ranked[0]?.city;
-  ranked.forEach((f) => {
-    if (f.city !== lastCity) {
-      itinerary.push({ day: `Dia ${dayNum}`, title: `Deslocamento para ${f.city}`, body: "Trem ou voo doméstico até a próxima cidade do roteiro." });
-      dayNum++;
-      lastCity = f.city;
-    }
-    itinerary.push({ day: `Dia ${dayNum}`, title: `${f.home} vs ${f.away}`, body: f.tag });
-    dayNum++;
-  });
-  itinerary.push({ day: `Dia ${dayNum}`, title: "Retorno", body: "Últimas compras e embarque de volta." });
-
-  return { countries, games: ranked, cities, stadiums, days, itinerary };
+  const list = (notes || []).filter((n) => n && n.message);
+  if (list.length === 0 && !empty) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {list.map((n, i) => (
+        <div key={i} style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 8, padding: "10px 14px" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: BODY, margin: 0 }}>{n.message}</p>
+        </div>
+      ))}
+      {empty && list.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Ainda não há jogos para mostrar neste roteiro.</p>}
+    </div>
+  );
 }
 
 /* ============================================================
    7. LOADING (node 95:746)
    ============================================================ */
-function LoadingScreen({ onDone }) {
+function LoadingScreen({ onWork, onDone }) {
   const isMobile = useIsMobile();
   const [activeIdx, setActiveIdx] = useState(0);
   const lines = ["Cruzando calendários por país e data...", "Listando partidas possíveis...", "Organizando sequência de cidades...", "Preparando o roteiro..."];
 
+  // O trabalho de verdade (buscar os jogos reais e salvar o roteiro) começa já,
+  // em paralelo com a animação. O ref garante que rode UMA vez só (o modo
+  // estrito do React monta os efeitos duas vezes em desenvolvimento).
+  const workRef = useRef(null);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (!workRef.current) workRef.current = Promise.resolve().then(() => (onWork ? onWork() : null)).catch((e) => { console.error(e); return null; });
       // Mostra cada etapa por um tempinho, uma de cada vez, e só avança
-      // pra tela seguinte (chamando a lógica de verdade, que salva o
-      // roteiro) depois que a última etapa terminar de aparecer.
+      // pra tela seguinte depois que a última etapa apareceu E o trabalho terminou.
       for (let i = 0; i < lines.length; i++) {
         if (cancelled) return;
         setActiveIdx(i);
         await new Promise((resolve) => setTimeout(resolve, 700));
       }
-      if (!cancelled) onDone();
+      const next = await workRef.current;
+      if (!cancelled) onDone(next);
     })();
     return () => {
       cancelled = true;
@@ -1954,10 +1865,11 @@ function LoadingScreen({ onDone }) {
 // toLocaleDateString("pt-BR") normalmente adiciona.
 const MESES_ABREV = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 function formatDateBadge(date) {
+  if (!date) return "";
   return `${String(date.getDate()).padStart(2, "0")} ${MESES_ABREV[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
+function ResultadoRoteiro({ trip, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -2030,12 +1942,13 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 16, lineHeight: 1.5, color: BODY, margin: 0 }}>Encontramos as partidas possíveis e uma sequência de cidades para sua viagem. Abaixo você vê a prévia do roteiro sugerido e a opção de contratar consultoria para completar hospedagem, voos e transferências.</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+            <PlanFeedback loading={planLoading} error={planError} notes={trip.notes} empty={trip.games.length === 0} onRetry={onRetryPlan} />
             {trip.games.map((f, i) => (
               <div key={i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? 16 : 24 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, width: isMobile ? "100%" : 400 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <Badge gold={f.rivalry === "title"}>{f.tag}</Badge>
-                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Atmosfera: {f.vibe}/10</p>
+                    <Badge gold={!!f.rivalry}>{f.tag}</Badge>
+                    {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", height: 44, flexWrap: "wrap" }}>
                     <TeamBadge name={f.home} size={28} />
@@ -2050,7 +1963,7 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
                         <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
                           <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#334155", textTransform: "uppercase", margin: 0 }}>{formatDateBadge(f.date)}</p>
                         </div>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.competition}</p>
                       </div>
                     </div>
                   ) : (
@@ -2061,8 +1974,8 @@ function ResultadoRoteiro({ trip, onHireConsultoria, onNavigate, onLogout }) {
                 </div>
                 {!isMobile && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Estimativa Ingresso</p>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
+                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Competição</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{f.competition}</p>
                   </div>
                 )}
               </div>
@@ -2395,6 +2308,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
     budget: row.budget,
     priority: row.priority,
     pace: row.pace,
+    favoriteTeams: row.favorite_teams || [],
   });
 
   const handleDelete = async (row) => {
@@ -2474,7 +2388,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(340px, 1fr))", gap: 24 }}>
           {filtered.map((row) => {
             const status = deriveStatus(row);
-            const preview = buildTrip(rowToAnswers(row));
+            const preview = planToTrip(row.plan, row.countries);
             const days = row.date_start && row.date_end ? Math.max(1, Math.round((new Date(row.date_end) - new Date(row.date_start)) / 86400000)) : preview.days;
             const statusColor = status === "Ativo" ? GREEN : MUTED;
             return (
@@ -2495,7 +2409,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                       </div>
                     )}
                   </div>
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{preview.games.length} partida(s) possível(is), sequência por {preview.cities.join(", ") || "definir"}.</p>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{row.plan ? `${preview.games.length} partida(s) no roteiro, sequência por ${preview.cities.join(", ") || "definir"}.` : "Abra o roteiro para ver as partidas."}</p>
                 </div>
                 {preview.games.length > 0 && (
                   <div style={{ background: BG_ALT, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2514,7 +2428,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", gap: 16 }}>
-                    <p onClick={() => onOpenTrip(rowToAnswers(row))} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Abrir Roteiro</p>
+                    <p onClick={() => onOpenTrip(rowToAnswers(row), row.plan)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Abrir Roteiro</p>
                     <p onClick={() => onEditTrip(rowToAnswers(row))} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: MUTED, margin: 0, cursor: "pointer" }}>Editar</p>
                     <p onClick={() => handleDelete(row)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: "#ef4444", margin: 0, cursor: "pointer" }}>Excluir</p>
                   </div>
@@ -6327,7 +6241,7 @@ function Checkout({ answers, onBack, onDone, onHome }) {
 /* ============================================================
    10. RESULTADO DESBLOQUEADO (node 95:982)
    ============================================================ */
-function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
+function RoteiroDetalhe({ trip, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -6363,12 +6277,13 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Partidas possíveis para o seu roteiro</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
+            <PlanFeedback loading={planLoading} error={planError} notes={trip.notes} empty={trip.games.length === 0} onRetry={onRetryPlan} />
             {trip.games.map((f, i) => (
               <div key={i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? 16 : 24 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, width: isMobile ? "100%" : 500 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                     <Badge>{f.tag}</Badge>
-                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Atmosfera: {f.vibe}/10</p>
+                    {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
                   </div>
                   <div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -6379,14 +6294,14 @@ function RoteiroDetalhe({ trip, onNavigate, onLogout, onBackToRoteiros, onHireCo
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{f.stadium}</p>
                       <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "4px 10px" }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{f.date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</p>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{formatDateBadge(f.date)}</p>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: isMobile ? "flex-start" : "flex-end" }}>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>Estimativa Ingresso</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>{TICKET_RANGE[f.rivalry]}</p>
+                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>Competição</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>{f.competition}</p>
                 </div>
               </div>
             ))}
@@ -6558,9 +6473,14 @@ export default function App() {
   // renderização (screen="landing" por padrão) reescreveria qualquer link
   // direto (ex: /roteiro/destino) para "/" antes de conseguirmos lê-lo.
   const [initialized, setInitialized] = useState(false);
-  const trip = useMemo(() => buildTrip(answers), [screen]);
+  const [plan, setPlan] = useState(null); // plano real (jogos de verdade) da tela aberta
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState(null);
+  const trip = useMemo(() => planToTrip(plan, answers.countries), [plan, answers.countries]);
   const restart = () => {
     setAnswers({});
+    setPlan(null);
+    setPlanError(null);
     setScreen("landing");
     localStorage.removeItem("tripsz_state");
   };
@@ -6654,47 +6574,107 @@ export default function App() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Antes de ir pro checkout, grava as respostas do questionário no Supabase
-  // pra existir um registro real do pedido, ligado ao usuário autenticado.
-  // Salva o roteiro assim que o questionário termina — SEM cobrar nada.
-  // O roteiro (jogos possíveis, cidades, planejamento) é gratuito e já
-  // nasce desbloqueado. O que pode ser vendido depois, à parte, é a
-  // consultoria humana (ver handleHireConsultoria / tela de checkout).
+  // Monta o roteiro com jogos REAIS (/api/trip/plan) e salva as respostas junto
+  // com a "foto" desse roteiro (coluna plan) — assim, quando a pessoa reabre o
+  // roteiro depois, ela vê o que foi gerado, e não um recálculo com jogos que
+  // podem ter mudado. O roteiro continua gratuito e já nasce desbloqueado; o que
+  // pode ser vendido à parte é a consultoria humana (ver handleHireConsultoria).
+  // Devolve a próxima tela ("account" se não há sessão, senão "resultado").
   const handleSaveTrip = async () => {
     const supabase = supabaseBrowser();
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData.session?.user?.id;
-    if (!userId) {
-      setScreen("account");
-      return;
+    if (!userId) return "account";
+
+    setPlanError(null);
+    let newPlan = null;
+    try {
+      newPlan = await fetchPlan(answers);
+      setPlan(newPlan);
+    } catch (e) {
+      console.error("Erro ao montar o roteiro:", e.message);
+      setPlan(null);
+      setPlanError(e.message || "Não foi possível montar o roteiro agora.");
     }
-    const { data, error } = await supabase
-      .from("trip_answers")
-      .insert({
-        user_id: userId,
-        countries: answers.countries,
-        date_start: answers.dateStart,
-        date_end: answers.dateEnd,
-        flex_level: answers.flexLevel,
-        adults: answers.adults,
-        kids: answers.kids,
-        budget: answers.budget,
-        priority: answers.priority,
-        pace: answers.pace,
-        favorite_teams: answers.favoriteTeams || [],
-      })
-      .select()
-      .single();
+
+    const row = {
+      user_id: userId,
+      countries: answers.countries,
+      date_start: answers.dateStart,
+      date_end: answers.dateEnd,
+      flex_level: answers.flexLevel,
+      adults: answers.adults,
+      kids: answers.kids,
+      budget: answers.budget,
+      priority: answers.priority,
+      pace: answers.pace,
+      favorite_teams: answers.favoriteTeams || [],
+    };
+    const withPlan = newPlan ? { ...row, plan: slimPlan(newPlan), plan_generated_at: new Date().toISOString() } : row;
+    let { data, error } = await supabase.from("trip_answers").insert(withPlan).select().single();
+    if (error && newPlan && /plan/i.test(error.message || "")) {
+      // A coluna `plan` ainda não existe no banco (migração não rodada): salva só as respostas.
+      console.warn("Coluna plan ausente em trip_answers — rode supabase-migration-etapa3.sql. Salvando só as respostas.");
+      ({ data, error } = await supabase.from("trip_answers").insert(row).select().single());
+    }
     if (error) {
       console.error("Erro ao salvar respostas:", error.message);
-      // Mesmo se salvar falhar, ainda mostramos o resultado calculado —
-      // só não vai aparecer em "Meus Roteiros" depois.
-      setScreen("resultado");
-      return;
+      // Mesmo se salvar falhar, ainda mostramos o resultado — só não vai
+      // aparecer em "Meus Roteiros" depois.
+      return "resultado";
     }
     setAnswers((a) => ({ ...a, userId, tripAnswersId: data.id }));
-    setScreen("resultado");
+    return "resultado";
   };
+
+  // Guarda a foto num roteiro que já existe (ex.: roteiros antigos, criados antes da coluna plan).
+  const persistPlan = async (id, p) => {
+    try {
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.from("trip_answers").update({ plan: slimPlan(p), plan_generated_at: new Date().toISOString() }).eq("id", id);
+      if (error) console.warn("Não foi possível guardar o roteiro:", error.message);
+    } catch (e) {
+      console.warn("Não foi possível guardar o roteiro:", e);
+    }
+  };
+
+  // Carrega o plano da tela aberta: primeiro a foto salva no banco; se não houver
+  // (roteiro antigo, ou a pessoa recarregou a página), recalcula com os jogos reais.
+  const loadPlan = async (isCancelled = () => false) => {
+    setPlanLoading(true);
+    setPlanError(null);
+    try {
+      if (answers.tripAnswersId) {
+        const supabase = supabaseBrowser();
+        const { data } = await supabase.from("trip_answers").select("plan").eq("id", answers.tripAnswersId).maybeSingle();
+        if (data?.plan) {
+          if (!isCancelled()) setPlan(data.plan);
+          return;
+        }
+      }
+      if (!answers.countries?.length) return;
+      const fresh = await fetchPlan(answers);
+      if (isCancelled()) return;
+      setPlan(fresh);
+      if (answers.tripAnswersId) persistPlan(answers.tripAnswersId, fresh);
+    } catch (e) {
+      if (!isCancelled()) setPlanError(e.message || "Não foi possível montar o roteiro agora.");
+    } finally {
+      setPlanLoading(false);
+    }
+  };
+
+  // Ao abrir "resultado" ou "roteiro" sem plano em memória, busca. Não tenta de novo
+  // sozinho se acabou de dar erro (a pessoa usa o botão "Tentar de novo").
+  useEffect(() => {
+    if (!initialized || plan || planError) return;
+    if (screen !== "resultado" && screen !== "roteiro") return;
+    let cancelled = false;
+    loadPlan(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [screen, initialized, plan, answers.tripAnswersId]);
 
   return (
     <div style={{ width: "100%", minHeight: "100vh" }}>
@@ -6740,12 +6720,15 @@ export default function App() {
       {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
-      {screen === "loading" && <LoadingScreen onDone={handleSaveTrip} />}
-      {screen === "resultado" && <ResultadoRoteiro trip={trip} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "loading" && <LoadingScreen onWork={handleSaveTrip} onDone={(next) => setScreen(next || "resultado")} />}
+      {screen === "resultado" && <ResultadoRoteiro trip={trip} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
           trip={trip}
+          planLoading={planLoading}
+          planError={planError}
+          onRetryPlan={() => loadPlan()}
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onBackToRoteiros={() => setScreen("roteiros")}
@@ -6756,13 +6739,17 @@ export default function App() {
         <MeusRoteiros
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
-          onOpenTrip={(tripAnswers) => {
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
+          onOpenTrip={(tripAnswers, savedPlan) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
+            setPlan(savedPlan || null);
+            setPlanError(null);
             setScreen("roteiro");
           }}
           onEditTrip={(tripAnswers) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
+            setPlan(null);
+            setPlanError(null);
             setStepOffset(1);
             setScreen("destino");
           }}
@@ -6772,7 +6759,7 @@ export default function App() {
         <MinhasConquistas
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "jogos" && (
@@ -6795,7 +6782,7 @@ export default function App() {
         <MeuNivel
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setStepOffset(1); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
