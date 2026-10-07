@@ -42,6 +42,10 @@ export async function GET(request) {
           stale: sync.filter((s) => s.stale).length,
           failed: failed.length,
           oldest: sync.map((s) => s.fetchedAt).filter(Boolean).sort()[0] || null,
+          logsFound: sync.logsFound ?? null, // quantos registros de leitura o banco devolveu
+          serverNow: new Date().toISOString(),
+          // De onde veio cada liga e, quando foi lida na API, por quê (pra conferir o cache).
+          details: sync.slice(0, 60).map((s) => ({ liga: s.leagueId, temporada: s.season, origem: s.source, motivo: s.why || null, erro: s.error || null })),
         },
       },
       { headers: { "Cache-Control": "no-store" } }
