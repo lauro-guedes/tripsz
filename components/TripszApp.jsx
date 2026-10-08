@@ -6658,11 +6658,10 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    // Se a pessoa acabou de voltar do Mercado Pago com sucesso, pula direto
-    // pro resultado desbloqueado (ver nota no README sobre completar esta
-    // parte recuperando o roteiro salvo, em vez de recalculá-lo do zero).
+    // Se a pessoa acabou de voltar do Mercado Pago com sucesso, leva pra lista
+    // de roteiros (o pedido pago é marcado pelo webhook e o roteiro já está salvo lá).
     if (params.get("status") === "paid") {
-      setScreen("unlocked");
+      setScreen("roteiros");
       setInitialized(true);
       return;
     }

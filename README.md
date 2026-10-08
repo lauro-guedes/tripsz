@@ -25,7 +25,7 @@ app/
   admin/page.js                painel administrativo
   termos/, privacidade/, redefinir-senha/
   api/
-    trip/plan, trip/candidates     monta o roteiro / lista jogos candidatos
+    trip/plan                      monta o roteiro com jogos reais
     games/search                   Buscar Jogos
     attended-games/*               Registrar Jogo (busca por estádio/time)
     teams/*, cities/suggest        escudos e sugestões de times e cidades
@@ -95,7 +95,6 @@ Configure na Vercel (Settings → Environment Variables) e, para rodar local, em
 | `MERCADOPAGO_ACCESS_TOKEN` | token do Mercado Pago (teste ou produção) |
 | `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` | chave pública (troca de cartão) |
 | `FOOTBALL_API_KEY` | chave da API-Football |
-| `CRON_SECRET` | protege as rotas de manutenção em `/api/admin/*` (uso manual, com `?token=`) |
 | `ADMIN_EMAILS` | e-mails com acesso ao `/admin`, separados por vírgula |
 | `NEXT_PUBLIC_FREE_ACCESS_EMAILS` | e-mails com Passport liberado sem pagar |
 | `NEXT_PUBLIC_SITE_URL` | URL do site (ex.: `https://tripsz.vercel.app`) |
@@ -139,6 +138,5 @@ Abre em http://localhost:3000
 - Schema do banco desatualizado (ver acima).
 - `/api/subscribe` confia no `userId` e no e-mail enviados no corpo; vale validar
   a sessão no servidor.
-- Com `?status=paid` o app abre uma tela `unlocked` que não existe mais no mapa de rotas.
 - `TripszApp.jsx` tem quase 7 mil linhas; dividir por tela facilitaria a manutenção.
 - Não existe `.env.example` no repositório.
