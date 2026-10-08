@@ -21,6 +21,7 @@ import { supabaseBrowser } from "../lib/supabase";
 import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
 import { initials } from "../lib/textUtils";
 import { seasonOptions } from "../lib/seasons";
+import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
@@ -1872,11 +1873,155 @@ function formatDateBadge(date) {
   return `${String(date.getDate()).padStart(2, "0")} ${MESES_ABREV[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-function ResultadoRoteiro({ trip, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
+/* ============================================================
+   ROTEIRO — opções A / B / C + consultoria na lateral
+   (design do Figma: tela de resultado e detalhe do roteiro)
+   ============================================================ */
+const OPTION_TONES = {
+  green: { bg: GREEN },
+  navy: { bg: "#1E3A5F" },
+  slate: { bg: "#334155" },
+};
+
+const NAVY_PILL = { background: "#1E3A5F", borderRadius: 4, padding: "3px 8px", display: "inline-flex" };
+
+function LeaguePill({ children }) {
+  return (
+    <span style={{ ...NAVY_PILL, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", whiteSpace: "nowrap" }}>{children}</span>
+  );
+}
+
+/** Um dos cartões A / B / C com o dia a dia e o botão de escolher. */
+function OptionCard({ opt, chosen, onChoose, isMobile }) {
+  const tone = OPTION_TONES[opt.tone] || OPTION_TONES.slate;
+  return (
+    <div style={{ background: "#fff", border: chosen ? `2px solid ${GREEN}` : `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ background: tone.bg, padding: isMobile ? "14px 16px" : "16px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 8 : 16 }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 14, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: tone.bg, margin: 0 }}>{opt.key}</p>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 16, color: "#fff", margin: 0 }}>Opção {opt.key} — {opt.title}</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: "rgba(255,255,255,0.8)", margin: 0 }}>{opt.summary}</p>
+          </div>
+        </div>
+        {opt.badge && (
+          <span style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.45)", borderRadius: 999, padding: "3px 12px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap" }}>{opt.badge}</span>
+        )}
+      </div>
+      {opt.omittedText && (
+        <div style={{ background: GOLD_BG, borderBottom: `1px solid ${GOLD_BORDER}`, padding: isMobile ? "10px 16px" : "10px 24px" }}>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>{opt.omittedText}</p>
+        </div>
+      )}
+      <div style={{ padding: isMobile ? 16 : 24, display: "flex", flexDirection: "column", gap: 16 }}>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>{opt.description}</p>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {opt.items.map((it, i) => {
+            const isGame = it.type === "game";
+            return (
+              <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 0", borderBottom: i === opt.items.length - 1 ? "none" : `1px solid ${BORDER}` }}>
+                <span style={{ minWidth: 48, textAlign: "center", borderRadius: 4, padding: "3px 6px", background: isGame ? GREEN_BG : BG, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: isGame ? GREEN : MUTED, flexShrink: 0 }}>{it.day}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{it.title}</p>
+                    {isGame && it.league && <LeaguePill>{it.league}</LeaguePill>}
+                  </div>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.4, color: MUTED, margin: "2px 0 0" }}>{it.body}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div
+          onClick={chosen ? undefined : () => onChoose(opt.key)}
+          style={{ background: chosen ? "#fff" : GREEN_BUTTON2, border: `1.5px solid ${chosen ? GREEN : GREEN_BUTTON2}`, borderRadius: 8, padding: "13px 24px", textAlign: "center", cursor: chosen ? "default" : "pointer" }}
+        >
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: chosen ? GREEN : "#fff", textTransform: "uppercase", margin: 0 }}>
+            {chosen ? `✓ Opção ${opt.key} escolhida` : `Escolher opção ${opt.key}`}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Cartão da consultoria (fica na lateral no computador e depois das opções no celular).
+ *  O botão só funciona depois de escolher uma das opções A / B / C. */
+function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, isMobile }) {
+  const enabled = !!chosenOpt;
+  return (
+    <div style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Consultoria opcional</p>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: "4px 0" }}>R$ 149,90</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>Acompanhamento humano para completar voos, hotéis, ingressos e outros detalhes da viagem.</p>
+      </div>
+      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>O que você recebe</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {["Ajuste de voos, hotéis e deslocamentos com base no seu roteiro.", "Sugestões de hospedagem, transporte e dicas práticas para a viagem.", "Ajuda para organizar ingressos, check-in e outros detalhes operacionais."].map((l) => (
+          <div key={l} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <div style={{ width: 6, height: 6, borderRadius: 3, background: GREEN, marginTop: 6, flexShrink: 0 }} />
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.4, color: BODY, margin: 0 }}>{l}</p>
+          </div>
+        ))}
+      </div>
+      <div style={{ height: 1, background: BORDER }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {[["Valor", "R$ 149,90"], ["Pagamento", "1x"], ["Agenda", "1 conversa"]].map(([l, v]) => (
+          <div key={l} style={{ display: "flex", justifyContent: "space-between" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{l}</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, margin: 0 }}>{v}</p>
+          </div>
+        ))}
+      </div>
+      {enabled ? (
+        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>✓ Baseada na Opção {chosenOpt.key} — {chosenOpt.title}</p>
+      ) : (
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, lineHeight: 1.4, color: needChoice ? GOLD : MUTED, margin: 0 }}>
+          Escolha uma das opções de roteiro (A, B ou C) para contratar a consultoria.
+        </p>
+      )}
+      <div
+        onClick={enabled ? onHire : onNeedChoice}
+        style={{ background: GREEN_BUTTON2, opacity: enabled ? 1 : 0.45, padding: "14px 24px", borderRadius: 8, cursor: enabled ? "pointer" : "not-allowed", textAlign: "center" }}
+      >
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", textTransform: "uppercase", margin: 0 }}>Contratar e agendar conversa</p>
+      </div>
+    </div>
+  );
+}
+
+/** Avisos do roteiro (sem listar jogo por jogo o que ficou de fora — isso fica na Opção C). */
+function restrictionBullets(trip, options) {
+  const bullets = [];
+  const route = trip.cities.length >= 2 ? ` ${trip.cities.join(" → ")}` : "";
+  bullets.push(
+    options.length > 1
+      ? `Compare alternativas para combinar as partidas com o tempo de deslocamento${route}.`
+      : "Compare as opções para ver o ritmo que mais combina com você."
+  );
+  bullets.push("A inclusão no roteiro não garante ingresso. Verifique a disponibilidade antes de reservar.");
+  const notes = trip.notes || [];
+  if (notes.some((n) => n.type === "favorite_not_fit")) {
+    bullets.push("Alguns jogos dos seus times favoritos não couberam em todas as opções — compare as alternativas.");
+  }
+  for (const n of notes) {
+    if (bullets.length >= 5) break;
+    if (["flex_used", "approx_location", "unlocated", "cap", "favorite_without_games"].includes(n.type) && n.message) bullets.push(n.message);
+  }
+  return bullets;
+}
+
+/** Tela do roteiro: usada logo depois do questionário (Resultado) e ao abrir um roteiro salvo (Detalhe). */
+function RoteiroView({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout, onBack }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState(null);
+  const [viewKey, setViewKey] = useState("A");
+  const [needChoice, setNeedChoice] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -1887,111 +2032,233 @@ function ResultadoRoteiro({ trip, planLoading, planError, onRetryPlan, onHireCon
     })();
   }, []);
 
-  const summaryCard = (
-    <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
-      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Prévia do Roteiro</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-        {trip.games.map((f, i) => (
-          <div key={i} style={{ background: BG, borderRadius: 12, display: "flex", gap: 12, alignItems: "center", padding: 16 }}>
-            <div style={{ background: GREEN_BUTTON2, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#fff", margin: 0 }}>{String(i + 1).padStart(2, "0")}</p>
-            </div>
-            <div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.city}</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Jogo {i + 1} • {f.tag}</p>
-            </div>
+  // no celular mostra uma opção por vez: abre na que a pessoa já escolheu
+  useEffect(() => {
+    if (chosenOption) setViewKey(chosenOption);
+  }, [chosenOption]);
+
+  const chosenOpt = options.find((o) => o.key === chosenOption) || null;
+  const visibleKey = options.some((o) => o.key === viewKey) ? viewKey : options[0]?.key;
+  const hasContent = !planLoading && !planError && trip.games.length > 0 && options.length > 0;
+  const duration = durationRange(options);
+  const durationShort = duration.replace(" a ", "–");
+  const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
+
+  const handleChoose = (key) => {
+    setNeedChoice(false);
+    onChooseOption(key);
+  };
+  const handleNeedChoice = () => {
+    setNeedChoice(true);
+    const el = typeof document !== "undefined" ? document.getElementById("opcoes-roteiro") : null;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const consultoria = (
+    <ConsultoriaCard chosenOpt={chosenOpt} needChoice={needChoice} onHire={onHireConsultoria} onNeedChoice={handleNeedChoice} isMobile={isMobile} />
+  );
+
+  const summary = (
+    <div style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Roteiro completo</p>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 26, lineHeight: 1.15, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
+      <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>
+        Você já tem acesso ao roteiro completo. Escolha a opção {options.length > 2 ? "A, B ou C" : "A ou B"} que melhor se adapta ao seu estilo de viagem.
+      </p>
+      <div style={{ height: 1, background: BORDER }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {[
+          ["Jogos possíveis", `${trip.games.length} ${trip.games.length === 1 ? "jogo" : "jogos"}`],
+          ["Cidades", `${trip.cities.length} ${trip.cities.length === 1 ? "cidade" : "cidades"}`],
+          ["Opções de duração", duration],
+          ...(trip.cities.length >= 2 ? [["Deslocamento", trip.cities.join(" → ")]] : []),
+        ].map(([l, v]) => (
+          <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{l}</p>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, margin: 0, textAlign: "right" }}>{v}</p>
           </div>
         ))}
-      </div>
-      <div style={{ height: 1, background: BORDER, width: "100%" }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-        {[["Jogos possíveis", `${trip.games.length} partidas`], ["Sequência de cidades", `${trip.cities.length} cidades`], ["Consultoria opcional", "R$ 149,90"]].map(([l, r]) => (
-          <div key={l} style={{ display: "flex", justifyContent: "space-between" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>{l}</p>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{r}</p>
+        {leagues.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Liga</p>
+            <span style={{ ...NAVY_PILL, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff" }}>{leagues[0]}{leagues.length > 1 ? ` +${leagues.length - 1}` : ""}</span>
           </div>
-        ))}
+        )}
       </div>
-      <div style={{ height: 1, background: BORDER, width: "100%" }} />
-      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: BODY, margin: 0 }}>A prévia do roteiro já mostra as partidas possíveis e a sequência sugerida de cidades. Se quiser, você pode contratar consultoria para completar hospedagem, voos, transferências e atividades extras.</p>
-      {!isMobile && (
-        <div style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, textTransform: "uppercase", margin: 0 }}>Consultoria Opcional</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Ajuda para completar hospedagem, voos e ingressos</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: BODY, margin: 0 }}>Um especialista pode ajudar a personalizar o restante da viagem e agendar os próximos passos por R$ 149,90.</p>
-        </div>
-      )}
-      <div onClick={onHireConsultoria} style={{ background: GREEN, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 8, width: "100%", cursor: "pointer" }}>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Contratar por R$ 149,90</p>
-        <Icon name="arrowRight" size={16} color="#fff" />
+      <div style={{ height: 1, background: BORDER }} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Acesso ao roteiro</p>
+        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>Já incluso</p>
       </div>
     </div>
   );
 
+  const bullets = hasContent ? restrictionBullets(trip, options) : [];
+
   return (
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-      <div style={{ background: GOLD_BG, borderTop: `1px solid ${GOLD_BORDER}`, borderBottom: `1px solid ${GOLD_BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? `12px ${px}` : `16px ${px}` }}>
-        <AlertTriangle size={18} color={GOLD} style={{ flexShrink: 0 }} />
-        <p style={{ flex: 1, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 11 : 14, color: GOLD, margin: 0 }}>
-          Partidas possíveis, sequência de cidades e roteiro sugerido já estão disponíveis abaixo. A consultoria opcional ajuda a completar hospedagem, voos, transferências e atividades extras.
-        </p>
+
+      {/* faixa do título */}
+      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 10 : 24, padding: isMobile ? "14px 16px" : `16px ${px}` }}>
+        <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+          <Badge>Meus Roteiros</Badge>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 20, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
+        </div>
+        {hasContent && (
+          <div style={{ display: "flex", gap: isMobile ? 12 : 24, fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 12, color: MUTED, flexWrap: "wrap" }}>
+            <p style={{ margin: 0 }}>• {durationShort}</p>
+            <p style={{ margin: 0 }}>• {trip.games.length} {trip.games.length === 1 ? "jogo possível" : "jogos possíveis"}</p>
+            <p style={{ margin: 0 }}>• {trip.cities.length} {trip.cities.length === 1 ? "cidade" : "cidades"}</p>
+          </div>
+        )}
+        {onBack && !isMobile && (
+          <div onClick={onBack} style={{ background: GREEN, padding: "10px 20px", borderRadius: 6, cursor: "pointer", textAlign: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>← Voltar para meus roteiros</p>
+          </div>
+        )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 40, alignItems: "flex-start", padding: isMobile ? `20px ${px} 32px` : 80 }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, width: "100%" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Roteiro Sugerido</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 16, lineHeight: 1.5, color: BODY, margin: 0 }}>Encontramos as partidas possíveis e uma sequência de cidades para sua viagem. Abaixo você vê a prévia do roteiro sugerido e a opção de contratar consultoria para completar hospedagem, voos e transferências.</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
-            <PlanFeedback loading={planLoading} error={planError} notes={trip.notes} empty={trip.games.length === 0} onRetry={onRetryPlan} />
-            {trip.games.map((f, i) => (
-              <div key={i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? 16 : 24 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, width: isMobile ? "100%" : 400 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <Badge gold={!!f.rivalry}>{f.tag}</Badge>
-                    {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 32, alignItems: "flex-start", padding: isMobile ? "20px 16px 32px" : `40px ${px} 80px` }}>
+        <div style={{ flex: 1, minWidth: 0, width: "100%", display: "flex", flexDirection: "column", gap: isMobile ? 24 : 32 }}>
+          {!hasContent && <PlanFeedback loading={planLoading} error={planError} notes={trip.notes} empty={trip.games.length === 0} onRetry={onRetryPlan} />}
+
+          {hasContent && (
+            <>
+              {/* restrições */}
+              <div style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 12, padding: isMobile ? 16 : 20, display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 11, background: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>!</p>
                   </div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", height: 44, flexWrap: "wrap" }}>
-                    <TeamBadge name={f.home} url={f.homeLogo} size={28} resolve />
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.home}</p>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>VS</p>
-                    <TeamBadge name={f.away} url={f.awayLogo} size={28} resolve />
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.away}</p>
-                  </div>
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{[f.stadium, f.city && f.city !== f.stadium ? f.city : null].filter(Boolean).join(" • ")}</p>
-                  {isMobile ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
-                          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#334155", textTransform: "uppercase", margin: 0 }}>{formatDateBadge(f.date)}</p>
-                        </div>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{f.competition}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GOLD, margin: 0 }}>{isMobile ? "Restrições identificadas no roteiro" : "Restrições identificadas no seu roteiro"}</p>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {bullets.map((b, i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <div style={{ width: 5, height: 5, borderRadius: 3, background: "#F59E0B", marginTop: 7, flexShrink: 0 }} />
+                      <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>{b}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ border: `1px solid ${GOLD_BORDER}`, background: "#FEF3C7", borderRadius: 6, padding: "8px 12px" }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Escolha abaixo a opção que melhor se adapta ao seu ritmo de viagem.</p>
+                </div>
+              </div>
+
+              {/* partidas */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 20, color: TEXT, margin: 0 }}>Partidas disponíveis no seu período</p>
+                {trip.games.map((f, i) => (
+                  <div key={f.id ?? i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 16 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>{formatDateBadge(f.date)}</p>
+                        {isMobile && f.competition && <LeaguePill>{f.competition}</LeaguePill>}
+                        {f.rivalry && <Badge gold>{f.rivalry}</Badge>}
+                      </div>
+                      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                        <TeamBadge name={f.home} url={f.homeLogo} size={isMobile ? 24 : 28} resolve />
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
+                        <TeamBadge name={f.away} url={f.awayLogo} size={isMobile ? 24 : 28} resolve />
+                      </div>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                        <Landmark size={14} color={MUTED} />
+                        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{[f.stadium, f.city && f.city !== f.stadium ? f.city : null].filter(Boolean).join(" • ")}</p>
+                        {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
                       </div>
                     </div>
-                  ) : (
-                    <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "6px 12px", display: "inline-flex" }}>
-                      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#334155", textTransform: "uppercase", margin: 0 }}>{formatDateBadge(f.date)}</p>
-                    </div>
-                  )}
+                    {!isMobile && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end", flexShrink: 0 }}>
+                        {f.competition && <LeaguePill>{f.competition}</LeaguePill>}
+                        <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{f.country}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* opções A / B / C */}
+              <div id="opcoes-roteiro" style={{ display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 24 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Escolha sua opção de roteiro</p>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Compare duração, partidas incluídas e deslocamentos antes de escolher.</p>
                 </div>
-                {!isMobile && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-                    <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>Competição</p>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{f.competition}</p>
+                {isMobile && (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {options.map((o) => (
+                      <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: visibleKey === o.key ? GREEN : "#fff", border: `1px solid ${visibleKey === o.key ? GREEN : BORDER}` }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: visibleKey === o.key ? "#fff" : TEXT, margin: 0 }}>Opção {o.key}{chosenOption === o.key ? " ✓" : ""}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
+                {options
+                  .filter((o) => !isMobile || o.key === visibleKey)
+                  .map((o) => (
+                    <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} />
+                  ))}
               </div>
-            ))}
-          </div>
-          {isMobile && summaryCard}
+            </>
+          )}
+
+          {isMobile && hasContent && consultoria}
         </div>
 
-        {!isMobile && <div style={{ width: 420, flexShrink: 0 }}>{summaryCard}</div>}
+        {!isMobile && hasContent && (
+          <div style={{ width: 360, flexShrink: 0, display: "flex", flexDirection: "column", gap: 20, position: "sticky", top: 24 }}>
+            {summary}
+            {consultoria}
+          </div>
+        )}
       </div>
+      {onBack && isMobile && (
+        <div style={{ padding: "0 16px 24px" }}>
+          <div onClick={onBack} style={{ border: `1px solid ${BORDER}`, background: "#fff", padding: "12px 20px", borderRadius: 8, cursor: "pointer", textAlign: "center" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>← Voltar para meus roteiros</p>
+          </div>
+        </div>
+      )}
       <AuthedFooter />
     </div>
+  );
+}
+
+/** Logo depois do questionário. */
+function ResultadoRoteiro({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
+  return (
+    <RoteiroView
+      trip={trip}
+      options={options}
+      chosenOption={chosenOption}
+      onChooseOption={onChooseOption}
+      planLoading={planLoading}
+      planError={planError}
+      onRetryPlan={onRetryPlan}
+      onHireConsultoria={onHireConsultoria}
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      onBack={() => onNavigate("roteiros")}
+    />
+  );
+}
+
+/** Roteiro salvo, aberto pela Biblioteca. */
+function RoteiroDetalhe({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
+  return (
+    <RoteiroView
+      trip={trip}
+      options={options}
+      chosenOption={chosenOption}
+      onChooseOption={onChooseOption}
+      planLoading={planLoading}
+      planError={planError}
+      onRetryPlan={onRetryPlan}
+      onHireConsultoria={onHireConsultoria}
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      onBack={onBackToRoteiros}
+    />
   );
 }
 
@@ -2432,7 +2699,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", gap: 16 }}>
-                    <p onClick={() => onOpenTrip(rowToAnswers(row), row.plan)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Abrir Roteiro</p>
+                    <p onClick={() => onOpenTrip(rowToAnswers(row), row.plan, row.selected_option)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0, cursor: "pointer" }}>Abrir Roteiro</p>
                     <p onClick={() => onEditTrip(rowToAnswers(row))} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: MUTED, margin: 0, cursor: "pointer" }}>Editar</p>
                     <p onClick={() => handleDelete(row)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: "#ef4444", margin: 0, cursor: "pointer" }}>Excluir</p>
                   </div>
@@ -2803,18 +3070,18 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="conquistas" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
         </div>
-        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Football Passport</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
           <div><Button onClick={onCreateNew}>Montar Outra Viagem</Button></div>
         </div>
-        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
             <Icon name="shieldCheck" size={24} color={GREEN} />
@@ -3041,17 +3308,17 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `64px ${px}`, overflow: "hidden" }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `64px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
         </div>
-        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Football Passport</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
         </div>
-        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
             <Award size={22} color={GREEN} />
@@ -3440,17 +3707,17 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
         </div>
-        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <Badge>Seu Progresso Atual</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Nível do Torcedor</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Sua jornada como caçador de estádios. Acumule XP para subir de categoria e garantir benefícios exclusivos na arquibancada.</p>
         </div>
-        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PROGRESSO DO PASSPORT</p>
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{xp} / {tier.max === Infinity ? xp : tier.max + 1} XP</p>
@@ -6009,7 +6276,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
 /* ============================================================
    10. CHECKOUT (node 95:877)
    ============================================================ */
-function Checkout({ answers, onBack, onDone, onHome }) {
+function Checkout({ answers, selectedOption, onBack, onDone, onHome }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const handleNavItem = (id) => {
@@ -6074,6 +6341,7 @@ function Checkout({ answers, onBack, onDone, onHome }) {
         body: JSON.stringify({
           userId: answers.userId,
           tripAnswersId: answers.tripAnswersId,
+          selectedOption,
           scheduledDate: scheduledDateStr,
           scheduledTime: selectedTime,
         }),
@@ -6245,166 +6513,6 @@ function Checkout({ answers, onBack, onDone, onHome }) {
 /* ============================================================
    10. RESULTADO DESBLOQUEADO (node 95:982)
    ============================================================ */
-function RoteiroDetalhe({ trip, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
-  const isMobile = useIsMobile();
-  const px = isMobile ? "16px" : "80px";
-  const [userName, setUserName] = useState("");
-  const [userAvatar, setUserAvatar] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      const supabase = supabaseBrowser();
-      const { data } = await supabase.auth.getUser();
-      setUserName(data.user?.user_metadata?.name || data.user?.email || "");
-      setUserAvatar(data.user?.user_metadata?.avatar_url || null);
-    })();
-  }, []);
-
-  return (
-    <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-
-      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? "16px" : `24px ${px}` }}>
-        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-          <Badge>Meus Roteiros</Badge>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 20, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
-        </div>
-        <div style={{ display: "flex", gap: isMobile ? 12 : 24, fontFamily: FONT_MONO, fontSize: isMobile ? 12 : 14, color: MUTED, flexWrap: "wrap" }}>
-          <p style={{ margin: 0 }}>• {trip.days} dias</p><p style={{ margin: 0 }}>• {trip.games.length} jogos</p><p style={{ margin: 0 }}>• {trip.cities.length} cidades</p>
-        </div>
-        <div onClick={onBackToRoteiros} style={{ background: GREEN, padding: "10px 20px", borderRadius: 6, cursor: "pointer", width: isMobile ? "100%" : "auto", textAlign: "center" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>← Voltar para meus roteiros</p>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 40, alignItems: "flex-start", padding: isMobile ? "20px 16px 32px" : 80 }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, width: "100%" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Partidas possíveis para o seu roteiro</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
-            <PlanFeedback loading={planLoading} error={planError} notes={trip.notes} empty={trip.games.length === 0} onRetry={onRetryPlan} />
-            {trip.games.map((f, i) => (
-              <div key={i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: isMobile ? 12 : 0, padding: isMobile ? 16 : 24 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, width: isMobile ? "100%" : 500 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <Badge>{f.tag}</Badge>
-                    {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
-                  </div>
-                  <div>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                      <TeamBadge name={f.home} url={f.homeLogo} size={isMobile ? 24 : 32} resolve />
-                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 22, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
-                      <TeamBadge name={f.away} url={f.awayLogo} size={isMobile ? 24 : 32} resolve />
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                      <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{f.stadium}</p>
-                      <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "4px 10px" }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0 }}>{formatDateBadge(f.date)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: isMobile ? "flex-start" : "flex-end" }}>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>Competição</p>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>{f.competition}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingTop: 16, width: "100%" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Roteiro sugerido</p>
-            <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
-              {trip.itinerary.map((it, i) => (
-                <div key={i} style={{ display: "flex", gap: isMobile ? 16 : 24 }}>
-                  <div style={{ width: isMobile ? 56 : 80, flexShrink: 0 }}>
-                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>{it.day}</p>
-                  </div>
-                  <div>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{it.title}</p>
-                    <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>{it.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ width: isMobile ? "100%" : 420, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
-          <div style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Roteiro Completo</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 32, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>Você já tem acesso ao roteiro completo com partidas possíveis, datas, cidades e planejamento dia a dia para planejar sua viagem.</p>
-            <div style={{ height: 1, background: BORDER }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 13 }}>
-              {[["Partidas possíveis", `${trip.games.length} jogos`], ["Cidades", `${trip.cities.length} cidades`], ["Duração sugerida", `${trip.days} dias`], ["Deslocamento", trip.cities.join(" → ") || "—"]].map(([l, v]) => (
-                <div key={l} style={{ display: "flex", justifyContent: "space-between" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, color: BODY, margin: 0 }}>{l}</p>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, color: TEXT, margin: 0 }}>{v}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 1, background: BORDER }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Acesso ao roteiro</p>
-              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Já incluso</p>
-            </div>
-          </div>
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <Lightbulb size={16} color={TEXT} />
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Consultoria humana opcional</p>
-            </div>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>Se quiser ajuda para completar voos, hotéis, ingressos e outros detalhes da viagem, nossa consultoria humana pode te apoiar de forma discreta.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* consultoria-opcional: oferta separada, sempre disponível a partir do roteiro já desbloqueado */}
-      <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: isMobile ? `24px 16px` : `24px ${px} 80px`, display: "flex", flexDirection: "column", gap: 24 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Oferta Separada</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 28, color: TEXT, margin: 0 }}>Consultoria humana opcional</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0, maxWidth: 700 }}>Se quiser ajuda para completar voos, hotéis, ingressos e outros detalhes da viagem, nossa consultoria humana pode te apoiar de forma discreta.</p>
-        </div>
-        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, alignItems: isMobile ? "stretch" : "center" }}>
-          <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Consultoria Opcional</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 32, color: TEXT, margin: "4px 0" }}>R$ 149,90</p>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>Acompanhamento humano para completar voos, hotéis, ingressos e outros detalhes da viagem.</p>
-            </div>
-            <div style={{ height: 1, background: BORDER }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 13 }}>
-              {[["Acompanhamento", "1 especialista"], ["Atendimento", "1 conversa agendada"], ["Pagamento", "1x R$ 149,90"]].map(([l, v]) => (
-                <div key={l} style={{ display: "flex", justifyContent: "space-between" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, color: BODY, margin: 0 }}>{l}</p>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, color: TEXT, margin: 0 }}>{v}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ width: isMobile ? "100%" : 420, flexShrink: 0, background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>O que você recebe</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Ajuste de voos, hotéis e deslocamentos com base no seu roteiro.", "Sugestões de hospedagem, transporte e dicas práticas para a viagem.", "Ajuda para organizar ingressos, check-in e outros detalhes operacionais."].map((l) => (
-                <div key={l} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <div style={{ width: 6, height: 6, borderRadius: 3, background: GREEN, marginTop: 7, flexShrink: 0 }} />
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: 0 }}>{l}</p>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 1, background: BORDER }} />
-            <div onClick={onHireConsultoria} style={{ background: GREEN_BUTTON2, padding: "14px 24px", borderRadius: 8, cursor: "pointer", textAlign: "center" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0 }}>Contratar e agendar conversa</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <AuthedFooter />
-    </div>
-  );
-}
 
 /* ============================================================
    APP SHELL
@@ -6481,10 +6589,15 @@ export default function App() {
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState(null);
   const trip = useMemo(() => planToTrip(plan, answers.countries), [plan, answers.countries]);
+  // Opções A / B / C montadas a partir dos jogos do plano (vale também pra roteiros já salvos).
+  const options = useMemo(() => buildOptions(plan), [plan]);
+  // A opção escolhida libera a contratação da consultoria.
+  const [chosenOption, setChosenOption] = useState(null);
   const restart = () => {
     setAnswers({});
     setPlan(null);
     setPlanError(null);
+    setChosenOption(null);
     setScreen("landing");
     localStorage.removeItem("tripsz_state");
   };
@@ -6653,6 +6766,20 @@ export default function App() {
     }
   };
 
+  // A pessoa escolheu a opção A, B ou C. Guarda no roteiro: é isso que libera a consultoria
+  // (o servidor confere de novo em /api/checkout antes de gerar o pagamento).
+  const handleChooseOption = async (key) => {
+    setChosenOption(key);
+    if (!answers.tripAnswersId) return;
+    try {
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.from("trip_answers").update({ selected_option: key, selected_option_at: new Date().toISOString() }).eq("id", answers.tripAnswersId);
+      if (error) console.warn("Não foi possível guardar a opção escolhida (rode a migração da Etapa 3b):", error.message);
+    } catch (e) {
+      console.warn("Não foi possível guardar a opção escolhida:", e);
+    }
+  };
+
   // Carrega o plano da tela aberta: primeiro a foto salva no banco; se não houver
   // (roteiro antigo, ou a pessoa recarregou a página), recalcula com os jogos reais.
   const loadPlan = async (isCancelled = () => false) => {
@@ -6661,7 +6788,8 @@ export default function App() {
     try {
       if (answers.tripAnswersId) {
         const supabase = supabaseBrowser();
-        const { data } = await supabase.from("trip_answers").select("plan").eq("id", answers.tripAnswersId).maybeSingle();
+        const { data } = await supabase.from("trip_answers").select("*").eq("id", answers.tripAnswersId).maybeSingle();
+        if (data?.selected_option && !isCancelled()) setChosenOption(data.selected_option);
         if (data?.plan) {
           if (!isCancelled()) setPlan(data.plan);
           return;
@@ -6745,35 +6873,40 @@ export default function App() {
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "loading" && <LoadingScreen onWork={handleSaveTrip} onDone={(next) => setScreen(next || "resultado")} />}
-      {screen === "resultado" && <ResultadoRoteiro trip={trip} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => setScreen("checkout")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
-      {screen === "checkout" && <Checkout answers={answers} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
+      {screen === "resultado" && <ResultadoRoteiro trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "checkout" && <Checkout answers={answers} selectedOption={chosenOption} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
           trip={trip}
+          options={options}
+          chosenOption={chosenOption}
+          onChooseOption={handleChooseOption}
           planLoading={planLoading}
           planError={planError}
           onRetryPlan={() => loadPlan()}
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onBackToRoteiros={() => setScreen("roteiros")}
-          onHireConsultoria={() => setScreen("checkout")}
+          onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }}
         />
       )}
       {screen === "roteiros" && (
         <MeusRoteiros
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
-          onOpenTrip={(tripAnswers, savedPlan) => {
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
+          onOpenTrip={(tripAnswers, savedPlan, savedOption) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
             setPlan(savedPlan || null);
             setPlanError(null);
+            setChosenOption(savedOption || null);
             setScreen("roteiro");
           }}
           onEditTrip={(tripAnswers) => {
             setAnswers((a) => ({ ...a, ...tripAnswers }));
             setPlan(null);
             setPlanError(null);
+            setChosenOption(null);
             setStepOffset(1);
             setScreen("destino");
           }}
@@ -6783,7 +6916,7 @@ export default function App() {
         <MinhasConquistas
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "jogos" && (
@@ -6806,7 +6939,7 @@ export default function App() {
         <MeuNivel
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
-          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setStepOffset(1); setScreen("destino"); }}
+          onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
       {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
