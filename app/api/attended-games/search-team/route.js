@@ -1,9 +1,8 @@
 import { searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
+import { ensureLogoCached } from "@/lib/teamLogos";
 
 export const dynamic = "force-dynamic";
-
-const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
 
 // Mesma tradução usada em /api/teams/suggest — a API-Football guarda o
 // nome das seleções em inglês.
@@ -49,27 +48,6 @@ async function footballFetchRaw(path, params) {
     throw new Error(`API-Football error: ${res.status} ${JSON.stringify(data.errors || data)}`);
   }
   return data.response;
-}
-
-async function ensureLogoCached(teamId, originalUrl) {
-  if (!teamId || !originalUrl) return originalUrl;
-  const ourUrl = `${TEAM_LOGO_BUCKET_URL}/${teamId}.png`;
-  try {
-    const head = await fetch(ourUrl, { method: "HEAD" });
-    if (head.ok) return ourUrl;
-  } catch {}
-  try {
-    const res = await fetch(originalUrl);
-    if (!res.ok) return originalUrl;
-    const buffer = await res.arrayBuffer();
-    const { supabaseAdmin } = await import("@/lib/supabase");
-    const supabase = supabaseAdmin();
-    const { error } = await supabase.storage.from("team-logos").upload(`${teamId}.png`, buffer, { contentType: "image/png", upsert: true });
-    if (error) return originalUrl;
-    return ourUrl;
-  } catch {
-    return originalUrl;
-  }
 }
 
 // Cacheia o escudo de TODOS os times que aparecem nos resultados (o

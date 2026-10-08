@@ -1,10 +1,8 @@
 import { searchVenues, searchTeams } from "@/lib/footballApi";
-import { supabaseAdmin } from "@/lib/supabase";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
+import { ensureLogoCached } from "@/lib/teamLogos";
 
 export const dynamic = "force-dynamic";
-
-const TEAM_LOGO_BUCKET_URL = "https://aswxlrabhyzblyliyvjn.supabase.co/storage/v1/object/public/team-logos";
 
 // Testamos ao vivo: a busca de ESTÁDIO da API-Football (/venues) não
 // acha vários apelidos populares (Anfield, Old Trafford, San Siro,
@@ -113,30 +111,6 @@ function mapGames(fixtures) {
     country: f.league.country,
     leagueId: f.league.id,
   }));
-}
-
-async function ensureLogoCached(teamId, originalUrl) {
-  if (!teamId || !originalUrl) return originalUrl;
-  const ourUrl = `${TEAM_LOGO_BUCKET_URL}/${teamId}.png`;
-  try {
-    const head = await fetch(ourUrl, { method: "HEAD" });
-    if (head.ok) return ourUrl;
-  } catch {}
-  try {
-    const res = await fetch(originalUrl);
-    if (!res.ok) return originalUrl;
-    const buffer = await res.arrayBuffer();
-    const supabase = supabaseAdmin();
-    const { error } = await supabase.storage.from("team-logos").upload(`${teamId}.png`, buffer, { contentType: "image/png", upsert: true });
-    if (error) {
-      console.error("Erro ao guardar escudo no cache:", error.message);
-      return originalUrl;
-    }
-    return ourUrl;
-  } catch (e) {
-    console.error("Erro ao baixar escudo pra cachear:", e.message);
-    return originalUrl;
-  }
 }
 
 async function cacheGameLogos(games) {
