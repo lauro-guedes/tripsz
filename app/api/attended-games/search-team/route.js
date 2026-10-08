@@ -1,4 +1,5 @@
 import { searchTeams } from "@/lib/footballApi";
+import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 
 export const dynamic = "force-dynamic";
 
@@ -111,8 +112,8 @@ export async function GET(request) {
   if (!rawTeam) {
     return Response.json({ error: mode === "selecao" ? "Informe o nome de uma seleção." : "Informe o nome do clube." }, { status: 400 });
   }
-  if (!season || season < 2022 || season > 2024) {
-    return Response.json({ error: "Escolha um ano entre 2022 e 2024." }, { status: 400 });
+  if (!isValidSeason(season)) {
+    return Response.json({ error: `Escolha uma temporada entre ${MIN_SEASON} e ${maxSeason()}.` }, { status: 400 });
   }
 
   try {
@@ -124,7 +125,10 @@ export async function GET(request) {
     }
     const best = teams.find((t) => t.team.name.toLowerCase() === searchQuery.toLowerCase()) || teams[0];
 
-    const fixtures = await footballFetchRaw("/fixtures", { team: best.team.id, season });
+    const allFixtures = await footballFetchRaw("/fixtures", { team: best.team.id, season });
+    // Só jogos que já começaram: dá pra registrar que você foi, não um jogo que ainda vai acontecer.
+    const nowMs = Date.now();
+    const fixtures = allFixtures.filter((f) => new Date(f.fixture.date).getTime() <= nowMs);
     if (fixtures.length === 0) {
       return Response.json({ found: false, reason: "sem_jogos_no_periodo" });
     }
@@ -159,6 +163,8 @@ export async function GET(request) {
     });
   } catch (e) {
     console.error("Erro em /api/attended-games/search-team:", e);
+    const friendly = friendlySeasonError(e.message);
+    if (friendly) return Response.json({ error: friendly }, { status: 400 });
     return Response.json({ error: e.message || "Não foi possível buscar os jogos." }, { status: 500 });
   }
 }
