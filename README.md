@@ -26,7 +26,6 @@ app/
   termos/, privacidade/, redefinir-senha/
   api/
     trip/plan, trip/candidates     monta o roteiro / lista jogos candidatos
-    fixtures/sync                  cron diário (vercel.json) que atualiza jogos
     games/search                   Buscar Jogos
     attended-games/*               Registrar Jogo (busca por estádio/time)
     teams/*, cities/suggest        escudos e sugestões de times e cidades
@@ -96,7 +95,7 @@ Configure na Vercel (Settings → Environment Variables) e, para rodar local, em
 | `MERCADOPAGO_ACCESS_TOKEN` | token do Mercado Pago (teste ou produção) |
 | `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` | chave pública (troca de cartão) |
 | `FOOTBALL_API_KEY` | chave da API-Football |
-| `CRON_SECRET` | protege `/api/fixtures/sync` |
+| `CRON_SECRET` | protege as rotas de manutenção em `/api/admin/*` (uso manual, com `?token=`) |
 | `ADMIN_EMAILS` | e-mails com acesso ao `/admin`, separados por vírgula |
 | `NEXT_PUBLIC_FREE_ACCESS_EMAILS` | e-mails com Passport liberado sem pagar |
 | `NEXT_PUBLIC_SITE_URL` | URL do site (ex.: `https://tripsz.vercel.app`) |
@@ -107,8 +106,10 @@ Configure na Vercel (Settings → Environment Variables) e, para rodar local, em
 O código usa várias outras tabelas, que **não estão** nesse arquivo:
 `subscriptions`, `attended_games`, `public_profiles`, `saved_games`,
 `fixtures_calendar`, `team_home_venues`, `fixtures_cache`, `venues_cache`,
-`leagues`, `fixtures`, `fixtures_fetch_log`, `calendar_sync_log` e
-`newsletter_subscribers`, além dos buckets `avatars` e `team-logos`.
+`fixtures_fetch_log`, `calendar_sync_log`, `newsletter_subscribers` e
+`team_logos` (esta tem SQL em `supabase-team-logos.sql`), além dos buckets
+`avatars` e `team-logos`. As tabelas antigas `leagues` e `fixtures` não são mais
+usadas e podem ser apagadas.
 
 > **Pendência:** exportar o schema real do Supabase de produção e substituir
 > `supabase-schema.sql`, para dar pra recriar o ambiente do zero.
@@ -127,8 +128,8 @@ Abre em http://localhost:3000
 
 1. Suba o repositório no GitHub e importe na Vercel.
 2. Cadastre as variáveis de ambiente.
-3. O cron de `vercel.json` chama `/api/fixtures/sync` todo dia às 06:00 (UTC).
-   Para testar na mão: `/api/fixtures/sync?token=SEU_CRON_SECRET`.
+3. Não há cron: o calendário de jogos se atualiza sozinho quando alguém consulta
+   (ligas atualizadas há menos de 12 h nem vão à API).
 4. No Mercado Pago, aponte o webhook para `/api/webhook` e confira as URLs de
    retorno com o domínio real. Comece pelas credenciais de teste.
 5. No Supabase, em Authentication → URL Configuration, cadastre o domínio do site.
