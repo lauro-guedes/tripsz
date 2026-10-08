@@ -1,5 +1,6 @@
 import { searchVenues, searchTeams } from "@/lib/footballApi";
 import { supabaseAdmin } from "@/lib/supabase";
+import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 
 export const dynamic = "force-dynamic";
 
@@ -190,8 +191,8 @@ export async function GET(request) {
   if (!rawStadium) {
     return Response.json({ error: "Informe o nome do estádio." }, { status: 400 });
   }
-  if (!season || season < 2022 || season > 2024) {
-    return Response.json({ error: "Escolha um ano entre 2022 e 2024." }, { status: 400 });
+  if (!isValidSeason(season)) {
+    return Response.json({ error: `Escolha uma temporada entre ${MIN_SEASON} e ${maxSeason()}.` }, { status: 400 });
   }
 
   const queryNorm = stripDiacritics(rawStadium.toLowerCase()).replace(/[^a-z0-9 ]/g, "").trim();
@@ -322,11 +323,20 @@ export async function GET(request) {
     }
     matchedGames.sort((a, b) => new Date(a.date) - new Date(b.date));
 
+    // Só jogos que já começaram (na temporada em andamento a API traz os futuros também).
+    const nowMs = Date.now();
+    matchedGames = matchedGames.filter((g) => new Date(g.date).getTime() <= nowMs);
+    if (matchedGames.length === 0) {
+      return Response.json({ found: false, reason: "sem_jogos_no_periodo", venue: matchedVenueInfo });
+    }
+
     const games = await cacheGameLogos(matchedGames);
 
     return Response.json({ found: true, venue: matchedVenueInfo, games });
   } catch (e) {
     console.error("Erro em /api/attended-games/search-stadium:", e);
+    const friendly = friendlySeasonError(e.message);
+    if (friendly) return Response.json({ error: friendly }, { status: 400 });
     return Response.json({ error: e.message || "Não foi possível buscar os jogos." }, { status: 500 });
   }
 }
