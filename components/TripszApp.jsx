@@ -20,6 +20,7 @@ import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, 
 import { supabaseBrowser } from "../lib/supabase";
 import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
 import { initials } from "../lib/textUtils";
+import { seasonOptions } from "../lib/seasons";
 import TeamBadge from "./TeamBadge";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
@@ -2420,9 +2421,9 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                     {preview.games.slice(0, 2).map((g, i) => (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <TeamBadge name={g.home} url={g.homeLogo} size={18} resolve />
+                          <TeamBadge name={g.home} url={g.homeLogo} size={18} />
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
-                          <TeamBadge name={g.away} url={g.awayLogo} size={18} resolve />
+                          <TeamBadge name={g.away} url={g.awayLogo} size={18} />
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
                       </div>
@@ -4266,7 +4267,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
 
   const [stadiumQuery, setStadiumQuery] = useState("");
   const [searchMode, setSearchMode] = useState("estadio"); // "estadio" | "clube"
-  const [season, setSeason] = useState(2024);
+  const [season, setSeason] = useState(() => seasonOptions()[0].value);
   const [competitionFilter, setCompetitionFilter] = useState("todas");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -5037,9 +5038,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 )}
               </div>
               <select value={season} onChange={(e) => setSeason(parseInt(e.target.value, 10))} style={{ ...fieldStyle, width: isMobile ? "100%" : 140 }}>
-                <option value={2024}>2024/25</option>
-                <option value={2023}>2023/24</option>
-                <option value={2022}>2022/23</option>
+                {seasonOptions().map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
               <div onClick={loading ? undefined : () => { setShowSuggestions(false); handleSearch(); }} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
@@ -6738,7 +6739,7 @@ export default function App() {
       )}
       {screen === "assinar" && <AssinarStandalone onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "account" && <StepAccount answers={answers} setAnswers={setAnswers} onNext={() => setScreen(readAndClearPostLoginTarget() || "destino")} onBack={restart} />}
-      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen("account")} onHome={restart} stepOffset={stepOffset} />}
+      {screen === "destino" && <StepDestino answers={answers} setAnswers={setAnswers} onNext={() => setScreen("times")} onBack={() => setScreen(stepOffset === 1 ? "roteiros" : "account")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "times" && <StepTimesFavoritos answers={answers} setAnswers={setAnswers} onNext={() => setScreen("datas")} onBack={() => setScreen("destino")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "datas" && <StepDatas answers={answers} setAnswers={setAnswers} onNext={() => setScreen("pessoas")} onBack={() => setScreen("times")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
