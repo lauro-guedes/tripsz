@@ -14,13 +14,31 @@ import { supabaseAdmin } from "@/lib/supabase";
  */
 export async function POST(request) {
   try {
-    const { userId, tripAnswersId, scheduledDate, scheduledTime } = await request.json();
+    const { userId, tripAnswersId, scheduledDate, scheduledTime, selectedOption } = await request.json();
 
     if (!userId) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
     }
     if (!scheduledDate || !scheduledTime) {
       return Response.json({ error: "Escolha uma data e um horário para a consultoria." }, { status: 400 });
+    }
+
+    // A consultoria só pode ser contratada depois de escolher uma das opções de roteiro
+    // (A, B ou C). Conferimos aqui no servidor — o botão desativado na tela é só conforto.
+    // A fonte da verdade é a opção guardada no roteiro; se ela ainda não foi gravada (ex.: a
+    // migração não rodou), aceitamos a que veio do navegador, desde que seja válida.
+    const VALID_OPTIONS = ["A", "B", "C"];
+    let chosenOption = null;
+    if (tripAnswersId) {
+      const { data: ta } = await supabaseAdmin().from("trip_answers").select("user_id, selected_option").eq("id", tripAnswersId).maybeSingle();
+      if (ta && ta.user_id !== userId) {
+        return Response.json({ error: "Esse roteiro não pertence à sua conta." }, { status: 403 });
+      }
+      if (VALID_OPTIONS.includes(ta?.selected_option)) chosenOption = ta.selected_option;
+    }
+    if (!chosenOption && VALID_OPTIONS.includes(selectedOption)) chosenOption = selectedOption;
+    if (!chosenOption) {
+      return Response.json({ error: "Escolha uma das opções de roteiro (A, B ou C) antes de contratar a consultoria." }, { status: 400 });
     }
 
     // Sem essas duas variáveis configuradas na Vercel, o Mercado Pago
@@ -80,7 +98,7 @@ export async function POST(request) {
         },
         auto_return: "approved",
         notification_url: `${siteUrl}/api/webhook`,
-        metadata: { userId, tripAnswersId, scheduledDate, scheduledTime },
+        metadata: { userId, tripAnswersId, scheduledDate, scheduledTime, selectedOption: chosenOption },
       },
     });
 
