@@ -4,7 +4,7 @@
  * há imagem). Usado em Meus jogos, Buscar jogos, Meu calendário e no
  * roteiro. Veja a explicação da ordem de tentativas logo acima do componente.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BG_ALT, BORDER, MUTED, FONT_DISPLAY } from "../lib/tokens";
 import { TEAM_LOGO_IDS, TEAM_LOGO_BUCKET } from "../lib/teamLogoIds";
 import { initials } from "../lib/textUtils";
@@ -80,6 +80,21 @@ export default function TeamBadge({ name, url, size = 32, resolve = false }) {
   }, [exhausted, resolve, byName, name]);
 
   const src = exhausted ? byName || null : candidates[step];
+
+  // Avança pro próximo endereço quando a imagem falhou. Só falha de verdade
+  // conta: imagem "carregada" mas com largura 0 (corrompida / resposta que não
+  // é imagem) também é falha — sem isso aparecia o ícone de imagem quebrada
+  // (o quadradinho azul com "?") em vez de passar pro próximo endereço ou
+  // cair nas iniciais.
+  const fail = useCallback(() => (exhausted ? setByName(null) : setStep((n) => n + 1)), [exhausted]);
+  const imgRef = useRef(null);
+  // Se o erro aconteceu ANTES do React ligar o onError, a imagem já chega
+  // "completa" e com largura 0: confere logo que ela aparece.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) fail();
+  }, [src, fail]);
+
   if (!src) {
     return (
       <div style={{ width: size, height: size, borderRadius: "50%", background: BG_ALT, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -89,12 +104,17 @@ export default function TeamBadge({ name, url, size = 32, resolve = false }) {
   }
   return (
     <img
+      ref={imgRef}
+      key={src}
       src={src}
       alt={name}
       width={size}
       height={size}
       decoding="async"
-      onError={() => (exhausted ? setByName(null) : setStep((n) => n + 1))}
+      onError={fail}
+      onLoad={(e) => {
+        if (e.currentTarget.naturalWidth === 0) fail();
+      }}
       style={{ objectFit: "contain", flexShrink: 0 }}
     />
   );
