@@ -16,7 +16,7 @@
  */
 "use client";
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Landmark, Download, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, Lightbulb, Eye, EyeOff, X, QrCode, Receipt, Award, Clipboard, BarChart2, TrendingUp, Star, Share2, MapPin, AlertCircle, Trophy, Download, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabaseBrowser } from "../lib/supabase";
 import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
 import { initials } from "../lib/textUtils";
@@ -2149,33 +2149,42 @@ function RoteiroView({ trip, options, chosenOption, onChooseOption, planLoading,
               {/* partidas */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 20, color: TEXT, margin: 0 }}>Partidas disponíveis no seu período</p>
-                {trip.games.map((f, i) => (
-                  <div key={f.id ?? i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 10 : 16 }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                {trip.games.map((f, i) => {
+                  const place = [f.city, f.country].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(", ");
+                  const logoSize = isMobile ? 24 : 28;
+                  return (
+                    <div key={f.id ?? i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                      {/* topo: data (+ selo de clássico) */}
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>{formatDateBadge(f.date)}</p>
-                        {isMobile && f.competition && <LeaguePill>{f.competition}</LeaguePill>}
+                        <span style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: BODY }}>{formatDateBadge(f.date)}</span>
                         {f.rivalry && <Badge gold>{f.rivalry}</Badge>}
                       </div>
-                      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                        <TeamBadge name={f.home} url={f.homeLogo} size={isMobile ? 24 : 28} resolve />
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.home} vs {f.away}</p>
-                        <TeamBadge name={f.away} url={f.awayLogo} size={isMobile ? 24 : 28} resolve />
+                      {/* times: cada escudo ao lado do nome do SEU time */}
+                      <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+                          <TeamBadge name={f.home} url={f.homeLogo} size={logoSize} resolve />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.home}</p>
+                        </div>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>VS</p>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+                          <TeamBadge name={f.away} url={f.awayLogo} size={logoSize} resolve />
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.away}</p>
+                        </div>
                       </div>
+                      {/* estádio: só o nome, com o ícone de estádio do projeto */}
                       <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                        <Landmark size={14} color={MUTED} />
-                        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{[f.stadium, f.city && f.city !== f.stadium ? f.city : null].filter(Boolean).join(" • ")}</p>
+                        <Icon name="stadium" size={14} color={MUTED} />
+                        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{f.stadium}</p>
                         {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
                       </div>
-                    </div>
-                    {!isMobile && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end", flexShrink: 0 }}>
-                        {f.competition && <LeaguePill>{f.competition}</LeaguePill>}
-                        <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{f.country}</p>
+                      {/* rodapé: cidade, país à esquerda; competição à direita */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                        {place ? <span style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: BODY }}>{place}</span> : <span />}
+                        {f.competition && <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0, textAlign: "right" }}>{f.competition}</p>}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* opções A / B / C */}
