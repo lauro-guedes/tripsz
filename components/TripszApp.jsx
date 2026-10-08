@@ -2156,7 +2156,7 @@ function RoteiroView({ trip, options, chosenOption, onChooseOption, planLoading,
                     <div key={f.id ?? i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
                       {/* topo: data (+ selo de clássico) */}
                       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: BODY }}>{formatDateBadge(f.date)}</span>
+                        <span style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN }}>{formatDateBadge(f.date)}</span>
                         {f.rivalry && <Badge gold>{f.rivalry}</Badge>}
                       </div>
                       {/* times: cada escudo ao lado do nome do SEU time */}
