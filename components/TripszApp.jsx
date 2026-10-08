@@ -23,6 +23,7 @@ import { initials } from "../lib/textUtils";
 import { seasonOptions } from "../lib/seasons";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
+import { paceRangeLabel } from "../lib/paceRules";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -1679,7 +1680,10 @@ function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, stepOff
               const active = pace === id;
               return (
                 <div key={id} onClick={() => setAnswers((a) => ({ ...a, pace: id }))} style={{ flex: isMobile ? "none" : 1, background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, display: "flex", flexDirection: isMobile ? "row" : "column", gap: 8, alignItems: "center", justifyContent: isMobile ? "space-between" : "center", height: isMobile ? "auto" : 72, padding: isMobile ? 14 : 0, borderRadius: isMobile ? 8 : 12, cursor: "pointer" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: active ? GREEN : TEXT, margin: 0 }}>{label}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: isMobile ? "flex-start" : "center" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: active ? GREEN : TEXT, margin: 0 }}>{label}</p>
+                    <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: active ? GREEN : BODY, margin: 0 }}>({paceRangeLabel(id)})</p>
+                  </div>
                   {active && <Check size={12} color={GREEN} />}
                 </div>
               );
