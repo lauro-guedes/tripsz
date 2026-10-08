@@ -46,12 +46,14 @@ function resolveLogoByName(name) {
  * escudo quebrado nem time sem escudo à toa.
  */
 export default function TeamBadge({ name, url, size = 32, resolve = false }) {
-  const id = logoIdFromUrl(url) || TEAM_LOGO_IDS[name];
-  const candidates = [
-    url,
-    id ? `${TEAM_LOGO_BUCKET}/${id}.png` : null,
-    id ? `https://media.api-sports.io/football/teams/${id}.png` : null,
-  ].filter((v, i, arr) => v && arr.indexOf(v) === i);
+  const urlId = logoIdFromUrl(url);
+  const id = urlId || TEAM_LOGO_IDS[name];
+  const ourCopy = id ? `${TEAM_LOGO_BUCKET}/${id}.png` : null;
+  const apiCdn = id ? `https://media.api-sports.io/football/teams/${id}.png` : null;
+  // Quando o link do jogo é de um escudo com ID conhecido, tenta primeiro a NOSSA cópia
+  // (storage do Supabase, rápida) e só depois o CDN da API-Football, que é mais lento
+  // e às vezes falha. Links de outra origem continuam sendo tentados primeiro.
+  const candidates = (urlId ? [ourCopy, url, apiCdn] : [url, ourCopy, apiCdn]).filter((v, i, arr) => v && arr.indexOf(v) === i);
   const candidatesKey = candidates.join("|");
   const nameKey = (name || "").trim().toLowerCase();
 
@@ -91,6 +93,7 @@ export default function TeamBadge({ name, url, size = 32, resolve = false }) {
       alt={name}
       width={size}
       height={size}
+      decoding="async"
       onError={() => (exhausted ? setByName(null) : setStep((n) => n + 1))}
       style={{ objectFit: "contain", flexShrink: 0 }}
     />
