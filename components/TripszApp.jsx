@@ -86,7 +86,18 @@ function FontImports() {
       @supports (overflow: clip) { html, body { overflow-x: clip; } }
       img { max-width: 100%; }
       @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes tripsz-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.94); } }
     `}</style>
+  );
+}
+
+/* Estado de carregamento padrão: símbolo da Tripsz + texto, centralizados. */
+function Loading({ text = "Carregando...", compact = false, style }) {
+  return (
+    <div role="status" aria-live="polite" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: compact ? 10 : 16, padding: compact ? "20px 0" : "80px 24px", width: "100%", boxSizing: "border-box", ...style }}>
+      <img src="/simbolo-tripsz.svg" alt="" width={compact ? 38 : 56} height={compact ? 32 : 48} style={{ display: "block", animation: "tripsz-pulse 1.4s ease-in-out infinite" }} />
+      <p style={{ fontFamily: FONT_DISPLAY, fontSize: compact ? 13 : 14, color: MUTED, margin: 0, textAlign: "center" }}>{text}</p>
+    </div>
   );
 }
 
@@ -2663,7 +2674,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
       </div>
 
       <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `48px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
-        {trips === null && <p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando seus roteiros...</p>}
+        {trips === null && <Loading text="Carregando seus roteiros..." />}
         {error && <p style={{ fontFamily: FONT_DISPLAY, color: "#dc2626" }}>Erro ao carregar: {error}</p>}
         {trips !== null && filtered.length === 0 && (
           <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 48, textAlign: "center" }}>
@@ -3578,7 +3589,7 @@ function RankingTorcedores({ onNavigate, onLogout }) {
         </div>
 
         {loading ? (
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textAlign: "center" }}>Carregando ranking...</p>
+          <Loading text="Carregando ranking..." compact />
         ) : podium.length === 0 ? (
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40, textAlign: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: 15, color: MUTED, margin: 0 }}>Ainda estamos reunindo torcedores suficientes pro ranking {scope === "nacional" ? "nacional" : "global"} — volte em breve!</p>
@@ -3642,7 +3653,7 @@ function AssinarStandalone({ onNavigate, onLogout }) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
         <AuthedNav active="" userName="" userAvatar={null} onNavigate={onNavigate} onLogout={onLogout} />
-        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+        <Loading />
       </div>
     );
   }
@@ -3699,7 +3710,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
         <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+        <Loading />
       </div>
     );
   }
@@ -3908,6 +3919,7 @@ function BuscarJogos({ onNavigate, onLogout }) {
     setLoading(true);
     try {
       const params = new URLSearchParams({ date, lat: String(chosen.lat), lon: String(chosen.lon), radius: String(radius) });
+      if (chosen.country) params.set("country", chosen.country);
       const res = await fetch(`/api/games/search?${params.toString()}`);
       const json = await res.json();
       if (!res.ok) {
@@ -3959,6 +3971,57 @@ function BuscarJogos({ onNavigate, onLogout }) {
   const labelStyle = { fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 };
   const fieldStyle = { background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, height: 48, padding: "0 14px", width: "100%", boxSizing: "border-box", fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT, outline: "none" };
   const cityShort = searchedWith ? cityShortName(searchedWith.cityLabel) : "";
+
+  const renderGame = (g) => {
+      const p = kickoffParts(g.kickoff);
+      const saved = savedIds.has(g.id);
+      const noTime = g.status === "PST" || g.status === "TBD";
+      const league = g.leagueCountry && g.leagueCountry !== "World" ? `${g.league} • ${g.leagueCountry}` : g.league;
+      return (
+        <div key={g.id} style={{ background: "#fff", border: `${saved ? 1.5 : 1}px solid ${saved ? GREEN : BORDER}`, borderRadius: 12, padding: isMobile ? 16 : "20px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 12 : 32 }}>
+          <div style={{ width: isMobile ? "auto" : 96, flexShrink: 0, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "baseline" : "flex-start", gap: isMobile ? 10 : 2 }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>{p.dayMonthYear}</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>{noTime ? "A definir" : p.time}</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{p.weekdayLong}</p>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+              <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
+            </div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <MapPin size={14} color={MUTED} style={{ flexShrink: 0 }} />
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ") || "Estádio a confirmar"}</p>
+            </div>
+            {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
+          </div>
+          <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
+            {g.distanceKm == null ? (
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>distância indisponível</p>
+            ) : (
+              <>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{g.distanceKm} km</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, color: MUTED, margin: 0 }}>de {cityShort}</p>
+              </>
+            )}
+          </div>
+          {saved ? (
+            <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Check size={16} color="#008a3a" />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
+            </div>
+          ) : (
+            <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", flexShrink: 0 }}>
+              <Plus size={16} color="#fff" />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{addingId === g.id ? "Adicionando..." : "Adicionar ao calendário"}</p>
+            </div>
+          )}
+        </div>
+      );
+  };
+
 
   return (
     <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
@@ -4047,7 +4110,7 @@ function BuscarJogos({ onNavigate, onLogout }) {
           </div>
         )}
 
-        {loading && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Buscando jogos...</p>}
+        {loading && <Loading text="Buscando jogos..." compact />}
 
         {!loading && !result && !error && (
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Escolha a data, a cidade-base e o raio, e toque em “Buscar jogos”.</p>
@@ -4078,63 +4141,29 @@ function BuscarJogos({ onNavigate, onLogout }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: GOLD, margin: 0 }}>Nossa fonte de dados está instável agora — esses jogos podem estar um pouco desatualizados.</p>
             )}
 
-            {result.total === 0 ? (
+            {result.total === 0 && !(result.unconfirmed || []).length ? (
               <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 6 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Nenhum jogo encontrado nesse raio</p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Tente aumentar o raio de busca ou escolher outra data.</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {result.games.map((g) => {
-                  const p = kickoffParts(g.kickoff);
-                  const saved = savedIds.has(g.id);
-                  const noTime = g.status === "PST" || g.status === "TBD";
-                  const league = g.leagueCountry && g.leagueCountry !== "World" ? `${g.league} • ${g.leagueCountry}` : g.league;
-                  return (
-                    <div key={g.id} style={{ background: "#fff", border: `${saved ? 1.5 : 1}px solid ${saved ? GREEN : BORDER}`, borderRadius: 12, padding: isMobile ? 16 : "20px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 12 : 32 }}>
-                      <div style={{ width: isMobile ? "auto" : 96, flexShrink: 0, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "baseline" : "flex-start", gap: isMobile ? 10 : 2 }}>
-                        <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>{p.dayMonthYear}</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>{noTime ? "A definir" : p.time}</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{p.weekdayLong}</p>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
-                          <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
-                        </div>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <MapPin size={14} color={MUTED} style={{ flexShrink: 0 }} />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ")}</p>
-                        </div>
-                      </div>
-                      <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{g.distanceKm} km</p>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, color: MUTED, margin: 0 }}>de {cityShort}</p>
-                      </div>
-                      {saved ? (
-                        <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <Check size={16} color="#008a3a" />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
-                        </div>
-                      ) : (
-                        <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", flexShrink: 0 }}>
-                          <Plus size={16} color="#fff" />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{addingId === g.id ? "Adicionando..." : "Adicionar ao calendário"}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {result.games.map(renderGame)}
               </div>
             )}
 
-            {result.unlocated > 0 && (
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>
-                {result.unlocated} {result.unlocated === 1 ? "jogo dessa data ficou" : "jogos dessa data ficaram"} de fora porque a localização do estádio não está disponível.
-              </p>
+            {(result.unconfirmed || []).length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Estádio não confirmado</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>
+                    Jogos do mesmo país ainda sem local definido — podem estar dentro ou fora do raio escolhido.
+                  </p>
+                </div>
+                {result.unconfirmed.map(renderGame)}
+              </div>
             )}
+
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, textAlign: "center", margin: 0 }}>
               TODOS OS JOGOS DESTA BUSCA • Ajuste a data ou o raio para explorar mais.
             </p>
@@ -4294,7 +4323,7 @@ function MeuCalendario({ onNavigate, onLogout }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{monthTitle(view.year, view.month)}</p>
             </div>
 
-            {!loaded && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Carregando seu calendário...</p>}
+            {!loaded && <Loading text="Carregando seu calendário..." compact />}
 
             {loaded && monthGames.length === 0 && (
               <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 20, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
@@ -4418,7 +4447,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
         <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+        <Loading />
       </div>
     );
   }
@@ -4474,7 +4503,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Filtrado por: {tab === "todos" ? "Todos" : tab === "tripsz" ? "Via Tripsz" : "Manuais"}</p>
         </div>
 
-        {games === null && <p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando...</p>}
+        {games === null && <Loading />}
         {games !== null && filtered.length === 0 && (
           <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 40, textAlign: "center" }}>
             <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Football Passport.</p>
@@ -5039,7 +5068,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
         <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+        <Loading />
       </div>
     );
   }
@@ -5679,7 +5708,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
         <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
-        <p style={{ fontFamily: FONT_DISPLAY, color: MUTED, padding: 80 }}>Carregando...</p>
+        <Loading />
       </div>
     );
   }
@@ -5768,7 +5797,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
 
               <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: TEXT, margin: 0 }}>Histórico de Faturas</p>
-                {invoices === null && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Carregando...</p>}
+                {invoices === null && <Loading compact />}
                 {invoices !== null && invoices.length === 0 && (
                   <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Nenhuma fatura ainda — a primeira cobrança aparece aqui assim que for processada.</p>
                 )}
@@ -6112,7 +6141,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
       </div>
 
       {loading ? (
-        <div style={{ padding: 48 }}><p style={{ fontFamily: FONT_DISPLAY, color: MUTED }}>Carregando seu perfil...</p></div>
+        <Loading text="Carregando seu perfil..." />
       ) : (
         <div style={{ background: BG_ALT, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 48, padding: isMobile ? `0 ${px} 32px` : `0 ${px} 48px` }}>
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 32, flex: 1 }}>
@@ -6470,7 +6499,7 @@ function Checkout({ answers, selectedOption, onBack, onDone, onHome }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Horários disponíveis</p>
                 {loadingSlots ? (
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Carregando horários...</p>
+                  <Loading text="Carregando horários..." compact />
                 ) : timeSlots.length === 0 ? (
                   <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Sem atendimento nesse dia — escolha outra data.</p>
                 ) : (

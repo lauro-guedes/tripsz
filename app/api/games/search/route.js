@@ -16,6 +16,7 @@ export async function GET(request) {
   const date = searchParams.get("date");
   const lat = parseFloat(searchParams.get("lat"));
   const lon = parseFloat(searchParams.get("lon"));
+  const country = (searchParams.get("country") || "").toUpperCase().slice(0, 2) || null;
   const radiusRaw = parseFloat(searchParams.get("radius") || "150");
 
   const dateError = validateDate(date);
@@ -26,7 +27,7 @@ export async function GET(request) {
   const radiusKm = Math.min(Math.max(Number.isFinite(radiusRaw) ? radiusRaw : 150, 10), 1000);
 
   try {
-    const result = await searchGames({ date, lat, lon, radiusKm });
+    const result = await searchGames({ date, lat, lon, radiusKm, country });
     return Response.json(result);
   } catch (e) {
     if (e instanceof DateNotAvailableError) {
