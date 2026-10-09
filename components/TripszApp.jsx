@@ -21,6 +21,7 @@ import { supabaseBrowser } from "../lib/supabase";
 import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
 import { initials } from "../lib/textUtils";
 import { seasonOptionGroups, parseSeasonValue, gameSeason, compareSeasonsDesc } from "../lib/seasons";
+import { countryKey, continentOf, sameCountry } from "../lib/countries";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
@@ -2782,17 +2783,15 @@ function computeBadgeCategories(ctx) {
   const totalGames = games.length;
 
   const hasCompetition = (regex, countryFilter) =>
-    games.some((g) => regex.test(g.competition || "") && (!countryFilter || g.country === countryFilter));
+    games.some((g) => regex.test(g.competition || "") && (!countryFilter || sameCountry(g.country, countryFilter)));
 
   const validDates = games.map((g) => new Date(g.date)).filter((d) => !isNaN(d));
   const firstGameDate = validDates.length ? new Date(Math.min(...validDates)) : null;
 
   const hasIconicStadium = games.some((g) => ICONIC_STADIUMS.some((s) => (g.stadium || "").toLowerCase().includes(s)));
 
-  const euSet = new Set(COUNTRIES_BY_CONTINENT.eu || []);
-  const saSet = new Set(COUNTRIES_BY_CONTINENT.sa || []);
-  const hasEU = [...countriesSet].some((c) => euSet.has(c));
-  const hasSA = [...countriesSet].some((c) => saSet.has(c));
+  const hasEU = games.some((g) => continentOf(g.country) === "eu");
+  const hasSA = games.some((g) => continentOf(g.country) === "sa");
   const hasDerby = games.some((g) => isDerby(g.home, g.away));
 
   const teamToLeague = {};
@@ -2807,7 +2806,7 @@ function computeBadgeCategories(ctx) {
     const windowCountries = new Set();
     for (let j = i; j < sorted.length; j++) {
       if ((sorted[j].d - sorted[i].d) / 86400000 > 7) break;
-      if (sorted[j].country) windowCountries.add(sorted[j].country);
+      if (sorted[j].country) windowCountries.add(countryKey(sorted[j].country));
     }
     if (windowCountries.size >= 2) hasMarathon = true;
   }
@@ -2815,7 +2814,7 @@ function computeBadgeCategories(ctx) {
   const hasWinterEU = games.some((g) => {
     const d = new Date(g.date);
     const m = d.getMonth() + 1;
-    return euSet.has(g.country) && (m === 12 || m === 1 || m === 2);
+    return continentOf(g.country) === "eu" && (m === 12 || m === 1 || m === 2);
   });
   const hasNewYear = games.some((g) => {
     const d = new Date(g.date);
@@ -2852,7 +2851,7 @@ function computeBadgeCategories(ctx) {
   const hasSummerSA = games.some((g) => {
     const d = new Date(g.date);
     const m = d.getMonth() + 1;
-    return saSet.has(g.country) && (m === 12 || m === 1 || m === 2);
+    return continentOf(g.country) === "sa" && (m === 12 || m === 1 || m === 2);
   });
 
   // Ano de Copa — jogo (de qualquer competição) durante uma janela real
@@ -3032,7 +3031,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const allGames = attended.map((g) => ({ date: new Date(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source }));
 
     const stadiums = new Set(allGames.map((g) => g.stadium).filter(Boolean));
-    const countries = new Set(allGames.map((g) => g.country).filter(Boolean));
+    const countries = new Set(allGames.map((g) => countryKey(g.country)).filter(Boolean));
     const competitions = new Set(allGames.map((g) => g.competition || "domestica"));
     const hasChampions = allGames.some((g) => looksLikeChampions(g.competition));
 
@@ -3694,7 +3693,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
       const attended = attendedRows || [];
 
       const stadiums = new Set(attended.map((g) => g.stadium).filter(Boolean));
-      const countries = new Set(attended.map((g) => g.country).filter(Boolean));
+      const countries = new Set(attended.map((g) => countryKey(g.country)).filter(Boolean));
       const totalGames = attended.length;
       const hasChampions = attended.some((g) => /champions league/i.test(g.competition || ""));
       // "Badges completadas" — mesmos critérios usados em Minhas Conquistas
@@ -4419,7 +4418,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
 
   const all = games || [];
   const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
-  const countries = new Set(all.map((g) => g.country).filter(Boolean));
+  const countries = new Set(all.map((g) => countryKey(g.country)).filter(Boolean));
   const seasonByKey = new Map();
   all.forEach((g) => {
     const se = seasonOfGame(g);

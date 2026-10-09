@@ -1,40 +1,7 @@
 import { searchTeams } from "@/lib/footballApi";
+import { toApiCountryName } from "@/lib/countries";
 
 export const dynamic = "force-dynamic";
-
-// A API-Football guarda o nome das seleções em inglês — traduzimos os
-// nomes mais comuns em português, pra pessoa poder digitar do jeito
-// natural (ex: "Brasil" em vez de precisar saber que é "Brazil").
-const COUNTRY_NAME_PT_TO_EN = {
-  brasil: "Brazil", inglaterra: "England", espanha: "Spain", itália: "Italy",
-  italia: "Italy", alemanha: "Germany", frança: "France", franca: "France",
-  holanda: "Netherlands", turquia: "Turkey", uruguai: "Uruguay",
-  méxico: "Mexico", mexico: "Mexico", japão: "Japan", japao: "Japan",
-  "estados unidos": "USA", marrocos: "Morocco", croácia: "Croatia",
-  croacia: "Croatia", sérvia: "Serbia", servia: "Serbia", polônia: "Poland",
-  polonia: "Poland", bélgica: "Belgium", belgica: "Belgium",
-  suíça: "Switzerland", suica: "Switzerland", áustria: "Austria",
-  austria: "Austria", dinamarca: "Denmark", suécia: "Sweden",
-  suecia: "Sweden", noruega: "Norway", egito: "Egypt",
-  "coreia do sul": "South Korea", rússia: "Russia", russia: "Russia",
-  grécia: "Greece", grecia: "Greece", escócia: "Scotland",
-  escocia: "Scotland", "república tcheca": "Czech Republic",
-  "republica tcheca": "Czech Republic", ucrânia: "Ukraine",
-  ucrania: "Ukraine", irlanda: "Republic of Ireland", islândia: "Iceland",
-  islandia: "Iceland", hungria: "Hungary", índia: "India", india: "India",
-  canadá: "Canada", canada: "Canada", peru: "Peru", paraguai: "Paraguay",
-  bolívia: "Bolivia", bolivia: "Bolivia", equador: "Ecuador",
-  venezuela: "Venezuela", panamá: "Panama", panama: "Panama",
-  "costa rica": "Costa Rica", cuba: "Cuba", angola: "Angola",
-  moçambique: "Mozambique", mocambique: "Mozambique",
-  austrália: "Australia", australia: "Australia",
-  "nova zelândia": "New Zealand", "nova zelandia": "New Zealand",
-};
-
-function translateCountryName(q) {
-  const key = q.trim().toLowerCase();
-  return COUNTRY_NAME_PT_TO_EN[key] || q;
-}
 
 /**
  * GET /api/teams/suggest?q=fio
@@ -57,7 +24,7 @@ export async function GET(request) {
   }
 
   try {
-    const teams = await searchTeams(mode === "selecao" ? translateCountryName(q) : q);
+    const teams = await searchTeams(mode === "selecao" ? toApiCountryName(q) : q);
 
     let filtered = teams || [];
     if (mode === "selecao") {

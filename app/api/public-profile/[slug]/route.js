@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { TOURNAMENTS, hasMainTournament } from "@/lib/competitionBadges";
+import { countryKey, continentOf, sameCountry } from "@/lib/countries";
 
 // Essa rota SEMPRE precisa rodar de verdade (consulta o banco a cada
 // chamada) — sem isso, o Next.js tenta "pré-analisar" ela durante o
@@ -21,7 +22,7 @@ function computeTier(xp) {
 }
 
 function hasCompetitionFn(games, regex, country) {
-  return games.some((g) => regex.test(g.competition || "") && (!country || g.country === country));
+  return games.some((g) => regex.test(g.competition || "") && (!country || sameCountry(g.country, country)));
 }
 
 const NATIONAL_TEAM_NAMES = new Set([
@@ -42,8 +43,6 @@ function isDerby(home, away) {
   return KNOWN_DERBIES.some(([a, b]) => (home === a && away === b) || (home === b && away === a));
 }
 
-const COUNTRIES_EU = ["Inglaterra", "Espanha", "Itália", "Alemanha", "França", "Portugal", "Holanda", "Turquia", "England", "Spain", "Italy", "Germany", "France", "Netherlands", "Turkey"];
-const COUNTRIES_SA = ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia", "Brazil", "Uruguay", "Colombia"];
 
 const WORLD_CUP_WINDOWS = [
   { start: new Date("2022-11-20"), end: new Date("2022-12-18") },
@@ -103,7 +102,7 @@ export async function GET(request, { params }) {
     const isSubscriber = !!sub;
 
     const stadiums = new Set(games.map((g) => g.stadium).filter(Boolean));
-    const countries = new Set(games.map((g) => g.country).filter(Boolean));
+    const countries = new Set(games.map((g) => countryKey(g.country)).filter(Boolean));
     const competitions = new Set(games.map((g) => g.competition).filter(Boolean));
     const totalGames = games.length;
 
@@ -115,17 +114,17 @@ export async function GET(request, { params }) {
     const hasFavoriteDerby = games.some((g) => (favoriteTeams.has(g.home) || favoriteTeams.has(g.away)) && isDerby(g.home, g.away));
     const hasNationalTeamGame = games.some((g) => NATIONAL_TEAM_NAMES.has(g.home) || NATIONAL_TEAM_NAMES.has(g.away));
     const hasDerby = games.some((g) => isDerby(g.home, g.away));
-    const hasEU = games.some((g) => COUNTRIES_EU.includes(g.country));
-    const hasSA = games.some((g) => COUNTRIES_SA.includes(g.country));
+    const hasEU = games.some((g) => continentOf(g.country) === "eu");
+    const hasSA = games.some((g) => continentOf(g.country) === "sa");
     const hasWinterEU = games.some((g) => {
       const d = new Date(g.match_date);
       const m = d.getMonth() + 1;
-      return COUNTRIES_EU.includes(g.country) && (m === 12 || m === 1 || m === 2);
+      return continentOf(g.country) === "eu" && (m === 12 || m === 1 || m === 2);
     });
     const hasSummerSA = games.some((g) => {
       const d = new Date(g.match_date);
       const m = d.getMonth() + 1;
-      return COUNTRIES_SA.includes(g.country) && (m === 12 || m === 1 || m === 2);
+      return continentOf(g.country) === "sa" && (m === 12 || m === 1 || m === 2);
     });
     const hasNewYear = games.some((g) => {
       const d = new Date(g.match_date);

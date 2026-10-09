@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { countryKey } from "@/lib/countries";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export async function GET(request) {
       if (!user) continue;
 
       const stadiums = new Set(userGames.map((g) => g.stadium).filter(Boolean));
-      const countries = new Set(userGames.map((g) => g.country).filter(Boolean));
+      const countries = new Set(userGames.map((g) => countryKey(g.country)).filter(Boolean));
       const totalGames = userGames.length;
       const hasChampions = userGames.some((g) => /champions league/i.test(g.competition || ""));
       const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
