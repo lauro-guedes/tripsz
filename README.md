@@ -37,6 +37,7 @@ app/
 components/
   TripszApp.jsx                telas e navegação do app inteiro
   TeamBadge.jsx                escudo do time, com várias fontes e fallback
+  SocialLinks.jsx              redes sociais do rodapé (o endereço do Instagram fica aqui)
 lib/
   tripPlanner.js               motor de roteiros (lógica pura, sem rede/banco)
   tripOptions.js               monta as opções A / B / C a partir do plano
@@ -45,6 +46,8 @@ lib/
   footballApi.js               cliente da API-Football
   supabase.js                  clientes do Supabase (navegador e admin)
   tokens.js                    cores e fontes
+  xpRules.js                   regra de XP: total e XP gerado por cada jogo
+  fanLevels.js                 categorias de torcedor (nomes, faixas de XP e textos)
   data/                        cidades, clássicos (rivalries), geoExtras
 ```
 
@@ -66,6 +69,11 @@ O app é uma página só com roteamento próprio: o mapa `SCREEN_TO_PATH` em
   quantos dias a viagem exige. Máximo de 10 jogos.
 - Jogo de time favorito pesa mais que qualquer prioridade; clássicos ganham bônus;
   local provável (estádio inferido) é levemente penalizado; distância só desempata.
+- **Cada país pedido entra no roteiro quando for viável** (bônus de cobertura, uma vez por
+  país; até 4 países por conta). Se algum não entrar, um aviso diz o motivo (sem jogo no
+  período, ou não coube por ritmo/deslocamento) e mostra os jogos reais mais próximos dele.
+- Time favorito é reconhecido pelo **ID** (os da lista fixa, `lib/teamLogoIds.js`) ou pelo
+  **nome** (os escolhidos na busca `/api/teams/suggest`, que devolve o nome como a API escreve).
 - Quando algo não dá certo (sem jogo nas datas, favorito que não joga), avisa e
   mostra os jogos reais mais próximos, em vez de trocar em silêncio.
 - Opções: **A** foco nos jogos (recomendada), **B** jogos + cultura (1 dia livre
@@ -80,8 +88,11 @@ O horizonte é de 270 dias. A busca de uma pessoa lê da tabela e não gasta cot
 
 ### Gamificação
 
-XP = jogos registrados × 50 + estádios × 100 + países × 200 + conquistas × 150.
-Só jogos **registrados** contam; gerar um roteiro não dá XP.
+XP = jogos registrados × 50 + estádios × 100 + países × 200 + conquistas × 150
+(`lib/xpRules.js`). Só jogos **registrados** contam; gerar um roteiro não dá XP.
+Em Meus Jogos, cada jogo mostra o XP que gerou (jogo + estádio novo + país novo + conquista
+que ele desbloqueou); a soma dos jogos sempre fecha com o total.
+Os textos das categorias de torcedor ficam em `lib/fanLevels.js`.
 
 ## Variáveis de ambiente
 

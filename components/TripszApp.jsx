@@ -29,6 +29,9 @@ import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
 import { authFetch } from "../lib/authFetch";
 import { parseFutbologyLine, guessCountryFromCompetition } from "../lib/futbologyParse";
 import { paceRangeLabel } from "../lib/paceRules";
+import { XP_TIERS, computeTier, FAN_LEVEL_TEXTS } from "../lib/fanLevels";
+import { xpBreakdown, totalXp } from "../lib/xpRules";
+import SocialLinks from "./SocialLinks";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
 
@@ -338,7 +341,7 @@ function LandingPage({ onStart, onSubscribe, onLogin }) {
     ["E se a data do jogo mudar por causa da TV?", "As ligas europeias costumam fixar datas de 3 a 5 semanas antes. Nossa equipe monitora os calendários e monta o roteiro prevendo janelas de segurança nas datas de voos e hotéis."],
     ["Posso viajar com crianças ou grupos?", "Sim! Adaptamos o perfil da viagem para roteiros mais familiares, com setores calmos e acessíveis nos estádios."],
     ["Posso cancelar a assinatura a qualquer momento?", "Sim, sem multa. Seu acesso continua até o fim do período pago."],
-    ["O que acontece com meu Passport se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passport e badges fica pausado até reativar."],
+    ["O que acontece com meu Passport se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passport e às conquistas fica pausado até reativar."],
     ["Preciso ser assinante para contratar a consultoria?", "Não, a consultoria é um add-on avulso. Mas assinantes ganham 15% de desconto."],
     ["Como funciona o desconto anual?", "No plano anual você paga R$ 99,90/ano em vez de R$ 118,80 (12x R$ 9,90), economizando R$ 18,90."],
     ["É só futebol europeu ou inclui jogos no Brasil?", "A plataforma cobre 13 países, incluindo Brasil, Argentina, Uruguai, Chile e Colômbia, além das principais ligas europeias."],
@@ -457,7 +460,7 @@ function LandingPage({ onStart, onSubscribe, onLogin }) {
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: 2026</p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            {[["stadium", "Estádios", "109 visitados"], ["award", "Conquistas", "10 badges"], ["trophy", "Progresso", "158 jogos"]].map(([iconKey, label, value]) => (
+            {[["stadium", "Estádios", "109 visitados"], ["award", "Conquistas", "10 desbloqueadas"], ["trophy", "Progresso", "158 jogos"]].map(([iconKey, label, value]) => (
               <div key={label} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                 <div style={{ background: GREEN_BG, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {iconKey === "stadium" ? <Icon name="stadium" size={20} color={GREEN} /> : iconKey === "award" ? <Award size={20} color={GREEN} /> : <Trophy size={20} color={GREEN} />}
@@ -520,7 +523,7 @@ function LandingPage({ onStart, onSubscribe, onLogin }) {
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Football Passport (até 20 jogos)", true], ["Níveis, badges e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
+              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Football Passport (até 20 jogos)", true], ["Categorias, conquistas e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   {ok ? <Check size={16} color={GREEN} /> : <X size={16} color="#9ca3af" />}
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: ok ? TEXT : "#6b7280", margin: 0 }}>{label}</p>
@@ -2541,7 +2544,8 @@ function AuthedFooter() {
       </div>
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0, justifyContent: "space-between" }}>
         <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>© 2026 tripsz. Todos os direitos reservados.</p>
-        <div style={{ display: "flex", gap: 24 }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
+          <SocialLinks />
           <a href="/privacidade" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Privacidade</a>
           <a href="/termos" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Termos</a>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Contato</p>
@@ -3143,7 +3147,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, boxShadow: "0px 8px 12px rgba(15,23,42,0.07)", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: 24, padding: isMobile ? 20 : "16px 24px", margin: isMobile ? `0 ${px}` : `0 80px` }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: isMobile ? "none" : "0 0 320px" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Perfil público</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Reúna jogos, estádios, badges e conquistas em uma página compartilhável para amigos.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Reúna jogos, estádios e conquistas em uma página compartilhável para amigos.</p>
         </div>
         <div style={{ background: BG, display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", flex: 1, minWidth: 0 }}>
           <Globe size={16} color={MUTED} style={{ flexShrink: 0 }} />
@@ -3173,8 +3177,8 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       </div>
 
       <div style={{ background: BG_ALT, padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
-        <Badge gold>Galeria de Conquistas</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Badges de Viagem</p>
+        <Badge gold>Football Passport</Badge>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Conquistas de Viagem</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
           {badgeCategories.map((cat) => (
             <div key={cat.title} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -3327,10 +3331,10 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
 
   const features = [
     [Clipboard, "Registro Ilimitado de Jogos", "Adicione todas as partidas que você já assistiu ou planeja assistir nos estádios europeus."],
-    [Award, "Badges Exclusivas", "Ganhe insígnias virtuais personalizadas para cada clássico, liga ou país desbloqueado."],
+    [Award, "Conquistas Exclusivas", "Desbloqueie conquistas personalizadas para cada clássico, liga ou país que você visitar."],
     [BarChart2, "Estatísticas Completas", "Acompanhe gráficos ricos sobre sua jornada, estádios visitados e gols assistidos ao vivo."],
     [TrendingUp, "Ranking de Torcedores", "Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional."],
-    [Star, "Níveis de Torcedor", "Suba do nível 'Torcedor de Sofá' até a lendária categoria 'Lenda da Arquibancada'."],
+    [Star, FAN_LEVEL_TEXTS.featureTitle, FAN_LEVEL_TEXTS.featureBody],
     [Share2, "Compartilhamento Social", "Gere cards personalizados perfeitos para postar no Instagram e mostrar seu progresso."],
   ];
 
@@ -3437,17 +3441,7 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
 }
 
 /* --- Meu Nível: sistema de XP calculado de verdade a partir dos dados do usuário --- */
-const XP_TIERS = [
-  { level: 1, name: "Torcedor de Sofá", min: 0, max: 499, icon: "sofa", perk: "Cadastro inicial e rastreamento de estádios" },
-  { level: 2, name: "Estreante", min: 500, max: 1499, icon: "mapPin", perk: "Acesso à galeria e badges de conquistas" },
-  { level: 3, name: "Groundhopper", min: 1500, max: 4999, icon: "globe", perk: "Desconto de 10% em qualquer roteiro oficial" },
-  { level: 4, name: "Veterano", min: 5000, max: 19999, icon: "trophy", perk: "Acesso prioritário a caravanas e grupos de viagem" },
-  { level: 5, name: "Lenda", min: 20000, max: Infinity, icon: "crown", perk: "Sorteio de ingressos & Consultoria premium grátis" },
-];
-
-function computeTier(xp) {
-  return XP_TIERS.find((t) => xp >= t.min && xp <= t.max) || XP_TIERS[0];
-}
+// As categorias de torcedor (nomes, faixas de XP e textos) moraram aqui; agora ficam em lib/fanLevels.js.
 
 const TIER_MEDAL_COLORS = { 1: GOLD || "#b78103", 2: "#6b7280", 3: "#cd7f32" };
 const TIER_MEDAL_BG = { 1: "#fff9e6", 2: "#f1f5f9", 3: "#fdf4e5" };
@@ -3696,12 +3690,8 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
       const stadiums = new Set(attended.map((g) => g.stadium).filter(Boolean));
       const countries = new Set(attended.map((g) => countryKey(g.country)).filter(Boolean));
       const totalGames = attended.length;
-      const hasChampions = attended.some((g) => /champions league/i.test(g.competition || ""));
-      // "Badges completadas" — mesmos critérios usados em Minhas Conquistas
-      // (5+ estádios, 3+ países, alguma partida de Champions).
-      const completedBadges = [stadiums.size >= 5, countries.size >= 3, hasChampions].filter(Boolean).length;
-
-      const xp = totalGames * 50 + stadiums.size * 100 + countries.size * 200 + completedBadges * 150;
+      // O XP vem de lib/xpRules.js (a mesma fórmula de sempre, agora num lugar só — Meus Jogos mostra o XP de cada jogo).
+      const xp = totalXp(attended);
       setProgress({ xp, totalGames, stadiums: stadiums.size, countries: countries.size });
     })();
   }, []);
@@ -3743,7 +3733,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
         <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <Badge>Seu Progresso Atual</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Nível do Torcedor</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Sua jornada como caçador de estádios. Acumule XP para subir de categoria e garantir benefícios exclusivos na arquibancada.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>{FAN_LEVEL_TEXTS.pageIntro}</p>
         </div>
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -3764,7 +3754,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
 
       <div style={{ background: BG_ALT, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 40, padding: isMobile ? `24px ${px}` : `80px ${px}` }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Categorias de Torcedor</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>{FAN_LEVEL_TEXTS.sectionTitle}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[...XP_TIERS].reverse().map((t) => {
               const isCurrent = t.level === tier.level;
@@ -3791,7 +3781,7 @@ function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
         <div style={{ width: isMobile ? "100%" : 460, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Como ganhar XP</p>
-            {[["Comparecer a um jogo", "+50 XP"], ["Visitar um novo estádio", "+100 XP"], ["Conhecer um novo país", "+200 XP"], ["Completar uma Badge de conquista", "+150 XP"]].map(([l, v], i, arr) => (
+            {[["Comparecer a um jogo", "+50 XP"], ["Visitar um novo estádio", "+100 XP"], ["Conhecer um novo país", "+200 XP"], ["Desbloquear uma conquista", "+150 XP"]].map(([l, v], i, arr) => (
               <div key={l} style={{ display: "flex", justifyContent: "space-between", paddingBottom: i < arr.length - 1 ? 12 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${BORDER}` : "none" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{l}</p>
                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{v}</p>
@@ -4362,7 +4352,7 @@ function MeuCalendario({ onNavigate, onLogout }) {
                     {g.venue_name && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_name}</p>}
                     {g.venue_city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_city}</p>}
                   </div>
-                  <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, textDecoration: "underline", margin: 0, cursor: removingId ? "default" : "pointer", width: "fit-content" }}>
+                  <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", textDecoration: "underline", margin: 0, cursor: removingId ? "default" : "pointer", width: "fit-content" }}>
                     {removingId === g.id ? "Removendo..." : "Remover do calendário"}
                   </p>
                 </div>
@@ -4452,6 +4442,8 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   };
 
   const all = games || [];
+  // XP que cada jogo gerou (lib/xpRules.js) — calculado sobre TODOS os jogos, sem depender dos filtros da tela.
+  const xpInfo = xpBreakdown(all);
   const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
   const countries = new Set(all.map((g) => countryKey(g.country)).filter(Boolean));
   const seasonByKey = new Map();
@@ -4564,8 +4556,15 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                             <TeamBadge name={g.away_team} url={g.away_logo} size={22} resolve />
                           </div>
                         </div>
-                        <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          {xpInfo.byId.get(g.id) && (
+                            <div title="XP que este jogo gerou" style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
+                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>+{xpInfo.byId.get(g.id).total} XP</p>
+                            </div>
+                          )}
+                          <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
+                          </div>
                         </div>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
@@ -4580,6 +4579,16 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       </div>
                       {expanded && (
                         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                          {xpInfo.byId.get(g.id) && (
+                            <div style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>XP gerado por este jogo: +{xpInfo.byId.get(g.id).total}</p>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                {xpInfo.byId.get(g.id).parts.map((p) => (
+                                  <span key={p.key} style={{ background: "#fff", border: `1px solid ${GOLD_BORDER}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontSize: 12, color: BODY }}>{p.label} <b style={{ color: GOLD }}>+{p.xp}</b></span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {editingId === g.id ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
@@ -5785,7 +5794,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
       })()
     : null;
 
-  const perks = ["Football Passport completo", "Gamificação e badges", "Níveis de torcedor (5 categorias)", "Histórico completo de jogos", "15% desconto em consultorias", "Alertas personalizados de jogos"];
+  const perks = ["Football Passport completo", "Gamificação e conquistas", "Categorias de torcedor (5 níveis)", "Histórico completo de jogos", "15% desconto em consultorias", "Alertas personalizados de jogos"];
 
   return (
     <div style={{ background: BG, width: "100%" }}>
@@ -5929,7 +5938,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Tem certeza? Você perderá acesso a todos os seus benefícios premium:</p>
             </div>
             <div style={{ background: BG, borderRadius: 8, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-              {["Football Passport completo", "Badges e sistema de gamificação", "Níveis de torcedor e categorias", "Registro ilimitado de jogos", "15% de desconto em consultorias", "Histórico completo de partidas"].map((label) => (
+              {["Football Passport completo", "Conquistas e sistema de gamificação", "Categorias de torcedor", "Registro ilimitado de jogos", "15% de desconto em consultorias", "Histórico completo de partidas"].map((label) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid #ef4444", borderRadius: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#ef4444", margin: 0 }}>✕</p>
@@ -5982,6 +5991,30 @@ const COUNTRY_LIST = [
   "Rússia", "Senegal", "Sérvia", "Suécia", "Suíça", "Turquia",
   "Ucrânia", "Uruguai", "Venezuela",
 ];
+
+/** Aviso ao sair do perfil com alterações que ainda não foram salvas. */
+function UnsavedChangesModal({ saving, error, onSave, onDiscard, onStay }) {
+  return (
+    <div role="dialog" aria-modal="true" aria-labelledby="unsaved-title" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0 20px 50px rgba(15,23,42,0.25)" }}>
+        <p id="unsaved-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Você tem alterações não salvas</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Se sair agora, as mudanças que você fez no seu perfil serão perdidas. Quer salvar antes de sair?</p>
+        {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div onClick={saving ? undefined : onSave} style={{ background: GREEN_BUTTON, opacity: saving ? 0.6 : 1, padding: "14px 20px", borderRadius: 8, textAlign: "center", cursor: saving ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{saving ? "Salvando..." : "Salvar e sair"}</p>
+          </div>
+          <div onClick={saving ? undefined : onStay} style={{ background: BG_ALT, padding: "14px 20px", borderRadius: 8, textAlign: "center", cursor: saving ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Continuar editando</p>
+          </div>
+          <div onClick={saving ? undefined : onDiscard} style={{ padding: "10px 20px", textAlign: "center", cursor: saving ? "default" : "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#dc2626", margin: 0 }}>Sair sem salvar</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function MeuPerfil({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
@@ -6143,9 +6176,17 @@ function MeuPerfil({ onNavigate, onLogout }) {
     setSuccess(false);
 
     if (newPassword || confirmPassword) {
-      if (!currentPassword) return setError("Digite sua senha atual para definir uma nova senha.");
-      if (newPassword.length < 8) return setError("A nova senha precisa ter no mínimo 8 caracteres.");
-      if (newPassword !== confirmPassword) return setError("As senhas não coincidem.");
+      const passwordError = !currentPassword
+        ? "Digite sua senha atual para definir uma nova senha."
+        : newPassword.length < 8
+          ? "A nova senha precisa ter no mínimo 8 caracteres."
+          : newPassword !== confirmPassword
+            ? "As senhas não coincidem."
+            : null;
+      if (passwordError) {
+        setError(passwordError);
+        return false;
+      }
     }
 
     setSaving(true);
@@ -6171,8 +6212,10 @@ function MeuPerfil({ onNavigate, onLogout }) {
       setNewPassword("");
       setConfirmPassword("");
       setSuccess(true);
+      return true;
     } catch (e) {
       setError(e.message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -6181,9 +6224,61 @@ function MeuPerfil({ onNavigate, onLogout }) {
   const fieldStyle = { width: "100%", background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 14, fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none" };
   const px = isMobile ? "16px" : "80px";
 
+  // Há alterações que ainda não foram salvas? (usado pelos botões e pelo aviso ao sair)
+  const sameArray = (a = [], b = []) => a.length === b.length && a.every((x) => b.includes(x));
+  const hasChanges = !!original && (
+    name !== original.name ||
+    email !== original.email ||
+    whatsapp !== original.whatsapp ||
+    country !== original.country ||
+    !sameArray(favoriteTeams, original.favoriteTeams) ||
+    !sameArray(prefs, original.prefs) ||
+    !!currentPassword || !!newPassword || !!confirmPassword
+  );
+
+  // Aviso pra pessoa não esquecer de salvar: qualquer saída desta tela (menu, sair da
+  // conta, links internos) pergunta antes se houver alterações; fechar a aba ou
+  // recarregar a página usa o aviso do próprio navegador.
+  const [pendingLeave, setPendingLeave] = useState(null); // a ação de sair que ficou esperando a resposta
+  const requestLeave = (go) => {
+    if (hasChanges) setPendingLeave(() => go);
+    else go();
+  };
+  const guardedNavigate = (key) => requestLeave(() => onNavigate(key));
+  const guardedLogout = () => requestLeave(() => onLogout());
+  useEffect(() => {
+    if (!hasChanges) return;
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasChanges]);
+
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="perfil" userName={name} userAvatar={avatarUrl} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="perfil" userName={name} userAvatar={avatarUrl} onNavigate={guardedNavigate} onLogout={guardedLogout} />
+      {pendingLeave && (
+        <UnsavedChangesModal
+          saving={saving}
+          error={error}
+          onStay={() => setPendingLeave(null)}
+          onDiscard={() => {
+            const go = pendingLeave;
+            setPendingLeave(null);
+            go();
+          }}
+          onSave={async () => {
+            const saved = await handleSave();
+            if (saved) {
+              const go = pendingLeave;
+              setPendingLeave(null);
+              go();
+            }
+          }}
+        />
+      )}
 
       <div style={{ position: "relative", display: "flex", alignItems: "center", padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
@@ -6339,16 +6434,6 @@ function MeuPerfil({ onNavigate, onLogout }) {
             {success && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GREEN, margin: 0 }}>Alterações salvas com sucesso!</p>}
 
             {(() => {
-              const sameArray = (a = [], b = []) => a.length === b.length && a.every((x) => b.includes(x));
-              const hasChanges = !!original && (
-                name !== original.name ||
-                email !== original.email ||
-                whatsapp !== original.whatsapp ||
-                country !== original.country ||
-                !sameArray(favoriteTeams, original.favoriteTeams) ||
-                !sameArray(prefs, original.prefs) ||
-                !!currentPassword || !!newPassword || !!confirmPassword
-              );
               const canSave = hasChanges && !saving;
               return (
                 <div style={{ display: "flex", gap: 16, justifyContent: "flex-end", width: "100%" }}>
@@ -6374,7 +6459,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
                 </div>
               </div>
               {subAccess?.subscription?.status === "active" ? (
-                <div onClick={() => onNavigate("assinatura")} style={{ display: "flex", flexDirection: "column", gap: 12, cursor: "pointer" }}>
+                <div onClick={() => guardedNavigate("assinatura")} style={{ display: "flex", flexDirection: "column", gap: 12, cursor: "pointer" }}>
                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Minha Assinatura</p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -6391,7 +6476,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
               ) : (
                 <>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Desbloqueie roteiros para acumular conquistas e destravar o nível VIP Groundhopper no seu Football Passport.</p>
-                  <div onClick={() => onNavigate("assinatura")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                  <div onClick={() => guardedNavigate("assinatura")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 16px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Ver Minha Assinatura</p>
                   </div>
                 </>
@@ -6409,13 +6494,20 @@ function MeuPerfil({ onNavigate, onLogout }) {
 /* ============================================================
    10. CHECKOUT (node 95:877)
    ============================================================ */
-function Checkout({ answers, selectedOption, onBack, onDone, onHome }) {
+function Checkout({ answers, selectedOption, paymentNotice, onBack, onDone, onNavigate, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const handleNavItem = (id) => {
-    sessionStorage.setItem("tripsz_scroll_target", id);
-    onHome();
-  };
+  // Quem está contratando já está logada: o topo é o da área logada (antes era o da página
+  // inicial, e clicar no logo ou no menu levava pra Home e apagava o roteiro em andamento).
+  const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabaseBrowser().auth.getUser();
+      setUserName(data.user?.user_metadata?.name || data.user?.email || "");
+      setUserAvatar(data.user?.user_metadata?.avatar_url || null);
+    })();
+  }, []);
 
   // Próximos dias em que a consultoria atende de verdade: segunda,
   // quarta, sexta e sábado — datas reais, não fixas no código, então
@@ -6498,8 +6590,21 @@ function Checkout({ answers, selectedOption, onBack, onDone, onHome }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <TopNavPublic onStart={onBack} onHome={onHome} onNavItem={handleNavItem} active="Roteiros" />
+      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
       <div style={{ padding: isMobile ? "24px 16px" : 80, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
+        <div onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", width: "fit-content" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>← Voltar ao roteiro</p>
+        </div>
+        {paymentNotice && (
+          <div style={{ background: paymentNotice === "failed" ? "#fef2f2" : GOLD_BG, border: `1px solid ${paymentNotice === "failed" ? "#fecaca" : GOLD_BORDER}`, borderRadius: 12, padding: 16 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: paymentNotice === "failed" ? "#b91c1c" : GOLD, margin: 0 }}>
+              {paymentNotice === "failed" ? "O pagamento não foi concluído." : "Seu pagamento está em análise."}
+            </p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.4, color: BODY, margin: "4px 0 0" }}>
+              {paymentNotice === "failed" ? "Nada foi cobrado. Você pode tentar de novo abaixo." : "Assim que o Mercado Pago confirmar, a consultoria aparece em Meus Roteiros. Você não precisa pagar de novo."}
+            </p>
+          </div>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <Badge>Consultoria Opcional</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Contrate a consultoria humana</p>
@@ -6726,6 +6831,8 @@ export default function App() {
   const options = useMemo(() => buildOptions(plan), [plan]);
   // A opção escolhida libera a contratação da consultoria.
   const [chosenOption, setChosenOption] = useState(null);
+  // Voltando do Mercado Pago sem concluir o pagamento: "failed" ou "pending" (vem na URL do retorno).
+  const [paymentNotice, setPaymentNotice] = useState(null);
   const restart = () => {
     setAnswers({});
     setPlan(null);
@@ -6785,6 +6892,8 @@ export default function App() {
       setInitialized(true);
       return;
     }
+    const payStatus = params.get("status");
+    if (window.location.pathname === "/checkout" && (payStatus === "failed" || payStatus === "pending")) setPaymentNotice(payStatus);
 
     // Restaura as respostas salvas (sempre — mesmo se a URL mandar num
     // passo diferente, a pessoa não pode perder o que já preencheu).
@@ -6951,6 +7060,27 @@ export default function App() {
     };
   }, [screen, initialized, plan, answers.tripAnswersId]);
 
+  // O aviso de pagamento só vale dentro do checkout. Só limpa depois que o app terminou de
+  // inicializar: na primeira renderização a tela ainda é a inicial, e limpar antes apagaria o
+  // aviso que acabou de ser lido da URL do retorno do Mercado Pago.
+  useEffect(() => {
+    if (initialized && screen !== "checkout") setPaymentNotice(null);
+  }, [screen, initialized]);
+
+  // Recarregou (ou voltou do Mercado Pago) direto no checkout: a opção escolhida só existia na
+  // memória — busca a que ficou guardada no roteiro, pra o botão de contratar continuar valendo.
+  useEffect(() => {
+    if (!initialized || screen !== "checkout" || chosenOption || !answers.tripAnswersId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabaseBrowser().from("trip_answers").select("selected_option").eq("id", answers.tripAnswersId).maybeSingle();
+      if (!cancelled && data?.selected_option) setChosenOption(data.selected_option);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [screen, initialized, chosenOption, answers.tripAnswersId]);
+
   return (
     <div style={{ width: "100%", minHeight: "100vh" }}>
       <FontImports />
@@ -7006,7 +7136,7 @@ export default function App() {
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "loading" && <LoadingScreen onWork={handleSaveTrip} onDone={(next) => setScreen(next || "resultado")} />}
       {screen === "resultado" && <ResultadoRoteiro trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
-      {screen === "checkout" && <Checkout answers={answers} selectedOption={chosenOption} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onHome={restart} />}
+      {screen === "checkout" && <Checkout answers={answers} selectedOption={chosenOption} paymentNotice={paymentNotice} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
           trip={trip}

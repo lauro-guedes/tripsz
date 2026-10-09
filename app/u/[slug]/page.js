@@ -112,9 +112,9 @@ export default async function PublicProfilePage({ params }) {
       <div style={{ background: BG_ALT, padding: "48px 40px", display: "flex", flexDirection: "column", gap: 32 }}>
         <div>
           <div style={{ background: GOLD_BG, border: `1px solid ${GOLD}`, borderRadius: 4, padding: "6px 12px", display: "inline-block" }}>
-            <p style={{ fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>Galeria de Conquistas</p>
+            <p style={{ fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>Football Passport</p>
           </div>
-          <p style={{ fontWeight: 700, fontSize: 28, color: TEXT, margin: "12px 0 0" }}>Badges de Viagem</p>
+          <p style={{ fontWeight: 700, fontSize: 28, color: TEXT, margin: "12px 0 0" }}>Conquistas de Viagem</p>
         </div>
 
         {profile.badgeCategories.length === 0 && (

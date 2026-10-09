@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { ensureCalendar, getCandidates, getNearestFor, parseCandidateParams, addDays } from "@/lib/fixturesCalendar";
 import { LEAGUE_META, leagueIdsForCountries } from "@/lib/calendarCore";
 import { todayInSaoPaulo } from "@/lib/gamesSearchCore";
-import { planTrip, favoriteMap } from "@/lib/tripPlanner";
+import { planTrip, favoriteSpecs, specMatchesTeam } from "@/lib/tripPlanner";
 
 export const dynamic = "force-dynamic";
 // A primeira consulta de um país lê as ligas dele na API-Football (alguns segundos).
@@ -56,10 +56,22 @@ export async function POST(request) {
     if (answers.priority === "international" && !candidates.games.some((g) => g.competition.type === "continental")) {
       outside.international = await getNearestFor(supabase, { labels: params.labels, leagueIds: continentalIds, from: params.from, to: params.to });
     }
-    const present = new Set(candidates.games.flatMap((g) => [g.home.id, g.away.id]));
+    // Favoritos sem jogo no período: busca o mais próximo — pelo ID (lista fixa) ou pelo nome (time vindo da busca).
     outside.favorites = {};
-    for (const [id, name] of favoriteMap(favoriteTeams)) {
-      if (!present.has(id)) outside.favorites[name] = await getNearestFor(supabase, { labels: params.labels, teamIds: [id], from: params.from, to: params.to });
+    for (const spec of favoriteSpecs(favoriteTeams)) {
+      const has = candidates.games.some((g) => specMatchesTeam(spec, g.home) || specMatchesTeam(spec, g.away));
+      if (!has) {
+        outside.favorites[spec.name] = await getNearestFor(supabase, { labels: params.labels, ...(spec.id ? { teamIds: [spec.id] } : { teamNames: [spec.name] }), from: params.from, to: params.to });
+      }
+    }
+    // País pedido sem nenhum jogo no período: mostra os jogos mais próximos DELE (fora das datas).
+    outside.countries = {};
+    if (params.labels.length >= 2) {
+      for (const label of params.labels) {
+        if (!candidates.games.some((g) => g.country === label)) {
+          outside.countries[label] = await getNearestFor(supabase, { labels: [label], from: params.from, to: params.to });
+        }
+      }
     }
 
     const plan = planTrip(answers, candidates, { today, outside });
