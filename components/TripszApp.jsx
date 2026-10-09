@@ -25,6 +25,7 @@ import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
 import { authFetch } from "../lib/authFetch";
+import { parseFutbologyLine, guessCountryFromCompetition } from "../lib/futbologyParse";
 import { paceRangeLabel } from "../lib/paceRules";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
@@ -4567,6 +4568,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvResult, setCsvResult] = useState(null);
   const [csvBatchIndex, setCsvBatchIndex] = useState(0);
+  const [csvResolving, setCsvResolving] = useState(null); // { done, total } enquanto reconhece os jogos
+  const [csvNote, setCsvNote] = useState(null);
   const CSV_BATCH_SIZE = 10;
   // Autocomplete nos campos de cada card do lote — guarda qual
   // linha+campo está em foco, e as sugestões pra ele, só um de cada vez.
@@ -4770,69 +4773,91 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     URL.revokeObjectURL(url);
   };
 
-  // Alguns exports (como o do Futbology) vêm com letras "disfarçadas" de
-  // outros alfabetos (cirílico, armênio) que parecem idênticas a letras
-  // latinas de olho nu, mas são tecnicamente diferentes — sem trocar de
-  // volta, nenhuma busca por nome bate. Troca pela letra latina real.
-  const HOMOGLYPH_MAP = {
-    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x",
-    "і": "i", "ѕ": "s", "һ": "h", "ո": "n", "ս": "u", "ի": "i", "ց": "g",
-    "ր": "r", "ա": "a", "Ա": "A", "Ѕ": "S", "А": "A", "Е": "E", "О": "O",
-    "Р": "P", "С": "C",
-  };
-  const normalizeHomoglyphs = (text) =>
-    (text || "").split("").map((c) => HOMOGLYPH_MAP[c] || c).join("");
-
-  const PORTUGUESE_MONTHS = { jan: "01", fev: "02", mar: "03", abr: "04", mai: "05", jun: "06", jul: "07", ago: "08", set: "09", out: "10", nov: "11", dez: "12" };
-
-  // Parser específico pro formato do Futbology: sem cabeçalho de
-  // coluna, "estádio + mandante + visitante" tudo junto num texto só
-  // (sem separador confiável entre eles), separado da competição por
-  // ";", com um ".%" sobrando no final de cada linha.
-  const parseFutbologyLine = (rawLine, rowId) => {
-    const line = normalizeHomoglyphs(rawLine);
-    const [blobPart, compPart] = line.split(";");
-    if (!blobPart || !compPart) return null;
-
-    const dateMatch = blobPart.match(/^(\d{1,2}) de (\w{3})\.? de (\d{4})/i);
-    let date = null;
-    let rawDate = "";
-    let rest = blobPart;
-    if (dateMatch) {
-      rawDate = dateMatch[0];
-      const month = PORTUGUESE_MONTHS[dateMatch[2].toLowerCase()];
-      if (month) date = `${dateMatch[3]}-${month}-${dateMatch[1].padStart(2, "0")}`;
-      rest = blobPart.slice(dateMatch[0].length).trim();
-    }
-
-    const scoreMatch = rest.match(/(\d+)\s+(\d+):?\s*$/);
-    let homeScore = "";
-    let awayScore = "";
-    let combinedText = rest;
-    if (scoreMatch) {
-      homeScore = scoreMatch[1];
-      awayScore = scoreMatch[2];
-      combinedText = rest.slice(0, scoreMatch.index).trim();
-    }
-
-    const competition = compPart.replace(/\.%\s*$/, "").trim();
-
+  // Uma linha do export do Futbology -> linha de revisão. A leitura do texto
+  // (letras disfarçadas, "M" apagado, data, placar) está em lib/futbologyParse.js;
+  // quem descobre estádio/mandante/visitante é o reconhecimento automático
+  // (resolveCsvRows, abaixo), que casa a linha com o jogo real.
+  const toFutbologyRow = (rawLine, rowId) => {
+    const p = parseFutbologyLine(rawLine);
+    if (!p) return null;
     return {
       rowId,
       include: true,
-      date,
-      rawDate: rawDate || "(confira a data)",
+      date: p.date,
+      rawDate: p.rawDate || "(confira a data)",
       stadium: "",
       city: "",
-      country: "",
+      country: guessCountryFromCompetition(p.competition),
       home: "",
       away: "",
-      combinedText, // estádio + mandante + visitante juntos — a pessoa separa
-      homeScore,
-      awayScore,
-      competition,
+      combinedText: p.text, // estádio + mandante + visitante juntos
+      homeScore: p.homeScore,
+      awayScore: p.awayScore,
+      competition: p.competition,
       needsManualSplit: true,
+      autoState: "pending", // pending | matched | unmatched
     };
+  };
+
+  // Reconhecimento automático: manda as linhas (poucas por vez, agrupadas por
+  // data) pro servidor, que acha o jogo real e devolve times, escudos,
+  // estádio, cidade e país.
+  const resolveCsvRows = async (rows) => {
+    const todo = rows.filter((r) => r.date && r.homeScore !== "").sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
+    if (todo.length === 0) return;
+    const CHUNK = 6;
+    let matched = 0;
+    let planBlocked = false;
+    setCsvNote(null);
+    setCsvResolving({ done: 0, total: todo.length });
+    for (let i = 0; i < todo.length; i += CHUNK) {
+      const chunk = todo.slice(i, i + CHUNK);
+      let results = [];
+      try {
+        const res = await authFetch("/api/attended-games/futbology-resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rows: chunk.map((r) => ({ rowId: r.rowId, date: r.date, text: r.combinedText, homeScore: r.homeScore, awayScore: r.awayScore })) }),
+        });
+        const data = await res.json();
+        if (res.ok) results = data.results || [];
+      } catch {
+        // falhou este lote: as linhas ficam pra preencher na mão
+      }
+      const byId = new Map(results.map((r) => [r.rowId, r]));
+      if (results.some((r) => r.reason === "plano")) planBlocked = true;
+      matched += results.filter((r) => r.match).length;
+      setCsvRows((prev) =>
+        prev.map((row) => {
+          const r = byId.get(row.rowId);
+          if (!r || row.autoState !== "pending") return row;
+          if (!r.match) return { ...row, autoState: "unmatched" };
+          const m = r.match;
+          return {
+            ...row,
+            autoState: "matched",
+            needsManualSplit: false,
+            home: m.home,
+            away: m.away,
+            homeLogo: m.homeLogo,
+            awayLogo: m.awayLogo,
+            stadium: m.stadium || "",
+            city: m.city || "",
+            country: m.country || row.country,
+            competition: m.competition || row.competition,
+            apiFixtureId: m.apiFixtureId,
+          };
+        })
+      );
+      setCsvResolving({ done: Math.min(i + CHUNK, todo.length), total: todo.length });
+    }
+    setCsvResolving(null);
+    setCsvRows((prev) => prev.map((row) => (row.autoState === "pending" ? { ...row, autoState: "unmatched" } : row)));
+    setCsvNote(
+      planBlocked
+        ? `Reconhecemos ${matched} de ${todo.length} jogos. Os mais antigos não estão disponíveis na nossa fonte de dados — preencha esses à mão.`
+        : `Reconhecemos ${matched} de ${todo.length} jogos automaticamente.${matched < todo.length ? " Os demais você completa abaixo." : ""}`
+    );
   };
 
   const HEADER_ALIASES = {
@@ -4883,12 +4908,13 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       if (colIndex.mandante === undefined || colIndex.visitante === undefined || colIndex.data === undefined) {
         const looksLikeFutbology = lines.some((l) => /;.*\.%\s*$/.test(l));
         if (looksLikeFutbology) {
-          const rows = lines.map((line, i) => parseFutbologyLine(line, i)).filter(Boolean);
+          const rows = lines.map((line, i) => toFutbologyRow(line, i)).filter(Boolean);
           if (rows.length === 0) {
             setCsvError("Reconhecemos o formato Futbology, mas não conseguimos ler nenhuma linha dele. Confere se o arquivo não foi alterado.");
             return;
           }
           setCsvRows(rows);
+          resolveCsvRows(rows);
           return;
         }
         setCsvError('O arquivo precisa ter pelo menos as colunas "data", "mandante" e "visitante". Baixe nosso modelo pra ver o formato certo.');
@@ -4945,6 +4971,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         const { error: insertError } = await supabase.from("attended_games").insert({
           user_id: userId,
           source: "csv",
+          api_fixture_id: row.apiFixtureId || null,
           home_team: row.home,
           away_team: row.away,
           home_logo: row.homeLogo || null,
@@ -5086,7 +5113,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 <div>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>Importar jogos de um arquivo CSV</p>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "4px 0 0", lineHeight: 1.5 }}>
-                    Se você tem seus jogos num app tipo o Futbology, exporte como CSV e importe aqui. Isso não gasta nossa cota de busca ao vivo — usamos exatamente os dados que vierem no arquivo.
+                    Se você tem seus jogos num app tipo o Futbology, exporte como CSV e importe aqui. No formato do Futbology a gente reconhece cada jogo sozinho (times, escudos, estádio, cidade e país) — você só confere.
                   </p>
                 </div>
                 <div onClick={downloadCsvTemplate} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer", width: "fit-content" }}>
@@ -5102,6 +5129,15 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                   />
                 </div>
                 {csvError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{csvError}</p>}
+                {csvResolving && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Reconhecendo seus jogos… {csvResolving.done}/{csvResolving.total}</p>
+                    <div style={{ background: BG, border: `1px solid ${BORDER}`, height: 8, borderRadius: 999, overflow: "hidden" }}>
+                      <div style={{ background: GREEN, height: "100%", width: `${Math.round((csvResolving.done / csvResolving.total) * 100)}%`, borderRadius: 999 }} />
+                    </div>
+                  </div>
+                )}
+                {!csvResolving && csvNote && csvRows.length > 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{csvNote}</p>}
                 {csvResult && (
                   <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Resumo final</p>
@@ -5154,7 +5190,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{row.rawDate || "—"}</p>
                                 </div>
                                 <div style={{ background: isValid ? BORDER : "#fecaca", borderRadius: 999, padding: "8px 12px" }}>
-                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: isValid ? MUTED : "#dc2626", margin: 0 }}>{isValid ? "já identificado" : "falta dado"}</p>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: isValid ? MUTED : "#dc2626", margin: 0 }}>{row.autoState === "pending" ? "reconhecendo…" : row.autoState === "matched" && isValid ? "reconhecido ✓" : isValid ? "já identificado" : "falta dado"}</p>
                                 </div>
                               </div>
                               <div>
@@ -5250,9 +5286,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                   <input value={row.city} onChange={(e) => updateCsvRow(row.rowId, "city", e.target.value)} placeholder="Cidade" style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontSize: 13, fontFamily: FONT_DISPLAY, color: TEXT, boxSizing: "border-box" }} />
                                 </div>
                               </div>
-                              {row.needsManualSplit && (
+                              {row.needsManualSplit && row.autoState !== "pending" && (
                                 <div style={{ background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 10, padding: 12 }}>
-                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#92400e", textTransform: "uppercase", margin: 0 }}>Texto original do Futbology</p>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#92400e", textTransform: "uppercase", margin: 0 }}>Não reconhecemos este jogo — texto original do Futbology</p>
                                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#92400e", margin: "6px 0 0", lineHeight: 1.5 }}>{row.combinedText}{row.competition ? ` — ${row.competition}` : ""}</p>
                                 </div>
                               )}
