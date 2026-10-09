@@ -4389,6 +4389,10 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [seasonFilter, setSeasonFilter] = useState("todas");
   const [access, setAccess] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ stadium: "", city: "", country: "", competition: "" });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
 
   const loadGames = async () => {
     const acc = await checkPassportAccess();
@@ -4414,6 +4418,36 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     const supabase = supabaseBrowser();
     await supabase.from("attended_games").delete().eq("id", id);
     loadGames();
+  };
+
+  const startEdit = (g) => {
+    setEditError(null);
+    setEditForm({ stadium: g.stadium || "", city: g.city || "", country: g.country || "", competition: g.competition || "" });
+    setEditingId(g.id);
+  };
+
+  const saveEdit = async (g) => {
+    if (!editForm.country.trim()) {
+      setEditError("Informe o país.");
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    const patch = {
+      stadium: editForm.stadium.trim() || null,
+      city: editForm.city.trim() || null,
+      country: editForm.country.trim(),
+      competition: editForm.competition.trim() || null,
+    };
+    const supabase = supabaseBrowser();
+    const { data, error: updError } = await supabase.from("attended_games").update(patch).eq("id", g.id).select("id");
+    setEditSaving(false);
+    if (updError || !data || data.length === 0) {
+      setEditError("Não foi possível salvar a alteração agora.");
+      return;
+    }
+    setGames((list) => (list || []).map((x) => (x.id === g.id ? { ...x, ...patch } : x)));
+    setEditingId(null);
   };
 
   const all = games || [];
@@ -4545,11 +4579,34 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       </div>
                       {expanded && (
                         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
-                            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
-                          </div>
-                          <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
+                          {editingId === g.id ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
+                                <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
+                                  <input value={editForm[k]} onChange={(e) => setEditForm((f) => ({ ...f, [k]: e.target.value }))} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 12px", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none", width: "100%", boxSizing: "border-box" }} />
+                                </div>
+                              ))}
+                              {editError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{editError}</p>}
+                              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                                <div onClick={editSaving ? undefined : () => saveEdit(g)} style={{ background: GREEN, opacity: editSaving ? 0.6 : 1, borderRadius: 8, padding: "10px 18px", cursor: editSaving ? "default" : "pointer" }}>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{editSaving ? "Salvando..." : "Salvar"}</p>
+                                </div>
+                                <p onClick={() => setEditingId(null)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: MUTED, margin: 0, cursor: "pointer" }}>Cancelar</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
+                                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
+                              </div>
+                              <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+                                <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0, cursor: "pointer" }}>Editar local</p>
+                                <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -4787,7 +4844,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   };
 
   // Importação de CSV — não chama a API-Football pra nada aqui de
-  // propósito (confirmar cada linha na API estouraria nossa cota de 100
+  // propósito (confirmar cada linha na API estouraria nossa cota
   // chamadas/dia rapidinho). Os dados vêm direto do que a pessoa trouxe.
   const CSV_TEMPLATE_HEADER = "data,estadio,cidade,pais,mandante,visitante,placar_mandante,placar_visitante,competicao";
   const downloadCsvTemplate = () => {
