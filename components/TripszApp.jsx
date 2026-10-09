@@ -22,6 +22,7 @@ import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDE
 import { initials } from "../lib/textUtils";
 import { seasonOptionGroups, parseSeasonValue, gameSeason, compareSeasonsDesc } from "../lib/seasons";
 import { countryKey, continentOf, sameCountry } from "../lib/countries";
+import { dateOnly } from "../lib/dateOnly";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
@@ -3028,7 +3029,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     // Só jogos REGISTRADOS de verdade contam pras conquistas — gerar um
     // roteiro sugerido é só uma sugestão de viagem, não uma confirmação
     // de que a pessoa foi ao jogo.
-    const allGames = attended.map((g) => ({ date: new Date(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source }));
+    const allGames = attended.map((g) => ({ date: dateOnly(g.match_date), stadium: g.stadium, city: g.city, country: g.country, competition: g.competition, home: g.home_team, away: g.away_team, source: g.source }));
 
     const stadiums = new Set(allGames.map((g) => g.stadium).filter(Boolean));
     const countries = new Set(allGames.map((g) => countryKey(g.country)).filter(Boolean));
@@ -4556,7 +4557,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                     <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                         <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
-                          <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{new Date(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                          <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{dateOnly(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
                           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                             <TeamBadge name={g.home_team} url={g.home_logo} size={22} resolve />
                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
