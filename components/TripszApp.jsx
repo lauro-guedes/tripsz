@@ -2516,6 +2516,10 @@ function AuthedFooter() {
           <Wordmark />
           <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Somos uma plataforma pra montar roteiros de futebol e registrar seus jogos e estádios mundo afora. Ah, e se precisar, te ajudamos com consultoria pra voos, ingressos e hospedagem.</p>
         </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : "auto" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Redes sociais</p>
+          <SocialLinks />
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : 300 }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Fique por dentro</p>
           {status === "success" ? (
@@ -2546,10 +2550,6 @@ function AuthedFooter() {
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0, justifyContent: "space-between" }}>
         <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>© 2026 tripsz. Todos os direitos reservados.</p>
         <div style={{ display: "flex", gap: isMobile ? 16 : 32, alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Redes sociais</p>
-            <SocialLinks />
-          </div>
           <a href="/termos" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Termos</a>
           <a href="/privacidade" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Privacidade</a>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Contato</p>

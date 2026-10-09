@@ -8,7 +8,7 @@
  * levar a pessoa pra um perfil errado.
  */
 import { Instagram } from "lucide-react";
-import { MUTED, FONT_DISPLAY } from "../lib/tokens";
+import { BODY, FONT_DISPLAY } from "../lib/tokens";
 
 export const INSTAGRAM_URL = "https://www.instagram.com/tripsz.app/";
 
@@ -20,9 +20,9 @@ export default function SocialLinks({ instagramUrl = INSTAGRAM_URL }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Instagram da tripsz"
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, textDecoration: "none" }}
     >
-      <Instagram size={16} color={MUTED} />
+      <Instagram size={18} color={BODY} />
       <span>Instagram</span>
     </a>
   );
