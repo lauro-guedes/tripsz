@@ -133,10 +133,12 @@ Abre em http://localhost:3000
    retorno com o domínio real. Comece pelas credenciais de teste.
 5. No Supabase, em Authentication → URL Configuration, cadastre o domínio do site.
 
+## Segurança das rotas
+
+As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `userId`/e-mail enviados pelo navegador. O navegador manda o token de login (`lib/authFetch.js`) e o servidor o confere com o Supabase (`lib/serverAuth.js`): o usuário vem do token, e o admin é quem está logado **e** com e-mail em `ADMIN_EMAILS`. Ao criar uma rota nova que depende de quem é a pessoa, use `authUser(request)` ou `requireAdmin(request)`.
+
 ## Pendências conhecidas
 
 - Schema do banco desatualizado (ver acima).
-- `/api/subscribe` confia no `userId` e no e-mail enviados no corpo; vale validar
-  a sessão no servidor.
 - `TripszApp.jsx` tem quase 7 mil linhas; dividir por tela facilitaria a manutenção.
 - Não existe `.env.example` no repositório.

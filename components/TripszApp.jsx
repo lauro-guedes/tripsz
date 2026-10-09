@@ -23,6 +23,7 @@ import { initials } from "../lib/textUtils";
 import { seasonOptions } from "../lib/seasons";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
+import { authFetch } from "../lib/authFetch";
 import { paceRangeLabel } from "../lib/paceRules";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
 import { initMercadoPago, createCardToken, CardNumber, SecurityCode, ExpirationDate } from "@mercadopago/sdk-react";
@@ -2957,7 +2958,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     try {
       const supabase = supabaseBrowser();
       const { data: userData } = await supabase.auth.getUser();
-      const res = await fetch("/api/profile/get-or-create-slug", {
+      const res = await authFetch("/api/profile/get-or-create-slug", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: userData.user?.id, name: userData.user?.user_metadata?.name }),
@@ -3296,7 +3297,7 @@ function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew 
     setError(null);
     setLoadingPlan(plan);
     try {
-      const res = await fetch("/api/subscribe", {
+      const res = await authFetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, email: userEmail, plan }),
@@ -5479,7 +5480,7 @@ function AtualizarCartaoModal({ userId, onClose, onSaved }) {
         identificationType: "CPF",
         identificationNumber: cpf.replace(/\D/g, ""),
       });
-      const res = await fetch("/api/subscribe/update-card", {
+      const res = await authFetch("/api/subscribe/update-card", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, cardTokenId: token.id }),
@@ -5577,7 +5578,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
 
     if (acc.userId) {
       try {
-        const res = await fetch(`/api/subscribe/invoices?userId=${acc.userId}`);
+        const res = await authFetch(`/api/subscribe/invoices?userId=${acc.userId}`);
         const data = await res.json();
         setInvoices(res.ok ? data.invoices : []);
       } catch {
@@ -5594,7 +5595,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
     setCanceling(true);
     setError(null);
     try {
-      const res = await fetch("/api/subscribe/cancel", {
+      const res = await authFetch("/api/subscribe/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: access.userId }),
@@ -5618,7 +5619,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
     setSwitching(true);
     setError(null);
     try {
-      const cancelRes = await fetch("/api/subscribe/cancel", {
+      const cancelRes = await authFetch("/api/subscribe/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: access.userId }),
@@ -5627,7 +5628,7 @@ function MinhaAssinatura({ onNavigate, onLogout }) {
         const d = await cancelRes.json();
         throw new Error(d.error || "Não foi possível cancelar o plano atual.");
       }
-      const res = await fetch("/api/subscribe", {
+      const res = await authFetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: access.userId, email: access.userEmail, plan: newPlan }),
@@ -6348,7 +6349,7 @@ function Checkout({ answers, selectedOption, onBack, onDone, onHome }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await authFetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

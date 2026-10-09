@@ -1,15 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
 
 // Lista de e-mails com acesso ao painel administrativo — configurada na
 // Vercel (variável ADMIN_EMAILS, separados por vírgula). Sem isso,
 // ninguém entra no painel, nem por engano.
-function isAdminEmail(email) {
-  const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return !!email && allowed.includes(email.toLowerCase());
-}
-
 /**
  * GET /api/admin/overview?email=admin@tripsz.com
  *
@@ -21,7 +17,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
 
-  if (!isAdminEmail(email)) {
+  if (!(await requireAdmin(request))) {
     return Response.json({ error: "Acesso não autorizado." }, { status: 403 });
   }
 

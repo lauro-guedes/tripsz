@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { authUser } from "@/lib/serverAuth";
 
 async function mpFetch(path, options = {}) {
   const res = await fetch(`https://api.mercadopago.com${path}`, {
@@ -22,10 +23,11 @@ async function mpFetch(path, options = {}) {
  */
 export async function POST(request) {
   try {
-    const { userId } = await request.json();
-    if (!userId) {
+    const user = await authUser(request);
+    if (!user) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
     }
+    const userId = user.id; // vem do token conferido, nunca do corpo da requisição
 
     const supabase = supabaseAdmin();
     const { data: sub } = await supabase

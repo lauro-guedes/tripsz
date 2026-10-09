@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 
 /**
@@ -14,11 +15,12 @@ import { supabaseAdmin } from "@/lib/supabase";
  */
 export async function POST(request) {
   try {
-    const { userId, tripAnswersId, scheduledDate, scheduledTime, selectedOption } = await request.json();
-
-    if (!userId) {
+    const user = await authUser(request);
+    if (!user) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
     }
+    const userId = user.id; // vem do token conferido, nunca do corpo da requisição
+    const { tripAnswersId, scheduledDate, scheduledTime, selectedOption } = await request.json();
     if (!scheduledDate || !scheduledTime) {
       return Response.json({ error: "Escolha uma data e um horário para a consultoria." }, { status: 400 });
     }

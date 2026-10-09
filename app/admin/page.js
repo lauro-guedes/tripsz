@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase";
+import { authFetch } from "@/lib/authFetch";
 
 const GREEN = "#00d66f";
 const GREEN_BG = "#ddf9ea";
@@ -72,7 +73,7 @@ function OverviewView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -156,7 +157,7 @@ function UserDetailPanel({ email, userId, onClose }) {
   const handleToggleSuspend = async (suspend) => {
     setSuspendStatus("saving");
     try {
-      const res = await fetch("/api/admin/users/suspend", {
+      const res = await authFetch("/api/admin/users/suspend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, userId, suspend }),
@@ -171,7 +172,7 @@ function UserDetailPanel({ email, userId, onClose }) {
 
   const reloadData = async () => {
     try {
-      const res = await fetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
+      const res = await authFetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
       if (res.ok) setData(await res.json());
     } catch {}
   };
@@ -189,7 +190,7 @@ function UserDetailPanel({ email, userId, onClose }) {
     }
     setXpSaving(true);
     try {
-      const res = await fetch("/api/admin/users/adjust-xp", {
+      const res = await authFetch("/api/admin/users/adjust-xp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, userId, adjustment: parsed, reason: xpReason }),
@@ -209,7 +210,7 @@ function UserDetailPanel({ email, userId, onClose }) {
   const handleResetPassword = async () => {
     setResetStatus("sending");
     try {
-      const res = await fetch("/api/admin/users/reset-password", {
+      const res = await authFetch("/api/admin/users/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, userId }),
@@ -224,7 +225,7 @@ function UserDetailPanel({ email, userId, onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
+        const res = await authFetch(`/api/admin/users/detail?email=${encodeURIComponent(email)}&userId=${encodeURIComponent(userId)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -405,7 +406,7 @@ function UsersView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/users?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         const data = await res.json();
         setUsers(data.users || []);
@@ -518,7 +519,7 @@ function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
   const handleCancelSubscription = async () => {
     setCancelStatus("saving");
     try {
-      const res = await fetch("/api/admin/subscriptions/cancel", {
+      const res = await authFetch("/api/admin/subscriptions/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, subscriptionId }),
@@ -535,7 +536,7 @@ function SubscriptionDetailPanel({ email, subscriptionId, onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/subscriptions/detail?email=${encodeURIComponent(email)}&subscriptionId=${encodeURIComponent(subscriptionId)}`);
+        const res = await authFetch(`/api/admin/subscriptions/detail?email=${encodeURIComponent(email)}&subscriptionId=${encodeURIComponent(subscriptionId)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -637,7 +638,7 @@ function SubscriptionsView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/subscriptions?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/subscriptions?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -735,7 +736,7 @@ function ConsultingView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/consulting?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/consulting?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -803,7 +804,7 @@ function TripsView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/trips?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/trips?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -884,7 +885,7 @@ function GamificationView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/gamification?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/gamification?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -1013,7 +1014,7 @@ function FinanceView({ email }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/admin/finance?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/finance?email=${encodeURIComponent(email)}`);
         if (!res.ok) { setStatus("error"); return; }
         setData(await res.json());
         setStatus("ready");
@@ -1074,7 +1075,7 @@ export default function AdminPage() {
       setUserEmail(email || "");
       if (!email) { setStatus("denied"); return; }
       try {
-        const res = await fetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
+        const res = await authFetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
         setStatus(res.ok ? "ready" : "denied");
       } catch {
         setStatus("denied");

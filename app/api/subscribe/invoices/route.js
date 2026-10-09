@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { authUser } from "@/lib/serverAuth";
 
 async function mpFetch(path) {
   const res = await fetch(`https://api.mercadopago.com${path}`, {
@@ -19,11 +20,11 @@ async function mpFetch(path) {
  * teve, não só da atual.
  */
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-  if (!userId) {
-    return Response.json({ error: "Usuário não informado." }, { status: 400 });
+  const user = await authUser(request);
+  if (!user) {
+    return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
   }
+  const userId = user.id;
 
   try {
     const supabase = supabaseAdmin();

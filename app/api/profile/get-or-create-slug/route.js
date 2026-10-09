@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { authUser } from "@/lib/serverAuth";
 
 function slugify(text) {
   return (text || "torcedor")
@@ -19,10 +20,12 @@ function slugify(text) {
  */
 export async function POST(request) {
   try {
-    const { userId, name } = await request.json();
-    if (!userId) {
+    const user = await authUser(request);
+    if (!user) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
     }
+    const userId = user.id; // vem do token conferido, nunca do corpo da requisição
+    const { name } = await request.json();
 
     const supabase = supabaseAdmin();
 

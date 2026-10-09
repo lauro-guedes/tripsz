@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { authUser } from "@/lib/serverAuth";
 
 // A assinatura recorrente usa a API de "Assinaturas" (Preapproval) do
 // Mercado Pago — é um produto diferente do Checkout Pro que já usamos
@@ -34,10 +35,16 @@ const PLANS = {
  */
 export async function POST(request) {
   try {
-    const { userId, email, plan } = await request.json();
-
-    if (!userId || !email) {
+    const user = await authUser(request);
+    if (!user) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
+    }
+    const userId = user.id; // vem do token conferido, nunca do corpo da requisição
+    const body = await request.json();
+    const plan = body.plan;
+    const email = user.email || body.email;
+    if (!email) {
+      return Response.json({ error: "Usuário sem e-mail." }, { status: 400 });
     }
     const cfg = PLANS[plan];
     if (!cfg) {

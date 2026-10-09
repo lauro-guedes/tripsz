@@ -1,11 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/serverAuth";
 
 export const dynamic = "force-dynamic";
-
-function isAdminEmail(email) {
-  const allowed = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return !!email && allowed.includes(email.toLowerCase());
-}
 
 /**
  * POST /api/admin/users/reset-password
@@ -20,7 +16,7 @@ export async function POST(request) {
     const body = await request.json();
     const { email, userId } = body;
 
-    if (!isAdminEmail(email)) {
+    if (!(await requireAdmin(request))) {
       return Response.json({ error: "Acesso não autorizado." }, { status: 403 });
     }
     if (!userId) {
