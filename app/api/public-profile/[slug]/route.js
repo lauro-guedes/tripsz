@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { TOURNAMENTS, hasMainTournament } from "@/lib/competitionBadges";
 
 // Essa rota SEMPRE precisa rodar de verdade (consulta o banco a cada
 // chamada) — sem isso, o Next.js tenta "pré-analisar" ela durante o
@@ -178,7 +179,7 @@ export async function GET(request, { params }) {
         title: "Competições",
         badges: [
           { label: "Champions League", ...b(hasChampions) },
-          { label: "Copa do Mundo", ...b(hasCompetitionFn(games, /world cup|copa do mundo/i)) },
+          { label: "Copa do Mundo", ...b(hasMainTournament(games, "worldcup")) },
           { label: "Premier League", ...b(hasCompetitionFn(games, /premier league/i)) },
           { label: "La Liga", ...b(hasCompetitionFn(games, /la liga/i)) },
           { label: "Serie A", ...b(hasCompetitionFn(games, /serie a/i, "Italy")) },
@@ -187,6 +188,7 @@ export async function GET(request, { params }) {
           { label: "Brasileirão", ...b(hasCompetitionFn(games, /brasileir/i) || hasCompetitionFn(games, /serie a/i, "Brazil")) },
           { label: "Libertadores", ...b(hasCompetitionFn(games, /libertadores/i)) },
           { label: "Mundial de Clubes", ...b(hasCompetitionFn(games, /club world cup|mundial de clubes/i)) },
+          ...TOURNAMENTS.filter((t) => t.id !== "worldcup").map((t) => ({ label: t.label, ...b(hasMainTournament(games, t.id)) })),
           { label: "Clássico", ...b(hasDerby) },
         ],
       },

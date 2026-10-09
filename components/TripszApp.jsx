@@ -23,6 +23,7 @@ import { initials } from "../lib/textUtils";
 import { seasonOptionGroups, parseSeasonValue, gameSeason, compareSeasonsDesc } from "../lib/seasons";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
+import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
 import { authFetch } from "../lib/authFetch";
 import { paceRangeLabel } from "../lib/paceRules";
 import { todayInSaoPaulo, kickoffParts, formatLongDate, monthName, monthTitle, shiftMonth, buildMonthGrid, cityWithoutCountry, cityShortName, RADIUS_OPTIONS, WEEKDAY_HEADERS } from "../lib/calendarUtils";
@@ -2879,7 +2880,7 @@ function computeBadgeCategories(ctx) {
       title: "Competições",
       badges: [
         { id: "champions", label: "Champions League", ...b(games.some((g) => g.competition === "champions") || hasCompetition(/champions league/i)) },
-        { id: "worldcup", label: "Copa do Mundo", ...b(hasCompetition(/world cup|copa do mundo/i)) },
+        { id: "worldcup", label: "Copa do Mundo", ...b(hasMainTournament(games, "worldcup")) },
         { id: "premier", label: "Premier League", ...b(hasCompetition(/premier league/i)) },
         { id: "laliga", label: "La Liga", ...b(hasCompetition(/la liga/i)) },
         { id: "seriea", label: "Serie A", ...b(hasCompetition(/serie a/i, "Italy")) },
@@ -2888,6 +2889,7 @@ function computeBadgeCategories(ctx) {
         { id: "brasileirao", label: "Brasileirão", ...b(hasCompetition(/brasileir/i) || hasCompetition(/serie a/i, "Brazil")) },
         { id: "libertadores", label: "Libertadores", ...b(hasCompetition(/libertadores/i)) },
         { id: "mundialclubes", label: "Mundial de Clubes", ...b(hasCompetition(/club world cup|mundial de clubes/i)) },
+        ...TOURNAMENTS.filter((t) => t.id !== "worldcup").map((t) => ({ id: t.id, label: t.label, ...b(hasMainTournament(games, t.id)) })),
         { id: "classico", label: "Clássico", ...b(hasDerby) },
       ],
     },
@@ -3182,7 +3184,7 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
                     BadgeIcon = Trophy;
                   }
                   return (
-                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, height: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
+                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, minHeight: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
                       <div style={{ background: bdg.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         {isStadiumBadge ? <Icon name="stadium" size={20} color={bdg.unlocked ? GREEN : MUTED} /> : <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />}
                       </div>
