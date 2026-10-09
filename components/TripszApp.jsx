@@ -23,6 +23,7 @@ import { initials } from "../lib/textUtils";
 import { seasonOptionGroups, parseSeasonValue, gameSeason, compareSeasonsDesc } from "../lib/seasons";
 import { countryKey, continentOf, sameCountry } from "../lib/countries";
 import { dateOnly } from "../lib/dateOnly";
+import { teamLabel } from "../lib/textUtils";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { TOURNAMENTS, hasMainTournament } from "../lib/competitionBadges";
@@ -1439,7 +1440,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome, stepO
                 <div key={s.name} onMouseDown={() => pickSuggestion(s.name)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                   <TeamBadge name={s.name} url={s.logo} size={24} />
                   <div>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                     {s.country && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.country}</p>}
                   </div>
                   {favoriteTeams.includes(s.name) && <Check size={16} color={GREEN} style={{ marginLeft: "auto" }} />}
@@ -1454,7 +1455,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome, stepO
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0, width: "100%", textAlign: isMobile ? "left" : "center" }}>Times selecionados ({favoriteTeams.length})</p>
             {favoriteTeams.map((team) => (
               <div key={team} onClick={() => toggleTeam(team)} style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{team}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{teamLabel(team)}</p>
                 <X size={12} color={GREEN} />
               </div>
             ))}
@@ -1475,7 +1476,7 @@ function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome, stepO
                   return (
                     <div key={team} onClick={() => toggleTeam(team)} style={{ background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "16px 20px", borderRadius: 8, cursor: "pointer" }}>
                       <TeamBadge name={team} size={24} />
-                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active ? 700 : 500, fontSize: 14, color: active ? GREEN : TEXT, margin: 0, flex: 1 }}>{team}</p>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: active ? 700 : 500, fontSize: 14, color: active ? GREEN : TEXT, margin: 0, flex: 1 }}>{teamLabel(team)}</p>
                       {active && <Check size={16} color={GREEN} />}
                     </div>
                   );
@@ -2186,12 +2187,12 @@ function RoteiroView({ trip, options, chosenOption, onChooseOption, planLoading,
                       <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap" }}>
                         <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
                           <TeamBadge name={f.home} url={f.homeLogo} size={logoSize} resolve />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.home}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.home)}</p>
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>VS</p>
                         <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
                           <TeamBadge name={f.away} url={f.awayLogo} size={logoSize} resolve />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{f.away}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.away)}</p>
                         </div>
                       </div>
                       {/* estádio: só o nome, com o ícone de estádio do projeto */}
@@ -2544,10 +2545,13 @@ function AuthedFooter() {
       </div>
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0, justifyContent: "space-between" }}>
         <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0 }}>© 2026 tripsz. Todos os direitos reservados.</p>
-        <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-          <SocialLinks />
-          <a href="/privacidade" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Privacidade</a>
+        <div style={{ display: "flex", gap: isMobile ? 16 : 32, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Redes sociais</p>
+            <SocialLinks />
+          </div>
           <a href="/termos" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Termos</a>
+          <a href="/privacidade" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Privacidade</a>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Contato</p>
         </div>
       </div>
@@ -2722,7 +2726,7 @@ function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNe
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                           <TeamBadge name={g.home} url={g.homeLogo} size={18} />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
                           <TeamBadge name={g.away} url={g.awayLogo} size={18} />
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
@@ -3950,7 +3954,7 @@ function BuscarJogos({ onNavigate, onLogout }) {
       // 23505 = esse jogo já estava salvo — trata como sucesso.
       if (insertError && insertError.code !== "23505") throw insertError;
       setSavedIds((prev) => new Set(prev).add(g.id));
-      setLastAdded(`${g.home} × ${g.away}`);
+      setLastAdded(`${teamLabel(g.home)} × ${teamLabel(g.away)}`);
     } catch {
       setError("Não foi possível adicionar ao calendário agora. Tente de novo.");
     } finally {
@@ -3978,7 +3982,7 @@ function BuscarJogos({ onNavigate, onLogout }) {
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home} × {g.away}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
               <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -4345,7 +4349,7 @@ function MeuCalendario({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{league}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} × {g.away_team}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} × {teamLabel(g.away_team)}</p>
                     <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -4552,19 +4556,19 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                           <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{dateOnly(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
                           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                             <TeamBadge name={g.home_team} url={g.home_logo} size={22} resolve />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {g.away_team}</p>
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {teamLabel(g.away_team)}</p>
                             <TeamBadge name={g.away_team} url={g.away_logo} size={22} resolve />
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          {xpInfo.byId.get(g.id) && (
-                            <div title="XP que este jogo gerou" style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
-                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>+{xpInfo.byId.get(g.id).total} XP</p>
-                            </div>
-                          )}
                           <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : "Manual ✓"}</p>
                           </div>
+                          {xpInfo.byId.get(g.id) && (
+                            <div title="XP que este jogo gerou" style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, padding: "4px 10px", borderRadius: 4 }}>
+                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>+{xpInfo.byId.get(g.id).total} XP</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
@@ -4579,16 +4583,6 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       </div>
                       {expanded && (
                         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                          {xpInfo.byId.get(g.id) && (
-                            <div style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>XP gerado por este jogo: +{xpInfo.byId.get(g.id).total}</p>
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                {xpInfo.byId.get(g.id).parts.map((p) => (
-                                  <span key={p.key} style={{ background: "#fff", border: `1px solid ${GOLD_BORDER}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontSize: 12, color: BODY }}>{p.label} <b style={{ color: GOLD }}>+{p.xp}</b></span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                           {editingId === g.id ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
@@ -4611,6 +4605,16 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                                 {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
                                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
                               </div>
+                              {xpInfo.byId.get(g.id) && (
+                                <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>XP gerado por este jogo: +{xpInfo.byId.get(g.id).total}</p>
+                                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                    {xpInfo.byId.get(g.id).parts.map((p) => (
+                                      <span key={p.key} style={{ background: "#fff", border: `1px solid ${GREEN}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontSize: 12, color: BODY }}>{p.label} <b style={{ color: GREEN }}>+{p.xp}</b></span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                               <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
                                 <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0, cursor: "pointer" }}>Editar local</p>
                                 <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
@@ -5291,7 +5295,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                               <div>
                                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Competição</p>
                                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "2px 0 0" }}>{row.competition || "—"}</p>
-                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>{row.home || "?"} {row.homeScore ?? ""}×{row.awayScore ?? ""} {row.away || "?"}</p>
+                                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: "6px 0 0" }}>{teamLabel(row.home) || "?"} {row.homeScore ?? ""}×{row.awayScore ?? ""} {teamLabel(row.away) || "?"}</p>
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 <div style={{ position: "relative" }}>
@@ -5321,7 +5325,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                           }}
                                           style={{ padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
                                         >
-                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                                           {(s.city || s.country) && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>{[s.city, s.country].filter(Boolean).join(", ")}</p>}
                                         </div>
                                       ))}
@@ -5346,7 +5350,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                         {!csvSuggestLoading && csvSuggestions.map((s) => (
                                           <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "home", s.name, s.logo)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
-                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                                           </div>
                                         ))}
                                       </div>
@@ -5369,7 +5373,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                                         {!csvSuggestLoading && csvSuggestions.map((s) => (
                                           <div key={s.name} onMouseDown={() => pickCsvSuggestion(row.rowId, "away", s.name, s.logo)} style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
                                             <TeamBadge name={s.name} url={s.logo} size={20} />
-                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{s.name}</p>
+                                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                                           </div>
                                         ))}
                                       </div>
@@ -5435,7 +5439,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                       >
                         {(searchMode === "clube" || searchMode === "selecao") && <TeamBadge name={s.name} url={s.logo} size={22} />}
                         <div>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                           {s.city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.city}{s.country ? `, ${s.country}` : ""}</p>}
                         </div>
                       </div>
@@ -5504,7 +5508,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                           <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{new Date(g.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
                           <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "4px 0", flexWrap: "wrap" }}>
                             <TeamBadge name={g.home} url={g.homeLogo} size={24} />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{g.home} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {g.away}</p>
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{teamLabel(g.home)} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {teamLabel(g.away)}</p>
                             <TeamBadge name={g.away} url={g.awayLogo} size={24} />
                           </div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
@@ -6375,7 +6379,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
                       >
                         <TeamBadge name={s.name} url={s.logo} size={22} />
                         <div>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{s.name}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{teamLabel(s.name)}</p>
                           {s.country && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{s.country}</p>}
                         </div>
                       </div>
@@ -6387,7 +6391,7 @@ function MeuPerfil({ onNavigate, onLogout }) {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
                   {favoriteTeams.map((team) => (
                     <div key={team} onClick={() => removeFavoriteTeam(team)} style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
-                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{team}</p>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>{teamLabel(team)}</p>
                       <X size={12} color={GREEN} />
                     </div>
                   ))}
