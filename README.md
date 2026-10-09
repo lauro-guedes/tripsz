@@ -101,17 +101,19 @@ Configure na Vercel (Settings → Environment Variables) e, para rodar local, em
 
 ## Banco de dados
 
-`supabase-schema.sql` cria só `trip_answers` e `orders` (versão inicial).
-O código usa várias outras tabelas, que **não estão** nesse arquivo:
-`subscriptions`, `attended_games`, `public_profiles`, `saved_games`,
-`fixtures_calendar`, `team_home_venues`, `fixtures_cache`, `venues_cache`,
-`fixtures_fetch_log`, `calendar_sync_log`, `newsletter_subscribers` e
-`team_logos` (esta tem SQL em `supabase-team-logos.sql`), além dos buckets
-`avatars` e `team-logos`. As tabelas antigas `leagues` e `fixtures` não são mais
-usadas e podem ser apagadas.
+`supabase-schema.sql` é o schema real de produção (exportado do Supabase em 09/10/2026):
+tabelas, índices e políticas de RLS. Rodando esse arquivo num projeto novo e criando os
+buckets públicos `avatars` e `team-logos` em Storage, o ambiente volta do zero.
 
-> **Pendência:** exportar o schema real do Supabase de produção e substituir
-> `supabase-schema.sql`, para dar pra recriar o ambiente do zero.
+- **Dados de pessoas** (RLS: cada um só vê/edita o que é seu): `trip_answers`, `orders`,
+  `subscriptions`, `attended_games`, `saved_games`, `public_profiles`.
+- **Caches só do servidor** (RLS ligado e sem política, de propósito: só a chave
+  `service_role` acessa): `fixtures_cache`, `fixtures_fetch_log`, `fixtures_calendar`,
+  `calendar_sync_log`, `team_home_venues`, `venues_cache` e `team_logos`.
+- `newsletter_subscribers`: qualquer pessoa pode se inscrever.
+
+As tabelas antigas `leagues` e `fixtures` foram apagadas; uma cópia ficou no schema
+`backup` do Supabase e pode ser removida quando você quiser.
 
 ## Rodando localmente
 
@@ -139,6 +141,5 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 
 ## Pendências conhecidas
 
-- Schema do banco desatualizado (ver acima).
 - `TripszApp.jsx` tem quase 7 mil linhas; dividir por tela facilitaria a manutenção.
 - Não existe `.env.example` no repositório.
