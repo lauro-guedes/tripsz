@@ -20,7 +20,7 @@ import { Globe, Check, Calendar, AlertTriangle, Shield, Info, CreditCard, Lock, 
 import { supabaseBrowser } from "../lib/supabase";
 import { GREEN, GREEN_BUTTON, GREEN_BUTTON2, GREEN_BG, GOLD, GOLD_BG, GOLD_BORDER, BG, BG_ALT, BORDER, TEXT, BODY, MUTED, FONT_DISPLAY, FONT_BODY, FONT_MONO } from "../lib/tokens";
 import { initials } from "../lib/textUtils";
-import { seasonOptions } from "../lib/seasons";
+import { seasonOptionGroups, parseSeasonValue, gameSeason, compareSeasonsDesc } from "../lib/seasons";
 import { buildOptions, durationRange } from "../lib/tripOptions";
 import TeamBadge from "./TeamBadge";
 import { authFetch } from "../lib/authFetch";
@@ -3206,10 +3206,10 @@ function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
 
 
 /* --- Meus Jogos: histórico real dos jogos registrados, agrupado por temporada --- */
-function seasonLabel(dateStr) {
-  const d = new Date(dateStr);
-  const y = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1; // temporada europeia: jul-jun
-  return `${y}/${String((y + 1) % 100).padStart(2, "0")}`;
+// Temporada de um jogo registrado: europeia (jul–jun, "2026/27") ou, pra
+// Brasileirão, Libertadores, América do Sul, MLS etc., ano-calendário ("2026").
+function seasonOfGame(g) {
+  return gameSeason(g.match_date, { country: g.country, competition: g.competition });
 }
 
 /* --- Acesso ao Passport: Meu Nível, Minhas Conquistas e Registrar Jogo
@@ -4388,23 +4388,28 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const all = games || [];
   const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
   const countries = new Set(all.map((g) => g.country).filter(Boolean));
-  const seasons = Array.from(new Set(all.map((g) => seasonLabel(g.match_date)))).sort().reverse();
+  const seasonByKey = new Map();
+  all.forEach((g) => {
+    const se = seasonOfGame(g);
+    seasonByKey.set(se.key, se);
+  });
+  const seasons = Array.from(seasonByKey.values()).sort(compareSeasonsDesc); // [{ key, label, year, kind }]
 
   const filtered = all.filter((g) => {
     if (tab === "tripsz" && g.source !== "api") return false;
     if (tab === "manuais" && g.source !== "manual") return false;
-    if (seasonFilter !== "todas" && seasonLabel(g.match_date) !== seasonFilter) return false;
+    if (seasonFilter !== "todas" && seasonOfGame(g).key !== seasonFilter) return false;
     if (search && !(g.stadium || "").toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
   const grouped = {};
   filtered.forEach((g) => {
-    const s = seasonLabel(g.match_date);
-    if (!grouped[s]) grouped[s] = [];
-    grouped[s].push(g);
+    const k = seasonOfGame(g).key;
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(g);
   });
-  const orderedSeasons = Object.keys(grouped).sort().reverse();
+  const orderedSeasons = Object.keys(grouped).sort((a, b) => compareSeasonsDesc(seasonByKey.get(a), seasonByKey.get(b)));
 
   if (access === null) {
     return (
@@ -4428,20 +4433,11 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
-        </div>
-        <Badge>Histórico Completo</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Meus Jogos</p>
-        <div style={{ display: "flex", gap: isMobile ? 12 : 24, alignItems: "center", flexWrap: "wrap" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: GREEN, margin: 0 }}>{all.length} jogos</p>
-          <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{stadiums.size} estádios</p>
-          <div style={{ width: 6, height: 6, borderRadius: 3, background: BORDER }} />
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{countries.size} países</p>
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: isMobile ? `24px ${px} 8px` : `48px ${px} 8px` }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Meus Jogos</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>
+          {all.length} {all.length === 1 ? "jogo" : "jogos"} · {stadiums.size} {stadiums.size === 1 ? "estádio" : "estádios"} · {countries.size} {countries.size === 1 ? "país" : "países"}
+        </p>
       </div>
 
       <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
@@ -4466,7 +4462,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
           </div>
           <select value={seasonFilter} onChange={(e) => setSeasonFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: TEXT, width: isMobile ? "100%" : 240 }}>
             <option value="todas">Todas as temporadas</option>
-            {seasons.map((s) => <option key={s} value={s}>Temporada {s}</option>)}
+            {seasons.map((se) => <option key={se.key} value={se.key}>Temporada {se.label}</option>)}
           </select>
         </div>
 
@@ -4485,7 +4481,7 @@ function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
           {orderedSeasons.map((season) => (
             <div key={season} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: TEXT, margin: 0 }}>Temporada {season}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: TEXT, margin: 0 }}>Temporada {seasonByKey.get(season)?.label}</p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: MUTED, margin: 0 }}>{grouped[season].length} jogo(s)</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -4548,7 +4544,8 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
 
   const [stadiumQuery, setStadiumQuery] = useState("");
   const [searchMode, setSearchMode] = useState("estadio"); // "estadio" | "clube"
-  const [season, setSeason] = useState(() => seasonOptions()[0].value);
+  const [seasonValue, setSeasonValue] = useState(() => seasonOptionGroups().eu[0].value); // "eu:2026" (2026/27) ou "cal:2026" (ano de 2026)
+  const { year: season, label: seasonText } = parseSeasonValue(seasonValue);
   const [competitionFilter, setCompetitionFilter] = useState("todas");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -4679,7 +4676,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
           setShowManual(true);
           setManual((m) => ({ ...m, home: stadiumQuery }));
           const noun = searchMode === "selecao" ? "a seleção" : "o clube";
-          setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos ${noun}, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.` : `Não encontramos ${searchMode === "selecao" ? "essa seleção" : "esse clube"} na nossa base — preencha manualmente.`);
+          setError(data.reason === "sem_jogos_no_periodo" ? `Encontramos ${noun}, mas nenhum jogo na temporada ${seasonText} — tente outro ano, ou preencha manualmente.` : `Não encontramos ${searchMode === "selecao" ? "essa seleção" : "esse clube"} na nossa base — preencha manualmente.`);
           return;
         }
         setVenue({ name: data.club.name, city: data.club.city, country: data.club.country, logo: data.club.logo, isClub: true });
@@ -4695,7 +4692,7 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         setShowManual(true);
         if (data.reason === "sem_jogos_no_periodo") {
           setManual((m) => ({ ...m, stadium: data.venue?.name || stadiumQuery, city: data.venue?.city || "", country: data.venue?.country || "" }));
-          setError(`Encontramos o estádio, mas nenhum jogo na temporada ${season}/${season + 1} — tente outro ano, ou preencha manualmente.`);
+          setError(`Encontramos o estádio, mas nenhum jogo na temporada ${seasonText} — tente outro ano, ou preencha manualmente.`);
         } else {
           setError("Não encontramos esse estádio na nossa base — preencha manualmente.");
         }
@@ -5031,14 +5028,9 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
-        </div>
-        <Badge>Novo Registro Manual</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Registre um Jogo</p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Adicione jogos que você já esteve para completar seu Football Passport e subir seu nível de torcedor.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: isMobile ? `24px ${px} 8px` : `48px ${px} 8px` }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Registre um Jogo</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Adicione jogos que você já esteve para completar seu Football Passport e subir seu nível de torcedor.</p>
         {!access.isPaid && (() => {
           const used = Math.min(access.gamesCount + addedThisSession, access.gamesLimit);
           const pct = Math.round((used / access.gamesLimit) * 100);
@@ -5318,10 +5310,13 @@ function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                   </div>
                 )}
               </div>
-              <select value={season} onChange={(e) => setSeason(parseInt(e.target.value, 10))} style={{ ...fieldStyle, width: isMobile ? "100%" : 140 }}>
-                {seasonOptions().map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
+              <select value={seasonValue} onChange={(e) => setSeasonValue(e.target.value)} style={{ ...fieldStyle, width: isMobile ? "100%" : 180 }}>
+                <optgroup label="Temporada europeia (jul–jun)">
+                  {seasonOptionGroups().eu.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </optgroup>
+                <optgroup label="Ano-calendário (jan–dez)">
+                  {seasonOptionGroups().cal.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </optgroup>
               </select>
               <div onClick={loading ? undefined : () => { setShowSuggestions(false); handleSearch(); }} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
