@@ -1,6 +1,7 @@
 "use client";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar, WizardTopBar } from "../nav/WizardChrome";
+import { todayInSaoPaulo } from "../../lib/calendarUtils";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
@@ -39,7 +40,7 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                 <input
                   type="date"
                   value={answers.dateStart || ""}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={todayInSaoPaulo()}
                   onChange={(e) => {
                     const newStart = e.target.value;
                     setAnswers((a) => ({
@@ -59,11 +60,16 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                 <input
                   type="date"
                   value={answers.dateEnd || ""}
-                  min={answers.dateStart || new Date().toISOString().split("T")[0]}
+                  min={answers.dateStart || todayInSaoPaulo()}
                   onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
                   style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
                 />
               </div>
+              {answers.dateStart && (
+                <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: MUTED, margin: 0 }}>
+                  Escolha a volta a partir de {answers.dateStart.split("-").reverse().join("/")} (dia da ida).
+                </p>
+              )}
             </div>
           </div>
         </div>

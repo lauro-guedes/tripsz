@@ -118,6 +118,8 @@ export default function App() {
     const path = SCREEN_TO_PATH[screen] || "/";
     if (window.location.pathname !== path) {
       window.history.pushState({ screen }, "", path);
+      // Tela nova começa sempre no topo (ex.: Contratar consultoria → checkout).
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
   }, [screen, initialized]);
 

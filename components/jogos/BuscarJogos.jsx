@@ -108,6 +108,10 @@ export function BuscarJogos({ onNavigate, onLogout }) {
       setError("Escolha a data do jogo.");
       return;
     }
+    if (date < todayInSaoPaulo()) {
+      setError("Escolha uma data de hoje em diante.");
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams({ date, lat: String(chosen.lat), lon: String(chosen.lon), radius: String(radius) });
@@ -237,7 +241,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end", gap: isMobile ? 16 : 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200 }}>
             <p style={labelStyle}>Data do jogo</p>
-            <input type="date" value={date} min={todayInSaoPaulo()} onChange={(e) => setDate(e.target.value)} style={fieldStyle} />
+            <input type="date" value={date} min={todayInSaoPaulo()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={fieldStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
             <p style={labelStyle}>Cidade-base</p>

@@ -52,6 +52,8 @@ export function MeuPerfil({ onNavigate, onLogout }) {
   const [teamSuggestions, setTeamSuggestions] = useState([]);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
+  // Conta criada só com Google não tem senha: não há "senha atual" pra pedir.
+  const [hasPassword, setHasPassword] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [prefs, setPrefs] = useState([]);
@@ -87,6 +89,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
     setFavoriteTeams(loaded.favoriteTeams);
     setPrefs(loaded.prefs);
     setAvatarUrl(user.user_metadata?.avatar_url || null);
+    setHasPassword((user.identities || []).some((i) => i.provider === "email"));
     setOriginal(loaded);
     setLoading(false);
     setSubAccess(await checkPassportAccess());
@@ -133,8 +136,8 @@ export function MeuPerfil({ onNavigate, onLogout }) {
       setAvatarError("Envie um arquivo JPG ou PNG.");
       return;
     }
-    if (file.size > 1024 * 1024) {
-      setAvatarError("A imagem precisa ter no máximo 1MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("A imagem precisa ter no máximo 5MB.");
       return;
     }
 
@@ -189,7 +192,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
     setSuccess(false);
 
     if (newPassword || confirmPassword) {
-      const passwordError = !currentPassword
+      const passwordError = hasPassword && !currentPassword
         ? "Digite sua senha atual para definir uma nova senha."
         : newPassword.length < 8
           ? "A nova senha precisa ter no mínimo 8 caracteres."
@@ -208,7 +211,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
 
       // Trocar de senha exige confirmar a senha atual primeiro — o Supabase
       // não faz essa checagem sozinho, então reautenticamos antes de aplicar.
-      if (newPassword) {
+      if (newPassword && hasPassword) {
         const { error: reauthError } = await supabase.auth.signInWithPassword({ email: original.email, password: currentPassword });
         if (reauthError) throw new Error("Senha atual incorreta.");
       }
@@ -321,7 +324,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{avatarUploading ? "Enviando..." : "Alterar foto"}</p>
                   <input type="file" accept="image/jpeg,image/png" onChange={handleAvatarChange} disabled={avatarUploading} style={{ display: "none" }} />
                 </label>
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>JPG ou PNG. Máximo de 1MB</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>JPG ou PNG. Máximo de 5MB</p>
                 {avatarError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>{avatarError}</p>}
               </div>
             </div>
@@ -411,10 +414,12 @@ export function MeuPerfil({ onNavigate, onLogout }) {
             <div style={{ height: 1, background: BORDER, width: "100%" }} />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Segurança</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {hasPassword && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Senha Atual</p>
                 <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Preencha só se for trocar a senha" style={fieldStyle} />
               </div>
+              )}
               <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nova Senha</p>

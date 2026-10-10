@@ -70,7 +70,7 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
               </div>
               <div>
                 <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nível de Acesso</p>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>BLOQUEADO</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GREEN, margin: 0 }}>GRÁTIS</p>
               </div>
             </div>
           </div>
