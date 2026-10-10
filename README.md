@@ -35,7 +35,17 @@ app/
     consultoria/availability
     admin/*                        usuários, assinaturas, finanças, ligas etc.
 components/
-  TripszApp.jsx                telas e navegação do app inteiro
+  TripszApp.jsx                só o App: estado geral e troca de telas
+  routes.js                    mapa tela ⇄ URL (SCREEN_TO_PATH / PATH_TO_SCREEN)
+  ui/                          peças visuais: Button, Badge, Pill, Icon, Wordmark, Loading...
+  nav/                         menus: TopNavPublic, AuthedNav, AuthedFooter, WizardChrome
+  landing/                     página inicial
+  auth/                        criar conta, login, redefinir senha
+  wizard/                      passos do questionário e tela de cálculo
+  roteiro/                     resultado A/B/C, detalhe e Meus Roteiros
+  checkout/                    pagamento avulso da consultoria
+  conta/                       conquistas, ranking, nível, perfil, assinatura, paywall
+  jogos/                       Buscar Jogos, Meu Calendário, Meus Jogos, Registrar Jogo
   TeamBadge.jsx                escudo do time, com várias fontes e fallback
   SocialLinks.jsx              redes sociais do rodapé (o endereço do Instagram fica aqui)
 lib/
@@ -46,6 +56,9 @@ lib/
   footballApi.js               cliente da API-Football
   supabase.js                  clientes do Supabase (navegador e admin)
   tokens.js                    cores e fontes
+  tripPlanClient.js            chama /api/trip/plan e converte o plano para a tela
+  passportAccess.js            quem tem acesso ao Passport (limite de 20 jogos grátis)
+  gameSeason.js, seasons.js    temporada de um jogo (europeia ou ano-calendário)
   xpRules.js                   regra de XP: total e XP gerado por cada jogo
   fanLevels.js                 categorias de torcedor (nomes, faixas de XP e textos)
   data/                        cidades, clássicos (rivalries), geoExtras
@@ -54,7 +67,7 @@ lib/
 ### Navegação
 
 O app é uma página só com roteamento próprio: o mapa `SCREEN_TO_PATH` em
-`TripszApp.jsx` liga cada tela a uma URL (`/roteiro/destino`, `/conta/jogos`, ...).
+`components/routes.js` liga cada tela a uma URL (`/roteiro/destino`, `/conta/jogos`, ...).
 
 - **Montar viagem:** landing → criar conta → destino → times → datas →
   pessoas e orçamento → preferências → cálculo → resultado (A/B/C) → checkout
@@ -152,4 +165,8 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 
 ## Pendências conhecidas
 
-- `TripszApp.jsx` tem quase 7 mil linhas; dividir por tela facilitaria a manutenção.
+
+- Escudo do Botafogo-SP aparecendo como o do Rio: falta a tela e o jogo exatos para reproduzir.
+- No Supabase: remover a política duplicada `usuário edita suas respostas` em `trip_answers` e ligar a proteção contra senhas vazadas (Authentication → Providers → Email).
+- Meus Roteiros carrega `select("*")`; vale buscar só as colunas usadas.
+- O schema `backup` do Supabase pode ser removido depois de conferido.
