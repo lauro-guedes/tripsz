@@ -2031,8 +2031,12 @@ function restrictionBullets(trip, options) {
   if (notes.some((n) => n.type === "favorite_not_fit")) {
     bullets.push("Alguns jogos dos seus times favoritos não couberam em todas as opções — compare as alternativas.");
   }
+  // Países pedidos que ficaram de fora (ou foram completados com jogo nacional): a pessoa precisa saber o porquê.
   for (const n of notes) {
-    if (bullets.length >= 5) break;
+    if (["country_not_fit", "country_without_games", "country_fallback_domestic"].includes(n.type) && n.message) bullets.push(n.message);
+  }
+  for (const n of notes) {
+    if (bullets.length >= 8) break;
     if (["flex_used", "approx_location", "unlocated", "cap", "favorite_without_games"].includes(n.type) && n.message) bullets.push(n.message);
   }
   return bullets;
