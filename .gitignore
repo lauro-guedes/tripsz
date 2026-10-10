@@ -1,0 +1,14 @@
+# dependências e build
+node_modules/
+.next/
+out/
+
+# segredos: nunca versionar (o .env.example é o modelo e pode subir)
+.env
+.env.*
+!.env.example
+
+# sistema e editor
+.DS_Store
+*.log
+.vercel/

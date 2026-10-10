@@ -96,7 +96,7 @@ Os textos das categorias de torcedor ficam em `lib/fanLevels.js`.
 
 ## Variáveis de ambiente
 
-Configure na Vercel (Settings → Environment Variables) e, para rodar local, em `.env.local`.
+Configure na Vercel (Settings → Environment Variables) e, para rodar local, copie `.env.example` para `.env.local` e preencha.
 
 | Variável | Para quê |
 |---|---|
@@ -130,7 +130,7 @@ As tabelas antigas `leagues` e `fixtures` foram apagadas; uma cópia ficou no sc
 
 ```bash
 npm install
-# crie .env.local com as variáveis acima
+cp .env.example .env.local   # e preencha as variáveis
 npm run dev
 ```
 
@@ -153,4 +153,3 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 ## Pendências conhecidas
 
 - `TripszApp.jsx` tem quase 7 mil linhas; dividir por tela facilitaria a manutenção.
-- Não existe `.env.example` no repositório.
