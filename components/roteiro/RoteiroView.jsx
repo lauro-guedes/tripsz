@@ -220,6 +220,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
   const [userAvatar, setUserAvatar] = useState(null);
   const [viewKey, setViewKey] = useState("A");
   const [needChoice, setNeedChoice] = useState(false);
+  const [showRestrictions, setShowRestrictions] = useState(false); // aviso começa minimizado
 
   useEffect(() => {
     (async () => {
@@ -324,25 +325,30 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
 
           {hasContent && (
             <>
-              {/* restrições */}
+              {/* restrições (começa minimizado) */}
               <div style={{ background: GOLD_BG, border: `1px solid ${GOLD_BORDER}`, borderRadius: 12, padding: isMobile ? 16 : 20, display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div onClick={() => setShowRestrictions((v) => !v)} style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
                   <div style={{ width: 22, height: 22, borderRadius: 11, background: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>!</p>
                   </div>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GOLD, margin: 0 }}>{isMobile ? "Restrições identificadas no roteiro" : "Restrições identificadas no seu roteiro"}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: GOLD, margin: 0, flex: 1 }}>{isMobile ? "Restrições identificadas no roteiro" : "Restrições identificadas no seu roteiro"}</p>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0, whiteSpace: "nowrap", textDecoration: "underline" }}>{showRestrictions ? "Ocultar aviso ▲" : "Ver aviso completo ▼"}</p>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {bullets.map((b, i) => (
-                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ width: 5, height: 5, borderRadius: 3, background: "#F59E0B", marginTop: 7, flexShrink: 0 }} />
-                      <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>{b}</p>
+                {showRestrictions && (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {bullets.map((b, i) => (
+                        <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <div style={{ width: 5, height: 5, borderRadius: 3, background: "#F59E0B", marginTop: 7, flexShrink: 0 }} />
+                          <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>{b}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div style={{ border: `1px solid ${GOLD_BORDER}`, background: "#FEF3C7", borderRadius: 6, padding: "8px 12px" }}>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Escolha abaixo a opção que melhor se adapta ao seu ritmo de viagem.</p>
-                </div>
+                    <div style={{ border: `1px solid ${GOLD_BORDER}`, background: "#FEF3C7", borderRadius: 6, padding: "8px 12px" }}>
+                      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Escolha abaixo a opção que melhor se adapta ao seu ritmo de viagem.</p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* opções A / B / C */}
@@ -351,7 +357,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Escolha sua opção de roteiro</p>
                   <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Cada opção traz as partidas e os deslocamentos. Compare a duração antes de escolher.</p>
                 </div>
-                {isMobile && (
+                {(
                   <div style={{ display: "flex", gap: 8 }}>
                     {options.map((o) => (
                       <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: visibleKey === o.key ? GREEN : "#fff", border: `1px solid ${visibleKey === o.key ? GREEN : BORDER}` }}>
@@ -361,7 +367,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
                   </div>
                 )}
                 {options
-                  .filter((o) => !isMobile || o.key === visibleKey)
+                  .filter((o) => o.key === visibleKey)
                   .map((o) => (
                     <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} gamesById={gamesById} />
                   ))}
