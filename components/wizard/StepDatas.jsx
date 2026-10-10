@@ -1,7 +1,7 @@
 "use client";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar, WizardTopBar } from "../nav/WizardChrome";
-import { todayInSaoPaulo } from "../../lib/calendarUtils";
+import { maxSearchDate, todayInSaoPaulo } from "../../lib/calendarUtils";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
@@ -41,6 +41,7 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   type="date"
                   value={answers.dateStart || ""}
                   min={todayInSaoPaulo()}
+                  max={maxSearchDate()}
                   onChange={(e) => {
                     const newStart = e.target.value;
                     setAnswers((a) => ({
@@ -61,6 +62,7 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   type="date"
                   value={answers.dateEnd || ""}
                   min={answers.dateStart || todayInSaoPaulo()}
+                  max={maxSearchDate()}
                   onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
                   style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
                 />
@@ -70,6 +72,7 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   Escolha a volta a partir de {answers.dateStart.split("-").reverse().join("/")} (dia da ida).
                 </p>
               )}
+              <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: MUTED, margin: 0 }}>Datas até 6 meses à frente.</p>
             </div>
           </div>
         </div>
