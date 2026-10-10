@@ -1,41 +1,9 @@
 import { searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 import { ensureLogoCached } from "@/lib/teamLogos";
+import { toApiCountryName } from "@/lib/countries";
 
 export const dynamic = "force-dynamic";
-
-// Mesma tradução usada em /api/teams/suggest — a API-Football guarda o
-// nome das seleções em inglês.
-const COUNTRY_NAME_PT_TO_EN = {
-  brasil: "Brazil", inglaterra: "England", espanha: "Spain", itália: "Italy",
-  italia: "Italy", alemanha: "Germany", frança: "France", franca: "France",
-  holanda: "Netherlands", turquia: "Turkey", uruguai: "Uruguay",
-  méxico: "Mexico", mexico: "Mexico", japão: "Japan", japao: "Japan",
-  "estados unidos": "USA", marrocos: "Morocco", croácia: "Croatia",
-  croacia: "Croatia", sérvia: "Serbia", servia: "Serbia", polônia: "Poland",
-  polonia: "Poland", bélgica: "Belgium", belgica: "Belgium",
-  suíça: "Switzerland", suica: "Switzerland", áustria: "Austria",
-  austria: "Austria", dinamarca: "Denmark", suécia: "Sweden",
-  suecia: "Sweden", noruega: "Norway", egito: "Egypt",
-  "coreia do sul": "South Korea", rússia: "Russia", russia: "Russia",
-  grécia: "Greece", grecia: "Greece", escócia: "Scotland",
-  escocia: "Scotland", "república tcheca": "Czech Republic",
-  "republica tcheca": "Czech Republic", ucrânia: "Ukraine",
-  ucrania: "Ukraine", irlanda: "Republic of Ireland", islândia: "Iceland",
-  islandia: "Iceland", hungria: "Hungary", índia: "India", india: "India",
-  canadá: "Canada", canada: "Canada", peru: "Peru", paraguai: "Paraguay",
-  bolívia: "Bolivia", bolivia: "Bolivia", equador: "Ecuador",
-  venezuela: "Venezuela", panamá: "Panama", panama: "Panama",
-  "costa rica": "Costa Rica", cuba: "Cuba", angola: "Angola",
-  moçambique: "Mozambique", mocambique: "Mozambique",
-  austrália: "Australia", australia: "Australia",
-  "nova zelândia": "New Zealand", "nova zelandia": "New Zealand",
-};
-
-function translateCountryName(q) {
-  const key = q.trim().toLowerCase();
-  return COUNTRY_NAME_PT_TO_EN[key] || q;
-}
 
 async function footballFetchRaw(path, params) {
   const url = new URL("https://v3.football.api-sports.io" + path);
@@ -95,7 +63,7 @@ export async function GET(request) {
   }
 
   try {
-    const searchQuery = mode === "selecao" ? translateCountryName(rawTeam) : rawTeam;
+    const searchQuery = mode === "selecao" ? toApiCountryName(rawTeam) : rawTeam;
     const rawTeams = await searchTeams(searchQuery);
     const teams = mode === "selecao" ? (rawTeams || []).filter((t) => t.team.national === true) : rawTeams;
     if (!teams || teams.length === 0) {
