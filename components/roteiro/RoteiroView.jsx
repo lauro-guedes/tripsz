@@ -36,8 +36,46 @@ export function LeaguePill({ children }) {
   );
 }
 
+/** Cartão de uma partida (data, times, estádio, cidade e competição). */
+export function GameCard({ f, isMobile }) {
+  const place = [f.city, f.country].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(", ");
+      const logoSize = isMobile ? 24 : 28;
+      return (
+        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* topo: data (+ selo de clássico) */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN }}>{formatDateBadge(f.date)}</span>
+            {f.rivalry && <Badge gold>{f.rivalry}</Badge>}
+          </div>
+          {/* times: cada escudo ao lado do nome do SEU time */}
+          <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+              <TeamBadge name={f.home} url={f.homeLogo} size={logoSize} resolve />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.home)}</p>
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>VS</p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+              <TeamBadge name={f.away} url={f.awayLogo} size={logoSize} resolve />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.away)}</p>
+            </div>
+          </div>
+          {/* estádio: só o nome, com o ícone de estádio do projeto */}
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <Icon name="stadium" size={14} color={MUTED} />
+            <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{f.stadium}</p>
+            {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
+          </div>
+          {/* rodapé: cidade, país à esquerda; competição à direita */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            {place ? <span style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: BODY }}>{place}</span> : <span />}
+            {f.competition && <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0, textAlign: "right" }}>{f.competition}</p>}
+          </div>
+        </div>
+      );
+}
+
 /** Um dos cartões A / B / C com o dia a dia e o botão de escolher. */
-export function OptionCard({ opt, chosen, onChoose, isMobile }) {
+export function OptionCard({ opt, chosen, onChoose, isMobile, gamesById }) {
   const tone = OPTION_TONES[opt.tone] || OPTION_TONES.slate;
   return (
     <div style={{ background: "#fff", border: chosen ? `2px solid ${GREEN}` : `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
@@ -65,6 +103,17 @@ export function OptionCard({ opt, chosen, onChoose, isMobile }) {
         <div style={{ display: "flex", flexDirection: "column" }}>
           {opt.items.map((it, i) => {
             const isGame = it.type === "game";
+            const game = isGame ? gamesById?.get(it.gameId) : null;
+            if (game) {
+              return (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 0", borderBottom: i === opt.items.length - 1 ? "none" : `1px solid ${BORDER}` }}>
+                  <span style={{ minWidth: 48, textAlign: "center", borderRadius: 4, padding: "3px 6px", background: GREEN_BG, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, flexShrink: 0 }}>{it.day}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <GameCard f={game} isMobile={isMobile} />
+                  </div>
+                </div>
+              );
+            }
             return (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 0", borderBottom: i === opt.items.length - 1 ? "none" : `1px solid ${BORDER}` }}>
                 <span style={{ minWidth: 48, textAlign: "center", borderRadius: 4, padding: "3px 6px", background: isGame ? GREEN_BG : BG, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: isGame ? GREEN : MUTED, flexShrink: 0 }}>{it.day}</span>
@@ -191,6 +240,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
   const hasContent = !planLoading && !planError && trip.games.length > 0 && options.length > 0;
   const duration = durationRange(options);
   const durationShort = duration.replace(" a ", "–");
+  const gamesById = new Map(trip.games.map((g) => [g.id, g]));
   const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
 
   const handleChoose = (key) => {
@@ -295,58 +345,17 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
                 </div>
               </div>
 
-              {/* partidas */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 18 : 20, color: TEXT, margin: 0 }}>Partidas disponíveis no seu período</p>
-                {trip.games.map((f, i) => {
-                  const place = [f.city, f.country].filter((v, idx, arr) => v && arr.indexOf(v) === idx).join(", ");
-                  const logoSize = isMobile ? 24 : 28;
-                  return (
-                    <div key={f.id ?? i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 14 : "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-                      {/* topo: data (+ selo de clássico) */}
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN }}>{formatDateBadge(f.date)}</span>
-                        {f.rivalry && <Badge gold>{f.rivalry}</Badge>}
-                      </div>
-                      {/* times: cada escudo ao lado do nome do SEU time */}
-                      <div style={{ display: "flex", gap: isMobile ? 8 : 12, alignItems: "center", flexWrap: "wrap" }}>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
-                          <TeamBadge name={f.home} url={f.homeLogo} size={logoSize} resolve />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.home)}</p>
-                        </div>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>VS</p>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
-                          <TeamBadge name={f.away} url={f.awayLogo} size={logoSize} resolve />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 18, color: TEXT, margin: 0 }}>{teamLabel(f.away)}</p>
-                        </div>
-                      </div>
-                      {/* estádio: só o nome, com o ícone de estádio do projeto */}
-                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                        <Icon name="stadium" size={14} color={MUTED} />
-                        <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0 }}>{f.stadium}</p>
-                        {f.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
-                      </div>
-                      {/* rodapé: cidade, país à esquerda; competição à direita */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                        {place ? <span style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 6, padding: "4px 10px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: BODY }}>{place}</span> : <span />}
-                        {f.competition && <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0, textAlign: "right" }}>{f.competition}</p>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
               {/* opções A / B / C */}
               <div id="opcoes-roteiro" style={{ display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 24 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Escolha sua opção de roteiro</p>
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Compare duração, partidas incluídas e deslocamentos antes de escolher.</p>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Cada opção traz as partidas e os deslocamentos. Compare a duração antes de escolher.</p>
                 </div>
                 {isMobile && (
                   <div style={{ display: "flex", gap: 8 }}>
                     {options.map((o) => (
                       <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: visibleKey === o.key ? GREEN : "#fff", border: `1px solid ${visibleKey === o.key ? GREEN : BORDER}` }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: visibleKey === o.key ? "#fff" : TEXT, margin: 0 }}>Opção {o.key}{chosenOption === o.key ? " ✓" : ""}</p>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: visibleKey === o.key ? "#fff" : TEXT, margin: 0 }}>{o.badge || `Opção ${o.key}`}{chosenOption === o.key ? " ✓" : ""}</p>
                       </div>
                     ))}
                   </div>
@@ -354,7 +363,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
                 {options
                   .filter((o) => !isMobile || o.key === visibleKey)
                   .map((o) => (
-                    <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} />
+                    <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} gamesById={gamesById} />
                   ))}
               </div>
             </>
