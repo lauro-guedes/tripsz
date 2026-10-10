@@ -3,9 +3,11 @@ import { authFetch } from "../../lib/authFetch";
 import { TOURNAMENTS, hasMainTournament } from "../../lib/competitionBadges";
 import { continentOf, countryKey, sameCountry } from "../../lib/countries";
 import { dateOnly } from "../../lib/dateOnly";
+import { computeTier } from "../../lib/fanLevels";
 import { PASSPORT_LAUNCH_DATE } from "../../lib/passportAccess";
 import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
+import { totalXp } from "../../lib/xpRules";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BG, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 import { PHOTO_STADIUM } from "../landing/LandingPage";
 import { AuthedFooter } from "../nav/AuthedFooter";
@@ -320,6 +322,7 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       competitions: competitions.size,
       hasChampions,
       tripsCount: source.length,
+      xp: totalXp(attended),
     });
 
     setCtx({
@@ -347,7 +350,8 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   };
 
   const px = isMobile ? "16px" : "80px";
-  const level = stats && stats.countries >= 5 ? "VIP GROUNDHOPPER" : stats && stats.countries >= 1 ? "GROUNDHOPPER" : "NOVATO";
+  // Mesma categoria de Meu Nível (vem do XP), pra as duas telas nunca divergirem.
+  const level = computeTier(stats?.xp ?? 0).name.toUpperCase();
 
   const fmtDate = (d) => {
     if (!d) return null;

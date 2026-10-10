@@ -1,5 +1,5 @@
 "use client";
-import { RADIUS_OPTIONS, cityShortName, cityWithoutCountry, formatLongDate, kickoffParts, todayInSaoPaulo } from "../../lib/calendarUtils";
+import { RADIUS_OPTIONS, cityShortName, cityWithoutCountry, formatLongDate, kickoffParts, maxSearchDate, todayInSaoPaulo } from "../../lib/calendarUtils";
 import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, MUTED, TEXT } from "../../lib/tokens";
@@ -112,6 +112,10 @@ export function BuscarJogos({ onNavigate, onLogout }) {
       setError("Escolha uma data de hoje em diante.");
       return;
     }
+    if (date > maxSearchDate()) {
+      setError("Só dá pra buscar jogos dos próximos 6 meses — os calendários além disso ainda não foram divulgados.");
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams({ date, lat: String(chosen.lat), lon: String(chosen.lon), radius: String(radius) });
@@ -164,6 +168,27 @@ export function BuscarJogos({ onNavigate, onLogout }) {
     }
   };
 
+  const handleRemove = async (g) => {
+    if (!user.id || addingId) return;
+    setAddingId(g.id);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { error: delError } = await supabase.from("saved_games").delete().eq("user_id", user.id).eq("fixture_id", g.id);
+      if (delError) throw delError;
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(g.id);
+        return next;
+      });
+      setLastAdded(null);
+    } catch {
+      setError("Não foi possível remover do calendário agora. Tente de novo.");
+    } finally {
+      setAddingId(null);
+    }
+  };
+
   const labelStyle = { fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 };
   const fieldStyle = { background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, height: 48, padding: "0 14px", width: "100%", boxSizing: "border-box", fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT, outline: "none" };
   const cityShort = searchedWith ? cityShortName(searchedWith.cityLabel) : "";
@@ -204,9 +229,12 @@ export function BuscarJogos({ onNavigate, onLogout }) {
             )}
           </div>
           {saved ? (
-            <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Check size={16} color="#008a3a" />
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "stretch", flexShrink: 0 }}>
+              <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+                <Check size={16} color="#008a3a" />
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
+              </div>
+              <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: MUTED, textAlign: "center", textDecoration: "underline", cursor: addingId === g.id ? "default" : "pointer", margin: 0, opacity: addingId === g.id ? 0.6 : 1 }}>{addingId === g.id ? "Removendo..." : "Remover"}</p>
             </div>
           ) : (
             <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", flexShrink: 0 }}>
@@ -241,7 +269,8 @@ export function BuscarJogos({ onNavigate, onLogout }) {
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end", gap: isMobile ? 16 : 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200 }}>
             <p style={labelStyle}>Data do jogo</p>
-            <input type="date" value={date} min={todayInSaoPaulo()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={fieldStyle} />
+            <input type="date" value={date} min={todayInSaoPaulo()} max={maxSearchDate()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={fieldStyle} />
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
             <p style={labelStyle}>Cidade-base</p>

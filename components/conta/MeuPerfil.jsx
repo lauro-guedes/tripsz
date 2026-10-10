@@ -331,7 +331,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome Completo</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Usuário</p>
                 <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} />
               </div>
               <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>

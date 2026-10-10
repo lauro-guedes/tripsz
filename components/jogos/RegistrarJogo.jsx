@@ -2,7 +2,7 @@
 import { authFetch } from "../../lib/authFetch";
 import { guessCountryFromCompetition, parseFutbologyLine } from "../../lib/futbologyParse";
 import { checkPassportAccess } from "../../lib/passportAccess";
-import { parseSeasonValue, seasonOptionGroups } from "../../lib/seasons";
+import { isCalendarYearGame, parseSeasonValue, seasonOptionGroups } from "../../lib/seasons";
 import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
@@ -122,7 +122,19 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     return () => clearTimeout(timer);
   }, [stadiumQuery, searchMode]);
 
-  const pickSuggestion = (name) => {
+  // País do clube/estádio escolhido na lista: define qual calendário de
+  // temporadas mostrar (europeu jul–jun ou ano-calendário jan–dez).
+  const [pickedCountry, setPickedCountry] = useState(null);
+  const seasonKind = pickedCountry && searchMode !== "selecao" ? (isCalendarYearGame({ country: pickedCountry }) ? "cal" : "eu") : null;
+  useEffect(() => {
+    if (!seasonKind || seasonValue.startsWith(seasonKind + ":")) return;
+    const group = seasonOptionGroups()[seasonKind];
+    const sameYear = group.find((o) => o.value === `${seasonKind}:${season}`);
+    setSeasonValue((sameYear || group[0]).value);
+  }, [seasonKind]);
+
+  const pickSuggestion = (name, country) => {
+    setPickedCountry(country || null);
     setStadiumQuery(name);
     setShowSuggestions(false);
     setSuggestions([]);
@@ -801,7 +813,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                   <Icon name="search" size={18} color={MUTED} />
                   <input
                     value={stadiumQuery}
-                    onChange={(e) => setStadiumQuery(e.target.value)}
+                    onChange={(e) => { setStadiumQuery(e.target.value); setPickedCountry(null); }}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     onKeyDown={(e) => e.key === "Enter" && (setShowSuggestions(false), handleSearch())}
                     placeholder={searchMode === "clube" ? "Buscar clube..." : searchMode === "selecao" ? "Buscar seleção (ex: Brasil)..." : "Buscar estádio..."}
@@ -813,7 +825,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                     {suggestions.map((s) => (
                       <div
                         key={s.name}
-                        onMouseDown={() => pickSuggestion(s.name)}
+                        onMouseDown={() => pickSuggestion(s.name, s.country)}
                         style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}
                       >
                         {(searchMode === "clube" || searchMode === "selecao") && <TeamBadge name={s.name} url={s.logo} size={22} />}
@@ -827,12 +839,16 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                 )}
               </div>
               <select value={seasonValue} onChange={(e) => setSeasonValue(e.target.value)} style={{ ...fieldStyle, width: isMobile ? "100%" : 180 }}>
-                <optgroup label="Temporada europeia (jul–jun)">
-                  {seasonOptionGroups().eu.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </optgroup>
-                <optgroup label="Ano-calendário (jan–dez)">
-                  {seasonOptionGroups().cal.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </optgroup>
+                {seasonKind !== "cal" && (
+                  <optgroup label="Temporada europeia (jul–jun)">
+                    {seasonOptionGroups().eu.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </optgroup>
+                )}
+                {seasonKind !== "eu" && (
+                  <optgroup label="Ano-calendário (jan–dez)">
+                    {seasonOptionGroups().cal.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </optgroup>
+                )}
               </select>
               <div onClick={loading ? undefined : () => { setShowSuggestions(false); handleSearch(); }} style={{ background: GREEN_BUTTON, opacity: loading ? 0.6 : 1, padding: "14px 24px", borderRadius: 12, textAlign: "center", cursor: loading ? "default" : "pointer", whiteSpace: "nowrap" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loading ? "Buscando..." : "Buscar"}</p>
