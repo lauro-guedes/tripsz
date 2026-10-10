@@ -1135,7 +1135,7 @@ function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 12 : 14, color: MUTED, margin: 0 }}>Já tem conta?</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 12 : 14, color: GREEN, margin: 0, cursor: "pointer" }} onClick={() => { setLoginError(null); setShowLoginModal(true); }}>Entrar</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 12 : 14, color: GREEN, margin: 0, cursor: "pointer" }} onClick={() => { setShowLoginModal(true); }}>Entrar</p>
           </div>
           {error && (
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{error}</p>
