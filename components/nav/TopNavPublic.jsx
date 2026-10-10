@@ -8,8 +8,10 @@ export function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
   const isMobile = useIsMobile();
   const items = [
     ["Como Funciona", "como-funciona"],
-    ["Roteiros", "pricing"],
+    ["Roteiros", "perfis-viajante"],
     ["Diferenciais", "diferenciais"],
+    ["Passaporte", "passaporte"],
+    ["Planos", "pricing"],
     ["FAQ", "faq"],
   ];
   const handleNavItem = (id) => {
@@ -34,7 +36,7 @@ export function TopNavPublic({ onStart, active, onLogin, onHome, onNavItem }) {
   return (
     <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 80px" }}>
       <Wordmark onClick={onHome} />
-      <div style={{ display: "flex", gap: 40, alignItems: "center", fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14 }}>
+      <div style={{ display: "flex", gap: 32, alignItems: "center", fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14 }}>
         {items.map(([label, id]) => (
           <p key={id} onClick={() => handleNavItem(id)} style={{ color: label === active ? GREEN : MUTED, fontWeight: label === active ? 700 : 500, margin: 0, cursor: "pointer" }}>{label}</p>
         ))}

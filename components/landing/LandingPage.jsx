@@ -147,7 +147,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
       </div>
 
       {/* passport-section */}
-      <div style={{ background: "#fff", padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64, alignItems: "center" }}>
+      <div id="passaporte" style={{ background: "#fff", padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64, alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", maxWidth: 900 }}>
           <Badge>Football Passport</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>O passaporte que transforma sua jornada em uma história pessoal</p>
@@ -192,7 +192,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
       </div>
 
       {/* perfis-viajante */}
-      <div style={{ background: BG, padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
+      <div id="perfis-viajante" style={{ background: BG, padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
           <Badge gold>Qual é o seu Perfil?</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>Para cada tipo de apaixonado</p>
