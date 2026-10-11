@@ -72,6 +72,14 @@ const STADIUM_NICKNAME_TO_TEAM = {
   // Estádio Nacional Mané Garrincha (Brasília) — sem "dono" fixo. O
   // usuário confirmou uma lista real de jogos lá entre 2022-2024; usamos
   // os times que mais aparecem nela, do mais frequente pro menos.
+  // Maracanã (Rio): a API registra o nome de formas diferentes ("Estádio do
+  // Maracanã", "Estadio Jornalista Mário Filho (Maracanã)"), então aceitamos
+  // qualquer um deles e partimos dos clubes que mais jogam lá.
+  "maracana": ["Flamengo", "Fluminense", "Vasco DA Gama", "Botafogo", "Brazil"],
+  "estadio do maracana": ["Flamengo", "Fluminense", "Vasco DA Gama", "Botafogo", "Brazil"],
+  "estadio jornalista mario filho": ["Flamengo", "Fluminense", "Vasco DA Gama", "Botafogo", "Brazil"],
+  "jornalista mario filho": ["Flamengo", "Fluminense", "Vasco DA Gama", "Botafogo", "Brazil"],
+  "mario filho": ["Flamengo", "Fluminense", "Vasco DA Gama", "Botafogo", "Brazil"],
   "mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
   "estadio nacional mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
   "arena brb mane garrincha": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
@@ -253,6 +261,7 @@ export async function GET(request) {
       const matches = fixtures.filter((f) => {
         const venueName = stripDiacritics((f.fixture.venue?.name || "").toLowerCase()).replace(/[^a-z0-9 ]/g, "");
         if (!venueName) return false;
+        if (/maracana|mario filho/.test(queryNorm) && /maracana|mario filho/.test(venueName)) return true; // mesmo estádio, nomes diferentes
         return venueName.includes(queryNorm) || queryNorm.includes(venueName);
       });
 

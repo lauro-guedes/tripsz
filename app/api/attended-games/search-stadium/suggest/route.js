@@ -12,7 +12,7 @@ function stripDiacritics(str) {
 // o apelido já é conhecido.
 const STADIUM_NICKNAMES = [
   "Anfield", "Old Trafford", "San Siro", "Giuseppe Meazza", "Wanda Metropolitano",
-  "Signal Iduna Park", "Westfalenstadion", "Mineirão", "Itaquerão", "Ali Sami Yen",
+  "Signal Iduna Park", "Westfalenstadion", "Mineirão", "Itaquerão", "Ali Sami Yen", "Maracanã",
 ];
 
 /**
