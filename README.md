@@ -59,6 +59,7 @@ lib/
   tripPlanClient.js            chama /api/trip/plan e converte o plano para a tela
   passportAccess.js            quem tem acesso ao Passport (limite de 20 jogos grátis)
   gameSeason.js, seasons.js    temporada de um jogo (europeia ou ano-calendário)
+  searchKey.js                 normaliza nomes de busca (acento, til, hífen, apóstrofo)
   xpRules.js                   regra de XP: total e XP gerado por cada jogo
   fanLevels.js                 categorias de torcedor (nomes, faixas de XP e textos)
   data/                        cidades, clássicos (rivalries), geoExtras
@@ -97,7 +98,7 @@ O app é uma página só com roteamento próprio: o mapa `SCREEN_TO_PATH` em
 `lib/fixturesCalendar.js` guarda os jogos de cada liga na tabela `fixtures_calendar`,
 já com cidade, coordenada e país. Antes de cada consulta só as ligas dos países
 pedidos são conferidas; se foram atualizadas há menos de 12 h, nem vai à API.
-O horizonte é de 270 dias. A busca de uma pessoa lê da tabela e não gasta cota.
+O horizonte guardado é de 270 dias, mas a busca de jogos e as datas do roteiro aceitam só até 6 meses à frente (`maxSearchDate`); sem jogo na data pedida, a busca mostra os mais próximos (±10 dias) no mesmo raio. A busca de uma pessoa lê da tabela e não gasta cota.
 
 ### Gamificação
 
@@ -166,7 +167,5 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 ## Pendências conhecidas
 
 
-- Escudo do Botafogo-SP aparecendo como o do Rio: falta a tela e o jogo exatos para reproduzir.
 - No Supabase: remover a política duplicada `usuário edita suas respostas` em `trip_answers` e ligar a proteção contra senhas vazadas (Authentication → Providers → Email).
-- Meus Roteiros carrega `select("*")`; vale buscar só as colunas usadas.
 - O schema `backup` do Supabase pode ser removido depois de conferido.

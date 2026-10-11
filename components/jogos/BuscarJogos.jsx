@@ -270,7 +270,12 @@ export function BuscarJogos({ onNavigate, onLogout }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200 }}>
             <p style={labelStyle}>Data do jogo</p>
             <input type="date" value={date} min={todayInSaoPaulo()} max={maxSearchDate()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={fieldStyle} />
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
+              {date !== todayInSaoPaulo() && (
+                <p onClick={() => setDate(todayInSaoPaulo())} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: GREEN, textDecoration: "underline", cursor: "pointer", margin: 0 }}>Usar hoje</p>
+              )}
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
             <p style={labelStyle}>Cidade-base</p>
@@ -374,6 +379,18 @@ export function BuscarJogos({ onNavigate, onLogout }) {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {result.games.map(renderGame)}
+              </div>
+            )}
+
+            {result.total === 0 && (result.nearby || []).length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Jogos em datas próximas</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>
+                    Nada em {formatLongDate(searchedWith.date)}, mas há jogos no mesmo raio em até 10 dias antes ou depois.
+                  </p>
+                </div>
+                {result.nearby.map(renderGame)}
               </div>
             )}
 

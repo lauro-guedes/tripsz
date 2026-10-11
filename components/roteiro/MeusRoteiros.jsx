@@ -34,7 +34,7 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
     // precisa (nem pode) filtrar por user_id manualmente aqui.
     const { data, error: fetchError } = await supabase
       .from("trip_answers")
-      .select("*, orders(status, paid_at)")
+      .select("*, orders(status, paid_at, item_type)")
       .order("created_at", { ascending: false });
 
     if (fetchError) {
