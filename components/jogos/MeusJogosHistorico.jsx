@@ -206,9 +206,11 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <div style={{ background: g.source === "api" ? GREEN_BG : BG_ALT, border: `1px solid ${g.source === "api" ? GREEN : BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: g.source === "api" ? GREEN : BODY, margin: 0 }}>{g.source === "api" ? "Via Tripsz" : g.source === "csv" ? "Importado ✓" : "Manual ✓"}</p>
-                          </div>
+                          {g.source === "csv" && (
+                            <div style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
+                              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: BODY, margin: 0 }}>Importado ✓</p>
+                            </div>
+                          )}
                           {xpInfo.byId.get(g.id) && (
                             <div title="XP que este jogo gerou" style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, padding: "4px 10px", borderRadius: 4 }}>
                               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>+{xpInfo.byId.get(g.id).total} XP</p>
