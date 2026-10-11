@@ -7,6 +7,7 @@ import { compareSeasonsDesc } from "../../lib/seasons";
 import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
+import { stadiumVisits } from "../../lib/gameDetailsCore";
 import { xpBreakdown } from "../../lib/xpRules";
 import TeamBadge from "../TeamBadge";
 import { PassportPaywall } from "../conta/PassportPaywall";
@@ -15,6 +16,7 @@ import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
 import { Loading } from "../ui/Loading";
 import { useIsMobile } from "../ui/useIsMobile";
+import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -28,7 +30,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [search, setSearch] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("todas");
   const [access, setAccess] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [detailsId, setDetailsId] = useState(null); // jogo cujo modal "Detalhes da experiência" está aberto
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ stadium: "", city: "", country: "", competition: "" });
   const [editSaving, setEditSaving] = useState(false);
@@ -93,6 +95,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const all = games || [];
   // XP que cada jogo gerou (lib/xpRules.js) — calculado sobre TODOS os jogos, sem depender dos filtros da tela.
   const xpInfo = xpBreakdown(all);
+  const detailsGame = detailsId ? all.find((g) => g.id === detailsId) || null : null;
   const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
   const countries = new Set(all.map((g) => countryKey(g.country)).filter(Boolean));
   const seasonByKey = new Map();
@@ -193,7 +196,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {grouped[season].map((g) => {
-                  const expanded = expandedId === g.id;
                   return (
                     <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
@@ -223,14 +225,17 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                           <MapPin size={16} color={BODY} />
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
                         </div>
-                        <div onClick={() => setExpandedId(expanded ? null : g.id)} style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
+                        <div onClick={() => setDetailsId(g.id)} role="button" style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Ver detalhes da experiência</p>
-                          <Icon name={expanded ? "chevronDown" : "chevronRight"} size={14} color={GREEN} />
+                          <Icon name="chevronRight" size={14} color={GREEN} />
                         </div>
                       </div>
-                      {expanded && (
-                        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                          {editingId === g.id ? (
+                      <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                        <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
+                        <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
+                      </div>
+                      {editingId === g.id && (
+                        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
                                 <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -246,28 +251,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                                 <p onClick={() => setEditingId(null)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: MUTED, margin: 0, cursor: "pointer" }}>Cancelar</p>
                               </div>
                             </div>
-                          ) : (
-                            <>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                {g.competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>Competição: {g.competition}</p>}
-                                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{g.city ? `${g.city}, ` : ""}{g.country}</p>
-                              </div>
-                              {xpInfo.byId.get(g.id) && (
-                                <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 8, padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>XP gerado por este jogo: +{xpInfo.byId.get(g.id).total}</p>
-                                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                    {xpInfo.byId.get(g.id).parts.map((p) => (
-                                      <span key={p.key} style={{ background: "#fff", border: `1px solid ${GREEN}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontSize: 12, color: BODY }}>{p.label} <b style={{ color: GREEN }}>+{p.xp}</b></span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-                                <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0, cursor: "pointer" }}>Editar local</p>
-                                <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
-                              </div>
-                            </>
-                          )}
                         </div>
                       )}
                     </div>
@@ -278,6 +261,18 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
           ))}
         </div>
       </div>
+
+      {detailsGame && (
+        <DetalhesExperienciaModal
+          key={detailsGame.id}
+          game={detailsGame}
+          xp={xpInfo.byId.get(detailsGame.id) || null}
+          totalXp={xpInfo.total}
+          visits={stadiumVisits(all, detailsGame)}
+          isFirstVisit={!!(xpInfo.byId.get(detailsGame.id) && xpInfo.byId.get(detailsGame.id).parts.some((p) => p.key === "stadium"))}
+          onClose={() => setDetailsId(null)}
+        />
+      )}
 
       <AuthedFooter />
     </div>
