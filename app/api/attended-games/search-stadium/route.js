@@ -1,3 +1,4 @@
+import { compactKey, searchKey } from "@/lib/searchKey";
 import { searchVenues, searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 import { ensureLogoCached } from "@/lib/teamLogos";
@@ -86,9 +87,8 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "estadio governador helio prates da silveira": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
 };
 
-function stripDiacritics(str) {
-  return (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
+// Apelidos com a mesma normalização da busca (hífen, ponto e acento não atrapalham).
+const NICKNAME_BY_KEY = Object.fromEntries(Object.entries(STADIUM_NICKNAME_TO_TEAM).map(([k, v]) => [searchKey(k), v]));
 
 async function footballFetchRaw(path, params) {
   const url = new URL("https://v3.football.api-sports.io" + path);
@@ -177,13 +177,14 @@ export async function GET(request) {
     return Response.json({ error: `Escolha uma temporada entre ${MIN_SEASON} e ${maxSeason()}.` }, { status: 400 });
   }
 
-  const queryNorm = stripDiacritics(rawStadium.toLowerCase()).replace(/[^a-z0-9 ]/g, "").trim();
+  const queryNorm = searchKey(rawStadium);
+  const queryCompact = compactKey(rawStadium);
 
   try {
     const teamIdCandidates = [];
     let directVenueCandidates = [];
 
-    const nicknameTeams = STADIUM_NICKNAME_TO_TEAM[queryNorm];
+    const nicknameTeams = NICKNAME_BY_KEY[queryNorm];
     if (nicknameTeams) {
       const names = Array.isArray(nicknameTeams) ? nicknameTeams : [nicknameTeams];
       for (const name of names) {
@@ -194,7 +195,7 @@ export async function GET(request) {
 
     if (teamIdCandidates.length === 0) {
       try {
-        directVenueCandidates = await searchVenues(stripDiacritics(rawStadium));
+        directVenueCandidates = await searchVenues(queryNorm);
         for (const v of directVenueCandidates.slice(0, 3)) {
           const ids = await teamIdsForVenue(v.id);
           teamIdCandidates.push(...ids);
@@ -205,7 +206,7 @@ export async function GET(request) {
     }
 
     if (teamIdCandidates.length === 0) {
-      const id = await teamIdFromName(stripDiacritics(rawStadium));
+      const id = await teamIdFromName(queryNorm);
       if (id) teamIdCandidates.push(id);
     }
 
@@ -259,10 +260,11 @@ export async function GET(request) {
       const fixtures = await footballFetchRaw("/fixtures", { team: teamId, season });
 
       const matches = fixtures.filter((f) => {
-        const venueName = stripDiacritics((f.fixture.venue?.name || "").toLowerCase()).replace(/[^a-z0-9 ]/g, "");
+        const venueName = searchKey(f.fixture.venue?.name || "");
         if (!venueName) return false;
+        const venueCompact = venueName.replace(/ /g, "");
         if (/maracana|mario filho/.test(queryNorm) && /maracana|mario filho/.test(venueName)) return true; // mesmo estádio, nomes diferentes
-        return venueName.includes(queryNorm) || queryNorm.includes(venueName);
+        return venueName.includes(queryNorm) || queryNorm.includes(venueName) || venueCompact.includes(queryCompact) || queryCompact.includes(venueCompact);
       });
 
       if (matches.length > 0) {

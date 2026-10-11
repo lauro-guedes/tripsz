@@ -1,3 +1,4 @@
+import { searchKey } from "@/lib/searchKey";
 import { searchVenues } from "@/lib/footballApi";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +33,8 @@ export async function GET(request) {
     return Response.json({ suggestions: [] });
   }
 
-  const qNorm = stripDiacritics(q.toLowerCase());
-  const nicknameMatches = STADIUM_NICKNAMES.filter((n) => stripDiacritics(n.toLowerCase()).includes(qNorm)).map((n) => ({
+  const qNorm = searchKey(q);
+  const nicknameMatches = STADIUM_NICKNAMES.filter((n) => searchKey(n).includes(qNorm)).map((n) => ({
     name: n,
     city: null,
     country: null,
@@ -41,7 +42,7 @@ export async function GET(request) {
 
   let apiMatches = [];
   try {
-    const venues = await searchVenues(stripDiacritics(q));
+    const venues = await searchVenues(qNorm);
     apiMatches = (venues || []).slice(0, 6).map((v) => ({ name: v.name, city: v.city, country: v.country }));
   } catch (e) {
     console.error("Erro na busca de sugestões de estádio:", e.message);
