@@ -34,7 +34,7 @@ export function AvatarCircle({ url, name, size = 36, fontSize }) {
 export const NAV_MAIN = [
   { label: "Meus roteiros", key: "roteiros" },
   { label: "Meus jogos", key: "jogos" },
-  { label: "Meu calendário", children: [["Calendário", "calendario"], ["Buscar jogos", "buscar"]] },
+  { label: "Buscar jogos", children: [["Buscar jogos", "buscar"], ["Meu Calendário", "calendario"]] },
   { label: "Passaporte", children: [["Nível de Torcedor", "nivel"], ["Meu Passaporte", "conquistas"], ["Ranking", "ranking"]] },
 ];
 
