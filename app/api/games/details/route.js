@@ -31,20 +31,23 @@ export async function GET(request) {
   if (error) return json({ error: "Não foi possível carregar o jogo agora." }, 500);
   if (!game) return json({ error: "Jogo não encontrado." }, 404);
 
-  const localVenue = await venueByName(supabase, game);
-  if (!game.api_fixture_id) return json({ available: false, reason: "manual", venue: localVenue });
+  // Sem vínculo com a partida: só o estádio (achado pelo nome) fica disponível.
+  if (!game.api_fixture_id) return json({ available: false, reason: "manual", venue: await venueByName(supabase, game) });
 
   const got = await getFixtureDetails(supabase, game.api_fixture_id);
-  if (got.error) return json({ available: false, reason: "unavailable", venue: localVenue });
+  if (got.error) return json({ available: false, reason: "unavailable", venue: await venueByName(supabase, game) });
 
   // O que a pessoa registrou (estádio/cidade/país) vale mais que o cadastro da API.
+  // Se a API não trouxe o ID ou a capacidade do estádio, completa procurando pelo nome.
   const v = got.details.venue || {};
+  const extra = !v.id || !v.capacity ? await venueByName(supabase, game) : null;
   const venue = venuePayload({
-    id: v.id || null,
+    id: v.id || (extra && extra.id) || null,
     name: game.stadium || v.name || null,
     city: game.city || v.city || null,
     country: game.country || v.country || null,
-    capacity: v.capacity || localVenue.capacity || null,
+    capacity: v.capacity || (extra && extra.capacity) || null,
+    image: v.image || (extra && extra.image) || null,
   });
   return json({ available: true, details: { ...got.details, venue } });
 }
