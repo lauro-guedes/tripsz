@@ -177,3 +177,58 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
               <TeamBadge name={game.away_team} url={awayLogo} size={48} />
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 14 : 16, lineHeight: 1.4, color: TEXT, margin: 0, textAlign: "center" }}>{teamLabel(game.away_team)}</p>
             </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 5 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <p style={{ fontFamily: FONT_MONO, fontSize: 12, lineHeight: 1.4, color: BODY, margin: 0 }}>{when}</p>
+              {competition && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, lineHeight: 1.4, color: MUTED, margin: 0 }}>{competition}</p>}
+            </div>
+            {place && (
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <Icon name="mapPin" size={16} color={MUTED} />
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, lineHeight: 1.4, color: MUTED, margin: 0 }}>{place}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* abas */}
+        <div style={{ position: "relative", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+          <div ref={tabsRef} onScroll={measure} role="tablist" style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", padding: isMobile ? "0 12px" : 0 }}>
+            {TABS.map((t) => {
+              const on = tab === t.id;
+              return (
+                <div
+                  key={t.id}
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setTab(t.id)}
+                  style={{ flex: isMobile ? "0 0 auto" : 1, minWidth: isMobile ? t.minWidth : 0, height: 52, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxSizing: "border-box", borderBottom: on ? `3px solid ${GREEN}` : "3px solid transparent", marginBottom: -1 }}
+                >
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 400, fontSize: 13, lineHeight: 1.4, color: on ? GREEN_DARK : MUTED, margin: 0, whiteSpace: "nowrap" }}>{t.label}</p>
+                </div>
+              );
+            })}
+          </div>
+          {isMobile && tabsMore && (
+            <div aria-hidden="true" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 22, background: "linear-gradient(90deg, rgba(255,255,255,0), #fff 45%)", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+              <ChevronRight size={14} color={MUTED} />
+            </div>
+          )}
+        </div>
+
+        {/* conteúdo rolável */}
+        <div ref={scrollRef} onScroll={measure} role="tabpanel" style={{ flex: 1, minHeight: isMobile ? 360 : 420, overflowY: "auto", padding: pad, scrollbarWidth: "thin" }}>
+          {content}
+        </div>
+
+        {/* rodapé */}
+        <div style={{ borderTop: `1px solid ${BORDER}`, padding: `12px ${pad}px`, display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, lineHeight: 1.4, color: MUTED, margin: 0 }}>{note}</p>
+          {canScroll && <ArrowDown size={14} color={MUTED} aria-label="Role para ver mais" />}
+        </div>
+      </div>
+    </div>
+  );
+}
