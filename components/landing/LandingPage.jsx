@@ -59,7 +59,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
     ["E se a data do jogo mudar por causa da TV?", "As ligas europeias costumam fixar datas de 3 a 5 semanas antes. Nossa equipe monitora os calendários e monta o roteiro prevendo janelas de segurança nas datas de voos e hotéis."],
     ["Posso viajar com crianças ou grupos?", "Sim! Adaptamos o perfil da viagem para roteiros mais familiares, com setores calmos e acessíveis nos estádios."],
     ["Posso cancelar a assinatura a qualquer momento?", "Sim, sem multa. Seu acesso continua até o fim do período pago."],
-    ["O que acontece com meu Passport se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passport e às conquistas fica pausado até reativar."],
+    ["O que acontece com meu Passaporte de Estádios se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passaporte de Estádios e às conquistas fica pausado até reativar."],
     ["Preciso ser assinante para contratar a consultoria?", "Não, a consultoria é um add-on avulso. Mas assinantes ganham 15% de desconto."],
     ["Como funciona o desconto anual?", "No plano anual você paga R$ 99,90/ano em vez de R$ 118,80 (12x R$ 9,90), economizando R$ 18,90."],
     ["É só futebol europeu ou inclui jogos no Brasil?", "A plataforma cobre 13 países, incluindo Brasil, Argentina, Uruguai, Chile e Colômbia, além das principais ligas europeias."],
@@ -149,13 +149,13 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
       {/* passport-section */}
       <div id="passaporte" style={{ background: "#fff", padding: isMobile ? `48px ${px}` : `100px ${px}`, display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64, alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", maxWidth: 900 }}>
-          <Badge>Football Passport</Badge>
+          <Badge>Passaporte de Estádios</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, textAlign: "center", margin: 0 }}>O passaporte que transforma sua jornada em uma história pessoal</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.6, color: BODY, textAlign: "center", margin: 0 }}>O Football Passport é a ferramenta da plataforma para registrar jogos, estádios, conquistas e progresso. Ele ajuda a planejar viagens, acompanhar o histórico e compartilhar sua paixão por futebol de forma única.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.6, color: BODY, textAlign: "center", margin: 0 }}>O Passaporte de Estádios é a ferramenta da plataforma para registrar jogos, estádios, conquistas e progresso. Ele ajuda a planejar viagens, acompanhar o histórico e compartilhar sua paixão por futebol de forma única.</p>
         </div>
         <div style={{ background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
             <Award size={20} color={GREEN} />
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -215,7 +215,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", textAlign: "center" }}>
           <Badge>Nossos Planos</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 40, color: TEXT, margin: 0 }}>Escolha o plano ideal para sua jornada</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 14 : 16, color: "#475569", margin: 0, width: isMobile ? "100%" : 600 }}>Crie roteiros de futebol personalizados gratuitamente ou desbloqueie a experiência completa com o Passport Tripsz.</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 14 : 16, color: "#475569", margin: 0, width: isMobile ? "100%" : 600 }}>Crie roteiros de futebol personalizados gratuitamente ou desbloqueie a experiência completa com o Passaporte de Estádios da tripsz.</p>
         </div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -241,7 +241,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Football Passport (até 20 jogos)", true], ["Categorias, conquistas e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
+              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 13 países", true], ["Passaporte de Estádios (até 20 jogos)", true], ["Categorias, conquistas e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   {ok ? <Check size={16} color={GREEN} /> : <X size={16} color="#9ca3af" />}
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: ok ? TEXT : "#6b7280", margin: 0 }}>{label}</p>
@@ -267,7 +267,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {["Tudo do plano gratuito", "Jogos ilimitados no Football Passport", "Importação em massa de outros apps (Futbology)", "Histórico completo de jogos", "15% de desconto em consultorias", "Alertas personalizados de jogos"].map((label) => (
+              {["Tudo do plano gratuito", "Jogos ilimitados no Passaporte de Estádios", "Importação em massa de outros apps (Futbology)", "Histórico completo de jogos", "15% de desconto em consultorias", "Alertas personalizados de jogos"].map((label) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <Check size={16} color={GREEN} />
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>

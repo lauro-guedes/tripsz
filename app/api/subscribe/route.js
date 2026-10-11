@@ -23,8 +23,8 @@ async function mpFetch(path, options = {}) {
 }
 
 const PLANS = {
-  monthly: { amount: 9.9, frequency: 1, frequency_type: "months", reason: "tripsz Passport — Mensal" },
-  annual: { amount: 99.9, frequency: 1, frequency_type: "years", reason: "tripsz Passport — Anual" },
+  monthly: { amount: 9.9, frequency: 1, frequency_type: "months", reason: "tripsz Passaporte de Estádios — Mensal" },
+  annual: { amount: 99.9, frequency: 1, frequency_type: "years", reason: "tripsz Passaporte de Estádios — Anual" },
 };
 
 /**

@@ -3,7 +3,7 @@
 Roteiros de viagem em torno de jogos de futebol (groundhopping). A pessoa escolhe
 países, datas e times favoritos; a tripsz cruza com o calendário de jogos reais e
 devolve a melhor sequência de cidades, em três opções de roteiro (A, B e C).
-Quem assina o **Passport** também registra os jogos a que foi, ganha XP, conquistas
+Quem assina o **Passaporte de Estádios** também registra os jogos a que foi, ganha XP, conquistas
 e aparece no ranking de torcedores.
 
 ## Stack
@@ -11,7 +11,7 @@ e aparece no ranking de torcedores.
 - **Next.js 14** (App Router) + **React 18**, publicado na **Vercel**
 - **Supabase**: login (Google e e-mail/senha), banco de dados e storage
   (buckets `avatars` e `team-logos`)
-- **Mercado Pago**: assinatura recorrente do Passport (API de Preapproval) e
+- **Mercado Pago**: assinatura recorrente do Passaporte de Estádios (API de Preapproval) e
   pagamento avulso da consultoria (Checkout Pro)
 - **API-Football** (api-sports.io): jogos, times e estádios — usada só no servidor
 - **PWA**: `app/manifest.js`, ícones e tela de carregamento estática em `app/layout.js`
@@ -57,7 +57,7 @@ lib/
   supabase.js                  clientes do Supabase (navegador e admin)
   tokens.js                    cores e fontes
   tripPlanClient.js            chama /api/trip/plan e converte o plano para a tela
-  passportAccess.js            quem tem acesso ao Passport (limite de 20 jogos grátis)
+  passportAccess.js            quem tem acesso ao Passaporte de Estádios (limite de 20 jogos grátis)
   gameSeason.js, seasons.js    temporada de um jogo (europeia ou ano-calendário)
   searchKey.js                 normaliza nomes de busca (acento, til, hífen, apóstrofo)
   xpRules.js                   regra de XP: total e XP gerado por cada jogo
@@ -121,7 +121,7 @@ Configure na Vercel (Settings → Environment Variables) e, para rodar local, co
 | `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` | chave pública (troca de cartão) |
 | `FOOTBALL_API_KEY` | chave da API-Football |
 | `ADMIN_EMAILS` | e-mails com acesso ao `/admin`, separados por vírgula |
-| `NEXT_PUBLIC_FREE_ACCESS_EMAILS` | e-mails com Passport liberado sem pagar |
+| `NEXT_PUBLIC_FREE_ACCESS_EMAILS` | e-mails com Passaporte de Estádios liberado sem pagar |
 | `NEXT_PUBLIC_SITE_URL` | URL do site (ex.: `https://tripsz.vercel.app`) |
 
 ## Banco de dados

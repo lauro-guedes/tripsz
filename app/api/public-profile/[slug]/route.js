@@ -53,7 +53,7 @@ const WORLD_CUP_WINDOWS = [
  * GET /api/public-profile/[slug]
  *
  * Rota PÚBLICA de verdade — não exige login, é feita pra quem recebe um
- * link compartilhado conseguir ver o Football Passport de alguém. Só
+ * link compartilhado conseguir ver o Passaporte de Estádios de alguém. Só
  * devolve dados seguros de mostrar (nome, foto, nível, badges,
  * estatísticas) — nunca e-mail, WhatsApp, ou detalhes de viagem/roteiro.
  *
@@ -218,7 +218,7 @@ export async function GET(request, { params }) {
         ],
       },
       {
-        title: "Passport & Comunidade",
+        title: "Passaporte & Comunidade",
         badges: [
           { label: "Membro Fundador", ...b(isLegacy, user.created_at) },
           { label: "Detetive de Campo", ...b(manualCount >= 1) },

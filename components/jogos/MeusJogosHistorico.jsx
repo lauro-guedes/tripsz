@@ -181,7 +181,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
         {games === null && <Loading />}
         {games !== null && filtered.length === 0 && (
           <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 40, textAlign: "center" }}>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Football Passport.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Passaporte de Estádios.</p>
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

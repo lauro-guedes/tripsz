@@ -25,7 +25,7 @@ export function ShareProfileModal({ link, name, onClose }) {
   const [instaHint, setInstaHint] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
 
-  const message = `Olha o meu Football Passport na tripsz${name ? `, ${name.split(" ")[0]}` : ""}: estádios visitados, jogos e conquistas. ${link}`;
+  const message = `Olha o meu Passaporte de Estádios na tripsz${name ? `, ${name.split(" ")[0]}` : ""}: estádios visitados, jogos e conquistas. ${link}`;
 
   useEffect(() => {
     setCanNativeShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
@@ -64,7 +64,7 @@ export function ShareProfileModal({ link, name, onClose }) {
 
   const shareNative = async () => {
     try {
-      await navigator.share({ title: "Meu Football Passport", text: "Meu Football Passport na tripsz", url: link });
+      await navigator.share({ title: "Meu Passaporte de Estádios", text: "Meu Passaporte de Estádios na tripsz", url: link });
     } catch {
       // a pessoa fechou o menu — não é erro
     }
@@ -87,7 +87,7 @@ export function ShareProfileModal({ link, name, onClose }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>
             <p id="share-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Compartilhar perfil</p>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: "4px 0 0" }}>Mostre seu Football Passport para os amigos.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.4, color: BODY, margin: "4px 0 0" }}>Mostre seu Passaporte de Estádios para os amigos.</p>
           </div>
           <div onClick={onClose} role="button" aria-label="Fechar" style={{ cursor: "pointer", display: "flex", padding: 4 }}>
             <X size={20} color={MUTED} />

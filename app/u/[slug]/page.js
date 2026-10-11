@@ -37,9 +37,9 @@ export async function generateMetadata({ params }) {
   const profile = await getProfile(params.slug);
   if (!profile) return { title: "Perfil não encontrado — tripsz" };
   return {
-    title: `Football Passport de ${profile.name} | tripsz`,
+    title: `Passaporte de Estádios de ${profile.name} | tripsz`,
     description: `Nível ${profile.level} · ${profile.levelName} — ${profile.stadiums} estádios, ${profile.countries} países, ${profile.games} jogos assistidos.`,
-    openGraph: { title: `Football Passport de ${profile.name}`, description: `Nível ${profile.level} · ${profile.levelName} no tripsz` },
+    openGraph: { title: `Passaporte de Estádios de ${profile.name}`, description: `Nível ${profile.level} · ${profile.levelName} no tripsz` },
   };
 }
 
@@ -79,7 +79,7 @@ export default async function PublicProfilePage({ params }) {
         </a>
         <div className="pp-actions">
           <a href="/" className="pp-login">Entrar</a>
-          <a href="/" className="pp-cta"><span className="pp-cta-long">Criar meu Football Passport</span><span className="pp-cta-short">Criar meu Passport</span></a>
+          <a href="/" className="pp-cta"><span className="pp-cta-long">Criar meu Passaporte de Estádios</span><span className="pp-cta-short">Criar meu Passaporte</span></a>
         </div>
       </div>
 
@@ -87,12 +87,12 @@ export default async function PublicProfilePage({ params }) {
         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(180deg, ${BG_ALT}, ${BG})` }} />
         <div style={{ position: "relative", flex: "1 0 280px", display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>tripsz.com/u/{params.slug}</p>
-          <p style={{ fontWeight: 700, fontSize: 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Football Passport de {profile.name}</p>
+          <p style={{ fontWeight: 700, fontSize: 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Passaporte de Estádios de {profile.name}</p>
           <p style={{ fontFamily: "Georgia, serif", fontSize: 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Confira os estádios visitados, jogos presenciados e conquistas desbloqueadas por este groundhopper.</p>
         </div>
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 28, width: 340, display: "flex", flexDirection: "column", gap: 20, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <p style={{ fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
             <p style={{ color: GREEN, fontSize: 18, margin: 0 }}>🛡</p>
           </div>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
@@ -129,7 +129,7 @@ export default async function PublicProfilePage({ params }) {
       <div style={{ background: BG_ALT, padding: "48px 40px", display: "flex", flexDirection: "column", gap: 32 }}>
         <div>
           <div style={{ background: GOLD_BG, border: `1px solid ${GOLD}`, borderRadius: 4, padding: "6px 12px", display: "inline-block" }}>
-            <p style={{ fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>Football Passport</p>
+            <p style={{ fontWeight: 700, fontSize: 11, color: GOLD, textTransform: "uppercase", margin: 0 }}>Passaporte de Estádios</p>
           </div>
           <p style={{ fontWeight: 700, fontSize: 28, color: TEXT, margin: "12px 0 0" }}>Conquistas de Viagem</p>
         </div>

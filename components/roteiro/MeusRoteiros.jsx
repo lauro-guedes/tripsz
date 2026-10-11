@@ -209,7 +209,7 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
               </div>
               <div style={{ textAlign: "center" }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Criar uma nova alternativa</p>
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Gere um novo Football Passport com destinos diferentes.</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Gere um novo Passaporte de Estádios com destinos diferentes.</p>
               </div>
             </div>
           )}

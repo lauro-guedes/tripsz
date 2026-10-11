@@ -2,7 +2,7 @@ export default function manifest() {
   return {
     name: "tripsz — roteiros de futebol",
     short_name: "tripsz",
-    description: "Monte roteiros de viagem pra jogos de futebol e acompanhe seu Football Passport.",
+    description: "Monte roteiros de viagem pra jogos de futebol e acompanhe seu Passaporte de Estádios.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fafc",

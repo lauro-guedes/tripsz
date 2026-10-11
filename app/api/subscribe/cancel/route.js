@@ -19,7 +19,7 @@ async function mpFetch(path, options = {}) {
  * POST /api/subscribe/cancel
  * Recebe { userId }. Cancela a assinatura ativa/pendente mais recente
  * do usuário no Mercado Pago e marca como "cancelled" no nosso banco.
- * Os dados do Passport continuam salvos — só o acesso fica pausado.
+ * Os dados do Passaporte de Estádios continuam salvos — só o acesso fica pausado.
  */
 export async function POST(request) {
   try {

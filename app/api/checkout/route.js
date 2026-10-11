@@ -64,7 +64,7 @@ export async function POST(request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     const supabase = supabaseAdmin();
 
-    // Desconto de 15% pra quem tem o Passport (assinante ativo, ou conta
+    // Desconto de 15% pra quem tem o Passaporte de Estádios (assinante ativo, ou conta
     // antiga de antes da assinatura existir). Calculado aqui no servidor
     // de propósito — nunca confiamos num desconto que viesse do navegador.
     const { data: userRow } = await supabase.auth.admin.getUserById(userId);

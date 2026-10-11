@@ -20,7 +20,7 @@ function mapSubscriptionStatus(mpStatus) {
 /**
  * POST /api/webhook
  * O Mercado Pago chama esta URL sozinho quando algo muda — pagamento
- * avulso (consultoria) ou status de assinatura recorrente (Passport).
+ * avulso (consultoria) ou status de assinatura recorrente (Passaporte de Estádios).
  * Aqui a gente sempre confirma direto na API deles (nunca confia só no
  * que vem no corpo da notificação) antes de atualizar o banco.
  */
@@ -28,7 +28,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    // Avisos de assinatura recorrente (Passport Tripsz)
+    // Avisos de assinatura recorrente (Passaporte de Estádios Tripsz)
     if (body.type === "subscription_preapproval" || body.type === "preapproval") {
       const preapprovalId = body.data?.id;
       if (!preapprovalId) return Response.json({ received: true });

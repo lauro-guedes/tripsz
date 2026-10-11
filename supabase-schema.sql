@@ -48,7 +48,7 @@ create table if not exists public.orders (
 );
 alter table public.orders enable row level security;
 
--- ---------- Assinatura do Passport ----------
+-- ---------- Assinatura do Passaporte de Estádios ----------
 create table if not exists public.subscriptions (
   id uuid not null default gen_random_uuid(),
   user_id uuid not null,
@@ -65,7 +65,7 @@ create table if not exists public.subscriptions (
 );
 alter table public.subscriptions enable row level security;
 
--- ---------- Football Passport ----------
+-- ---------- Passaporte de Estádios ----------
 create table if not exists public.attended_games (
   id uuid not null default gen_random_uuid(),
   user_id uuid not null,

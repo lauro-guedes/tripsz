@@ -22,7 +22,7 @@ import { TEAMS_BY_LEAGUE } from "../wizard/StepTimesFavoritos";
 import { Award, Clipboard, Globe, Share2, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 
-/* --- Minhas Conquistas: Football Passport com estatísticas reais --- */
+/* --- Minhas Conquistas: Passaporte de Estádios com estatísticas reais --- */
 // Estádios icônicos reconhecidos pra badge "Colecionador de Templos" —
 // lista curada, não exaustiva.
 export const ICONIC_STADIUMS = [
@@ -199,7 +199,7 @@ export function computeBadgeCategories(ctx) {
       ],
     },
     {
-      title: "Passport & Comunidade",
+      title: "Passaporte & Comunidade",
       badges: [
         { id: "fundador", label: "Membro Fundador", ...b(isLegacy, userCreatedAt) },
         { id: "detetive", label: "Detetive de Campo", ...b(manualCount >= 1) },
@@ -309,7 +309,7 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     const favoriteTeams = new Set(user?.user_metadata?.favorite_teams || []);
 
     // Perfil Compartilhado — a pessoa já gerou o link do Football
-    // Passport público (tabela public_profiles).
+    // Passaporte de Estádios público (tabela public_profiles).
     const { data: publicProfileRow } = await supabase
       .from("public_profiles")
       .select("slug")
@@ -375,13 +375,13 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
         </div>
         <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Football Passport</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
           <div><Button onClick={onCreateNew}>Montar Outra Viagem</Button></div>
         </div>
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>FOOTBALL PASSPORT</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
             <Icon name="shieldCheck" size={24} color={GREEN} />
           </div>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -449,7 +449,7 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       </div>
 
       <div style={{ background: BG_ALT, padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
-        <Badge gold>Football Passport</Badge>
+        <Badge gold>Passaporte de Estádios</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Conquistas de Viagem</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
           {badgeCategories.map((cat) => (

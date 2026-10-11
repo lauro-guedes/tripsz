@@ -246,7 +246,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
       })()
     : null;
 
-  const perks = ["Football Passport completo", "Gamificação e conquistas", "Categorias de torcedor (5 níveis)", "Histórico completo de jogos", "15% desconto em consultorias", "Alertas personalizados de jogos"];
+  const perks = ["Passaporte de Estádios completo", "Gamificação e conquistas", "Categorias de torcedor (5 níveis)", "Histórico completo de jogos", "15% desconto em consultorias", "Alertas personalizados de jogos"];
 
   return (
     <div style={{ background: BG, width: "100%" }}>
@@ -267,7 +267,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
           {access.legacy ? (
             <div style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: GREEN, margin: 0 }}>Acesso liberado (conta antiga)</p>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Sua conta foi criada antes do lançamento da assinatura do Passport, então você continua com acesso livre, sem precisar pagar nada.</p>
+              <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Sua conta foi criada antes do lançamento da assinatura do Passaporte de Estádios, então você continua com acesso livre, sem precisar pagar nada.</p>
             </div>
           ) : sub?.status === "active" ? (
             <>
@@ -390,7 +390,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, lineHeight: 1.4, color: MUTED, margin: 0 }}>Tem certeza? Você perderá acesso a todos os seus benefícios premium:</p>
             </div>
             <div style={{ background: BG, borderRadius: 8, padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-              {["Football Passport completo", "Conquistas e sistema de gamificação", "Categorias de torcedor", "Registro ilimitado de jogos", "15% de desconto em consultorias", "Histórico completo de partidas"].map((label) => (
+              {["Passaporte de Estádios completo", "Conquistas e sistema de gamificação", "Categorias de torcedor", "Registro ilimitado de jogos", "15% de desconto em consultorias", "Histórico completo de partidas"].map((label) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid #ef4444", borderRadius: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#ef4444", margin: 0 }}>✕</p>

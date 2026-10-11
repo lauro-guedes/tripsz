@@ -22,7 +22,7 @@ async function mpFetch(path, options = {}) {
  * body: { email: "admin@tripsz.com", subscriptionId: "UUID" }
  *
  * Cancela essa assinatura específica no Mercado Pago e marca como
- * "cancelled" no nosso banco. Os dados do Passport da pessoa continuam
+ * "cancelled" no nosso banco. Os dados do Passaporte de Estádios da pessoa continuam
  * intactos — só o acesso pago é pausado.
  */
 export async function POST(request) {
