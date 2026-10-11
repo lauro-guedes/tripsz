@@ -46,6 +46,7 @@ components/
   checkout/                    pagamento avulso da consultoria
   conta/                       conquistas, ranking, nível, perfil, assinatura, paywall
   jogos/                       Buscar Jogos, Meu Calendário, Meus Jogos, Registrar Jogo
+  jogos/detalhes/              modal "Detalhes da experiência" (Meus Jogos): uma aba por arquivo
   TeamBadge.jsx                escudo do time, com várias fontes e fallback
   SocialLinks.jsx              redes sociais do rodapé (o endereço do Instagram fica aqui)
 lib/
@@ -60,6 +61,8 @@ lib/
   passportAccess.js            quem tem acesso ao Passaporte de Estádios (limite de 20 jogos grátis)
   gameSeason.js, seasons.js    temporada de um jogo (europeia ou ano-calendário)
   searchKey.js                 normaliza nomes de busca (acento, til, hífen, apóstrofo)
+  gameDetailsCore.js           detalhes de um jogo (escalação, gols, estatísticas): lógica pura
+  gameDetails.js               busca na API-Football + cache desses detalhes (só servidor)
   xpRules.js                   regra de XP: total e XP gerado por cada jogo
   fanLevels.js                 categorias de torcedor (nomes, faixas de XP e textos)
   data/                        cidades, clássicos (rivalries), geoExtras
@@ -108,6 +111,23 @@ Em Meus Jogos, cada jogo mostra o XP que gerou (jogo + estádio novo + país nov
 que ele desbloqueou); a soma dos jogos sempre fecha com o total.
 Os textos das categorias de torcedor ficam em `lib/fanLevels.js`.
 
+### Detalhes da experiência (modal de Meus Jogos)
+
+"Ver detalhes da experiência" abre um modal com 5 abas: **Escalação** (campo com os 11 de cada
+time, reservas e técnico), **Gols** (linha do tempo com placar corrido; no desktop, resumo ao lado),
+**Estádio** (capacidade, cidade, país e visitas da pessoa), **Estatísticas** (barras mandante x
+visitante) e **XP** (o que o jogo rendeu, próxima categoria e compartilhar). No celular abre como
+folha de baixo pra cima; no desktop, centralizado (Figma 516:*).
+
+- Os dados vêm de `GET /api/games/details?gameId=...` (exige login; só devolve jogo da própria
+  pessoa). Jogo registrado **à mão** não tem `api_fixture_id`: só as abas Estádio e XP têm dados.
+- Cada jogo ENCERRADO é consultado na API-Football uma vez só (1 chamada pelo jogo + 1 pelo
+  estádio, se ele ainda não estiver em `venues_cache`) e fica em `fixture_details_cache`. Se a
+  tabela não existir, funciona igual (cache em memória), só gasta mais cota.
+- A foto do estádio é `media.api-sports.io/football/venues/<id>.png`; se falhar, usa a foto de
+  reserva `STADIUM_FALLBACK_IMAGE` (`components/jogos/detalhes/AbaEstadio.jsx`).
+- Editar local e Remover jogo ficam no próprio cartão (o cartão não expande mais).
+
 ## Variáveis de ambiente
 
 Configure na Vercel (Settings → Environment Variables) e, para rodar local, copie `.env.example` para `.env.local` e preencha.
@@ -136,6 +156,8 @@ buckets públicos `avatars` e `team-logos` em Storage, o ambiente volta do zero.
   `service_role` acessa): `fixtures_cache`, `fixtures_fetch_log`, `fixtures_calendar`,
   `calendar_sync_log`, `team_home_venues`, `venues_cache` e `team_logos`.
 - `newsletter_subscribers`: qualquer pessoa pode se inscrever.
+- **Pendente de rodar:** `supabase-fixture-details-cache.sql` cria `fixture_details_cache` (cache só do
+  servidor, como os de cima). Depois de rodar, incorpore o trecho ao `supabase-schema.sql`.
 
 As tabelas antigas `leagues` e `fixtures` foram apagadas; uma cópia ficou no schema
 `backup` do Supabase e pode ser removida quando você quiser.
