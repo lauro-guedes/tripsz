@@ -410,12 +410,12 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
         </div>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: "0px 8px 12px rgba(15,23,42,0.07)", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: 24, padding: isMobile ? 20 : "16px 24px", margin: isMobile ? `0 ${px}` : `0 80px` }}>
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 0, boxShadow: "0px 8px 12px rgba(15,23,42,0.07)", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: 24, padding: isMobile ? 20 : "16px 24px", margin: isMobile ? `0 ${px}` : `0 80px` }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: isMobile ? "none" : "0 0 320px" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>Perfil público</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>Reúna jogos, estádios e conquistas em uma página compartilhável para amigos.</p>
         </div>
-        <div style={{ background: BG, borderRadius: 8, display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", flex: 1, minWidth: 0 }}>
+        <div style={{ background: BG, display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", flex: 1, minWidth: 0 }}>
           <Globe size={16} color={MUTED} style={{ flexShrink: 0 }} />
           <p style={{ fontFamily: FONT_MONO, fontSize: 12, color: MUTED, margin: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {shareLink ? shareLink.replace(/^https?:\/\//, "") : "Gere seu link abaixo para ver aqui"}
@@ -427,13 +427,13 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
           )}
         </div>
         {shareLink && (
-          <div onClick={() => setShowShare(true)} style={{ background: GREEN, padding: "10px 20px", borderRadius: 8, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+          <div onClick={() => setShowShare(true)} style={{ background: GREEN, padding: "10px 20px", borderRadius: 0, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
             <Share2 size={16} color="#fff" />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>Compartilhar perfil</p>
           </div>
         )}
         {!shareLink && (
-          <div onClick={loadingShareLink ? undefined : handleGetShareLink} style={{ background: GREEN, padding: "10px 20px", borderRadius: 8, textAlign: "center", cursor: loadingShareLink ? "default" : "pointer", flexShrink: 0 }}>
+          <div onClick={loadingShareLink ? undefined : handleGetShareLink} style={{ background: GREEN, padding: "10px 20px", borderRadius: 0, textAlign: "center", cursor: loadingShareLink ? "default" : "pointer", flexShrink: 0 }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>{loadingShareLink ? "Gerando..." : "Gerar perfil público"}</p>
           </div>
         )}
