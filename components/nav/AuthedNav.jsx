@@ -35,7 +35,7 @@ export const NAV_MAIN = [
   { label: "Meus roteiros", key: "roteiros" },
   { label: "Meus jogos", key: "jogos" },
   { label: "Meu calendário", children: [["Calendário", "calendario"], ["Buscar jogos", "buscar"]] },
-  { label: "Meu nível", children: [["Nível", "nivel"], ["Minhas conquistas", "conquistas"], ["Ranking", "ranking"]] },
+  { label: "Passaporte", children: [["Nível de Torcedor", "nivel"], ["Meu Passaporte", "conquistas"], ["Ranking", "ranking"]] },
 ];
 
 export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }) {
