@@ -58,11 +58,28 @@ export default async function PublicProfilePage({ params }) {
 
   return (
     <div style={{ background: BG, minHeight: "100vh", fontFamily: "Inter, sans-serif" }}>
-      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 40px" }}>
-        <p style={{ fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>tripsz</p>
-        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <a href="/" style={{ fontSize: 14, color: BODY, textDecoration: "none" }}>Entrar</a>
-          <a href="/" style={{ background: GREEN, padding: "12px 24px", borderRadius: 12, color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none" }}>Criar meu Football Passport</a>
+      <style>{`
+        .pp-head { background:#fff; border-bottom:1px solid ${BORDER}; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 40px; }
+        .pp-actions { display:flex; gap:12px; align-items:center; }
+        .pp-login { border:1px solid ${BORDER}; background:#fff; color:${TEXT}; border-radius:8px; padding:12px 20px; font-weight:700; font-size:14px; text-decoration:none; white-space:nowrap; }
+        .pp-cta { background:${GREEN}; color:#fff; border-radius:12px; padding:12px 24px; font-weight:700; font-size:14px; text-decoration:none; white-space:nowrap; }
+        .pp-cta-short { display:none; }
+        @media (max-width: 640px) {
+          .pp-head { padding:12px 16px; }
+          .pp-actions { gap:8px; }
+          .pp-login { padding:9px 12px; font-size:12px; border-radius:6px; }
+          .pp-cta { padding:9px 12px; font-size:12px; border-radius:6px; }
+          .pp-cta-long { display:none; }
+          .pp-cta-short { display:inline; }
+        }
+      `}</style>
+      <div className="pp-head">
+        <a href="/" style={{ display: "inline-flex", flexShrink: 0 }}>
+          <img src="/logo-tripsz.svg" alt="tripsz" width={Math.round((123 / 34) * 30)} height={30} />
+        </a>
+        <div className="pp-actions">
+          <a href="/" className="pp-login">Entrar</a>
+          <a href="/" className="pp-cta"><span className="pp-cta-long">Criar meu Football Passport</span><span className="pp-cta-short">Criar meu Passport</span></a>
         </div>
       </div>
 
