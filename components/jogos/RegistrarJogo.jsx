@@ -248,6 +248,31 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
     }
   };
 
+  // Clicar em "Adicionado" desfaz: remove o jogo do Passport.
+  const handleRemoveGame = async (g) => {
+    if (!selectedIds.has(g.apiFixtureId) || savingId) return;
+    setSavingId(g.apiFixtureId);
+    setError(null);
+    try {
+      const supabase = supabaseBrowser();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Entre novamente.");
+      const { error: delError } = await supabase.from("attended_games").delete().eq("user_id", userId).eq("api_fixture_id", g.apiFixtureId);
+      if (delError) throw delError;
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(g.apiFixtureId);
+        return next;
+      });
+      setAddedThisSession((n) => Math.max(0, n - 1));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   // Importação de CSV — não chama a API-Football pra nada aqui de
   // propósito (confirmar cada linha na API estouraria nossa cota
   // chamadas/dia rapidinho). Os dados vêm direto do que a pessoa trouxe.
@@ -908,9 +933,9 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                           </div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
                         </div>
-                        <div onClick={() => handleAddGame(g)} style={{ background: selected ? BORDER : GREEN_BUTTON, opacity: isSaving ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: selected || isSaving ? "default" : "pointer", flexShrink: 0 }}>
+                        <div onClick={() => (selected ? handleRemoveGame(g) : handleAddGame(g))} style={{ background: selected ? BORDER : GREEN_BUTTON, opacity: isSaving ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: isSaving ? "default" : "pointer", flexShrink: 0 }}>
                           {selected && <Check size={14} color={MUTED} />}
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{isSaving ? "Salvando..." : selected ? "Adicionado" : "+ Adicionar"}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{isSaving ? "Salvando..." : selected ? "Adicionado · desmarcar" : "+ Adicionar"}</p>
                         </div>
                       </div>
                     );

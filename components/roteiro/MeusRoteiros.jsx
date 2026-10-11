@@ -178,11 +178,14 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
                   <div style={{ background: BG_ALT, borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                     <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, margin: 0 }}>PARTIDAS SUGERIDAS</p>
                     {preview.games.slice(0, 2).map((g, i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          <TeamBadge name={g.home} url={g.homeLogo} size={18} />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
-                          <TeamBadge name={g.away} url={g.awayLogo} size={18} />
+                      <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        {/* cada escudo ao lado do nome do SEU time; o estádio vai numa linha própria */}
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ display: "inline-flex", flexShrink: 0 }}><TeamBadge name={g.home} url={g.homeLogo} size={18} /></span>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(g.home)}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>×</p>
+                          <span style={{ display: "inline-flex", flexShrink: 0 }}><TeamBadge name={g.away} url={g.awayLogo} size={18} /></span>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{teamLabel(g.away)}</p>
                         </div>
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.stadium}</p>
                       </div>
