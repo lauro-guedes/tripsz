@@ -3,7 +3,6 @@ import { authFetch } from "../../lib/authFetch";
 import { FAN_LEVEL_TEXTS } from "../../lib/fanLevels";
 import { initials } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BG, GREEN_BUTTON, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
-import { PHOTO_STADIUM } from "../landing/LandingPage";
 import { Badge } from "../ui/Badge";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Award, BarChart2, Clipboard, Share2, Star, TrendingUp } from "lucide-react";
@@ -44,17 +43,13 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `64px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
-        </div>
-        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `64px ${px}` }}>
+        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24, padding: isMobile ? `0 ${px}` : 0 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
         </div>
-        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", ...(isMobile ? { borderLeft: "none", borderRight: "none", borderRadius: 0 } : {}), flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
             <Award size={22} color={GREEN} />

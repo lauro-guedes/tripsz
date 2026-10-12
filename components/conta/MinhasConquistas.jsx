@@ -9,7 +9,6 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
 import { totalXp } from "../../lib/xpRules";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BG, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
-import { PHOTO_STADIUM } from "../landing/LandingPage";
 import { ShareProfileModal } from "./ShareProfileModal";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
@@ -368,18 +367,14 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="conquistas" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
-        </div>
-        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `80px ${px}` }}>
+        <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24, padding: isMobile ? `0 ${px}` : 0 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
           <div><Button onClick={onCreateNew}>Montar Outra Viagem</Button></div>
         </div>
-        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", flexShrink: 0, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
+        <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "100%" : 420, maxWidth: "100%", ...(isMobile ? { borderLeft: "none", borderRight: "none", borderRadius: 0 } : {}), flexShrink: 0, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
             <Icon name="shieldCheck" size={24} color={GREEN} />
