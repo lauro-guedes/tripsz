@@ -193,3 +193,7 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 
 - No Supabase: remover a política duplicada `usuário edita suas respostas` em `trip_answers` e ligar a proteção contra senhas vazadas (Authentication → Providers → Email).
 - O schema `backup` do Supabase pode ser removido depois de conferido.
+
+## Priorização de jogos principais
+
+`lib/gameImportance.js` pontua cada jogo (competição: Champions/Libertadores > Europa/Sul-Americana > 1ª divisão > copas; fase; clubes grandes). O planner soma essa importância ao peso, então mesmo sem clubes favoritos as 3 opções (A, B, C) preferem os jogos principais. Favoritos continuam acima de tudo. A lista de clubes é estática (grafias da API).
