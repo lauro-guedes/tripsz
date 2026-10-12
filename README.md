@@ -26,7 +26,8 @@ app/
   termos/, privacidade/, redefinir-senha/
   api/
     trip/plan                      monta o roteiro com jogos reais
-    games/search                   Buscar Jogos
+    games/search                   Buscar Jogos por cidade (data + raio)
+    games/browse                   Buscar Jogos por país, liga ou clube (lê só do fixtures_calendar, sem gastar API)
     attended-games/*               Registrar Jogo (busca por estádio/time)
     teams/*, cities/suggest        escudos e sugestões de times e cidades
     ranking, profile/*, public-profile/[slug]
@@ -53,7 +54,7 @@ lib/
   tripPlanner.js               motor de roteiros (lógica pura, sem rede/banco)
   tripOptions.js               monta as opções A / B / C a partir do plano
   fixturesCalendar.js          calendário de jogos reais (servidor)
-  calendarCore.js, calendarUtils.js, fixtureLocation.js, gamesSearch*.js
+  calendarCore.js, calendarUtils.js, fixtureLocation.js, gamesSearch*.js, gamesBrowse.js
   footballApi.js               cliente da API-Football
   supabase.js                  clientes do Supabase (navegador e admin)
   tokens.js                    cores e fontes

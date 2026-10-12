@@ -31,6 +31,17 @@ export function BuscarJogos({ onNavigate, onLogout }) {
   const [savedIds, setSavedIds] = useState(new Set());
   const [addingId, setAddingId] = useState(null);
   const [lastAdded, setLastAdded] = useState(null);
+  // Abas: "cidade" (data + raio) ou, por período, "pais" | "liga" | "clube".
+  const [mode, setMode] = useState("cidade");
+  const [options, setOptions] = useState({ countries: [], leagues: [] });
+  const [country, setCountry] = useState("");
+  const [leagueId, setLeagueId] = useState("");
+  const [teamQuery, setTeamQuery] = useState("");
+  const [team, setTeam] = useState(null); // { name, logo }
+  const [teamSuggestions, setTeamSuggestions] = useState([]);
+  const [showTeamSuggestions, setShowTeamSuggestions] = useState(false);
+  const [days, setDays] = useState(30);
+  const [cityFilter, setCityFilter] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -59,6 +70,34 @@ export function BuscarJogos({ onNavigate, onLogout }) {
       // sem acesso ao armazenamento do navegador — segue sem lembrar
     }
   }, []);
+
+  // Países e ligas das abas País / Liga.
+  useEffect(() => {
+    if (mode === "cidade" || options.countries.length > 0) return;
+    fetch("/api/games/browse?options=1")
+      .then((r) => r.json())
+      .then((j) => setOptions({ countries: j.countries || [], leagues: j.leagues || [] }))
+      .catch(() => {});
+  }, [mode, options.countries.length]);
+
+  // Autocomplete do clube.
+  useEffect(() => {
+    const q = teamQuery.trim();
+    if (mode !== "clube" || (team && q === team.name) || q.length < 3) {
+      setTeamSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/teams/suggest?q=${encodeURIComponent(q)}`);
+        const json = await res.json();
+        setTeamSuggestions(json.suggestions || []);
+      } catch {
+        setTeamSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [teamQuery, team, mode]);
 
   // Autocomplete da cidade-base.
   useEffect(() => {
@@ -91,9 +130,59 @@ export function BuscarJogos({ onNavigate, onLogout }) {
     }
   };
 
+  const switchMode = (m) => {
+    if (m === mode) return;
+    setMode(m);
+    setResult(null);
+    setSearchedWith(null);
+    setError(null);
+    setLastAdded(null);
+    setCityFilter("");
+  };
+
+  const handleBrowse = async () => {
+    let chosenTeam = team;
+    if (mode === "clube" && !chosenTeam && teamSuggestions.length > 0) {
+      chosenTeam = teamSuggestions[0];
+      setTeam(chosenTeam);
+      setTeamQuery(chosenTeam.name);
+    }
+    if (mode === "pais" && !country) return setError("Escolha um país.");
+    if (mode === "liga" && !leagueId) return setError("Escolha uma liga.");
+    if (mode === "clube" && !chosenTeam) return setError("Escolha um clube da lista de sugestões.");
+    if (!date || date < todayInSaoPaulo()) return setError("Escolha uma data de hoje em diante.");
+    if (date > maxSearchDate()) return setError("Só dá pra buscar jogos dos próximos 6 meses — os calendários além disso ainda não foram divulgados.");
+    setLoading(true);
+    setCityFilter("");
+    try {
+      const params = new URLSearchParams({ mode, from: date, days: String(days) });
+      if (mode === "pais") params.set("country", country);
+      if (mode === "liga") params.set("league", String(leagueId));
+      if (mode === "clube") params.set("team", chosenTeam.name);
+      const res = await fetch(`/api/games/browse?${params.toString()}`);
+      const json = await res.json();
+      if (!res.ok) {
+        setResult(null);
+        setSearchedWith(null);
+        setError(json.message || "Não foi possível buscar os jogos agora.");
+        return;
+      }
+      const leagueName = options.leagues.find((l) => String(l.id) === String(leagueId))?.name;
+      const subject = mode === "pais" ? country : mode === "liga" ? leagueName || "a liga" : chosenTeam.name;
+      setResult({ ...json, browse: true });
+      setSearchedWith({ date, days, subject });
+    } catch {
+      setResult(null);
+      setError("Não foi possível buscar os jogos agora. Verifique sua conexão.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearch = async () => {
     setError(null);
     setLastAdded(null);
+    if (mode !== "cidade") return handleBrowse();
     let chosen = city;
     // Digitou mas não clicou na sugestão? Usa a primeira (a mais populosa).
     if (!chosen && suggestions.length > 0) {
@@ -191,7 +280,11 @@ export function BuscarJogos({ onNavigate, onLogout }) {
 
   const labelStyle = { fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 };
   const fieldStyle = { background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, height: 48, padding: "0 14px", width: "100%", boxSizing: "border-box", fontFamily: FONT_DISPLAY, fontSize: 16, color: TEXT, outline: "none" };
-  const cityShort = searchedWith ? cityShortName(searchedWith.cityLabel) : "";
+  const cityShort = searchedWith?.cityLabel ? cityShortName(searchedWith.cityLabel) : "";
+  // Abas País/Liga/Clube: cidades que aparecem nos resultados (filtro "abre cidade").
+  const browseGames = result?.browse ? result.games : [];
+  const browseCities = mode === "pais" ? [...new Set(browseGames.map((g) => g.city).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR")) : [];
+  const shownGames = cityFilter ? browseGames.filter((g) => g.city === cityFilter) : browseGames;
 
   const renderGame = (g) => {
       const p = kickoffParts(g.kickoff);
@@ -218,7 +311,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
             </div>
             {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
           </div>
-          <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
+          {mode === "cidade" && <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
             {g.distanceKm == null ? (
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>distância indisponível</p>
             ) : (
@@ -227,7 +320,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, color: MUTED, margin: 0 }}>de {cityShort}</p>
               </>
             )}
-          </div>
+          </div>}
           {saved ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "stretch", flexShrink: 0 }}>
               <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
@@ -266,9 +359,17 @@ export function BuscarJogos({ onNavigate, onLogout }) {
       </div>
 
       <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: isMobile ? `24px ${px}` : `32px ${px}`, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-end", overflowX: "auto" }}>
+          {[["cidade", "Cidade"], ["pais", "País"], ["liga", "Liga"], ["clube", "Clube"]].map(([m, label]) => (
+            <div key={m} onClick={() => switchMode(m)} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer", flexShrink: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: mode === m ? TEXT : MUTED, margin: 0 }}>{label}</p>
+              <div style={{ background: mode === m ? GREEN : BORDER, height: 2, borderRadius: 1, width: mode === m ? 72 : 44 }} />
+            </div>
+          ))}
+        </div>
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end", gap: isMobile ? 16 : 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200 }}>
-            <p style={labelStyle}>Data do jogo</p>
+            <p style={labelStyle}>{mode === "cidade" ? "Data do jogo" : "A partir de"}</p>
             <input type="date" value={date} min={todayInSaoPaulo()} max={maxSearchDate()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={fieldStyle} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
@@ -277,7 +378,53 @@ export function BuscarJogos({ onNavigate, onLogout }) {
               )}
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
+          {mode === "pais" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0 }}>
+              <p style={labelStyle}>País</p>
+              <select value={country} onChange={(e) => setCountry(e.target.value)} style={fieldStyle}>
+                <option value="">Escolha um país</option>
+                {options.countries.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          )}
+          {mode === "liga" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0 }}>
+              <p style={labelStyle}>Liga</p>
+              <select value={leagueId} onChange={(e) => setLeagueId(e.target.value)} style={fieldStyle}>
+                <option value="">Escolha uma liga</option>
+                {options.leagues.map((l) => <option key={l.id} value={l.id}>{l.country && l.country !== "World" ? `${l.name} • ${l.country}` : l.name}</option>)}
+              </select>
+            </div>
+          )}
+          {mode === "clube" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
+              <p style={labelStyle}>Clube</p>
+              <input
+                value={teamQuery}
+                onChange={(e) => {
+                  setTeamQuery(e.target.value);
+                  if (team && e.target.value !== team.name) setTeam(null);
+                  setShowTeamSuggestions(true);
+                }}
+                onFocus={() => setShowTeamSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowTeamSuggestions(false), 150)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+                placeholder="Digite um clube (ex: Flamengo)"
+                style={fieldStyle}
+              />
+              {showTeamSuggestions && teamSuggestions.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 30, overflow: "hidden" }}>
+                  {teamSuggestions.map((t) => (
+                    <div key={`${t.name}-${t.country}`} onMouseDown={() => { setTeam(t); setTeamQuery(t.name); setTeamSuggestions([]); setShowTeamSuggestions(false); }} style={{ padding: "12px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 10, alignItems: "center" }}>
+                      <TeamBadge name={t.name} url={t.logo} size={22} />
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{t.name}{t.country ? ` • ${t.country}` : ""}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {mode === "cidade" && <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0, position: "relative" }}>
             <p style={labelStyle}>Cidade-base</p>
             <input
               value={cityQuery}
@@ -302,24 +449,37 @@ export function BuscarJogos({ onNavigate, onLogout }) {
                 ))}
               </div>
             )}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <p style={labelStyle}>Raio de busca</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {RADIUS_OPTIONS.map((r) => (
-                <div key={r} onClick={() => setRadius(r)} style={{ background: radius === r ? GREEN : BG_ALT, padding: "10px 16px", borderRadius: 999, cursor: "pointer" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: radius === r ? 700 : 500, fontSize: 13, color: radius === r ? "#fff" : BODY, margin: 0, whiteSpace: "nowrap" }}>{r} km</p>
-                </div>
-              ))}
+          </div>}
+          {mode === "cidade" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={labelStyle}>Raio de busca</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {RADIUS_OPTIONS.map((r) => (
+                  <div key={r} onClick={() => setRadius(r)} style={{ background: radius === r ? GREEN : BG_ALT, padding: "10px 16px", borderRadius: 999, cursor: "pointer" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: radius === r ? 700 : 500, fontSize: 13, color: radius === r ? "#fff" : BODY, margin: 0, whiteSpace: "nowrap" }}>{r} km</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={labelStyle}>Período</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[7, 15, 30, 60].map((d) => (
+                  <div key={d} onClick={() => setDays(d)} style={{ background: days === d ? GREEN : BG_ALT, padding: "10px 16px", borderRadius: 999, cursor: "pointer" }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: days === d ? 700 : 500, fontSize: 13, color: days === d ? "#fff" : BODY, margin: 0, whiteSpace: "nowrap" }}>{d} dias</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div onClick={loading ? undefined : handleSearch} style={{ background: GREEN, opacity: loading ? 0.6 : 1, padding: "13px 20px", borderRadius: 8, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: loading ? "default" : "pointer", flexShrink: 0, height: 48, boxSizing: "border-box" }}>
             <Icon name="search" size={18} color="#fff" />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{loading ? "Buscando..." : "Buscar jogos"}</p>
           </div>
         </div>
         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, lineHeight: 1.4, color: MUTED, margin: 0 }}>
-          Distâncias aproximadas em linha reta, medidas a partir da cidade escolhida. Horários de Brasília.
+          {mode === "cidade" ? "Distâncias aproximadas em linha reta, medidas a partir da cidade escolhida. Horários de Brasília." : "Mostra os jogos das principais ligas que acompanhamos. Horários de Brasília."}
         </p>
       </div>
 
@@ -343,7 +503,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
         {loading && <Loading text="Buscando jogos..." compact />}
 
         {!loading && !result && !error && (
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Escolha a data, a cidade-base e o raio, e toque em “Buscar jogos”.</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>{mode === "cidade" ? "Escolha a data, a cidade-base e o raio, e toque em “Buscar jogos”." : mode === "pais" ? "Escolha um país e o período, e toque em “Buscar jogos”." : mode === "liga" ? "Escolha uma liga e o período, e toque em “Buscar jogos”." : "Escolha um clube e o período, e toque em “Buscar jogos”."}</p>
         )}
 
         {!loading && result && searchedWith && (
@@ -351,13 +511,16 @@ export function BuscarJogos({ onNavigate, onLogout }) {
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 8 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: TEXT, margin: 0 }}>
-                  {result.total} {result.total === 1 ? "jogo encontrado" : "jogos encontrados"}
+                  {result.browse ? shownGames.length : result.total} {(result.browse ? shownGames.length : result.total) === 1 ? "jogo encontrado" : "jogos encontrados"}
                 </p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>
-                  {formatLongDate(searchedWith.date)} • Até {searchedWith.radius} km de {cityWithoutCountry(searchedWith.cityLabel)}
+                  {result.browse
+                    ? `${searchedWith.subject} • de ${formatLongDate(searchedWith.date)} até ${formatLongDate(result.to)}`
+                    : `${formatLongDate(searchedWith.date)} • Até ${searchedWith.radius} km de ${cityWithoutCountry(searchedWith.cityLabel)}`}
                 </p>
               </div>
-              {result.total > 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Mais perto da cidade-base</p>}
+              {!result.browse && result.total > 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Mais perto da cidade-base</p>}
+              {result.browse && shownGames.length > 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Em ordem de data</p>}
             </div>
 
             <div style={{ background: GOLD_BG, borderRadius: 8, padding: "12px 16px", display: "flex", gap: 10, alignItems: "center" }}>
@@ -371,14 +534,31 @@ export function BuscarJogos({ onNavigate, onLogout }) {
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: GOLD, margin: 0 }}>Nossa fonte de dados está instável agora — esses jogos podem estar um pouco desatualizados.</p>
             )}
 
-            {result.total === 0 && !(result.unconfirmed || []).length ? (
+            {result.browse && browseCities.length > 1 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={labelStyle}>Filtrar por cidade</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {[["", "Todas"], ...browseCities.map((c) => [c, c])].map(([value, label]) => (
+                    <div key={value || "todas"} onClick={() => setCityFilter(value)} style={{ background: cityFilter === value ? GREEN : "#fff", border: `1px solid ${cityFilter === value ? GREEN : BORDER}`, padding: "8px 14px", borderRadius: 999, cursor: "pointer" }}>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: cityFilter === value ? 700 : 500, fontSize: 13, color: cityFilter === value ? "#fff" : BODY, margin: 0, whiteSpace: "nowrap" }}>{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {result.browse && result.truncated && (
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: GOLD, margin: 0 }}>Mostrando os primeiros {result.games.length} de {result.total} jogos — reduza o período para ver o resto.</p>
+            )}
+
+            {(result.browse ? shownGames.length === 0 : result.total === 0 && !(result.unconfirmed || []).length) ? (
               <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", gap: 6 }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>Nenhum jogo encontrado nesse raio</p>
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Tente aumentar o raio de busca ou escolher outra data.</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{result.browse ? "Nenhum jogo nesse período" : "Nenhum jogo encontrado nesse raio"}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>{result.browse ? "Tente um período maior ou outra data de início." : "Tente aumentar o raio de busca ou escolher outra data."}</p>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {result.games.map(renderGame)}
+                {(result.browse ? shownGames : result.games).map(renderGame)}
               </div>
             )}
 
