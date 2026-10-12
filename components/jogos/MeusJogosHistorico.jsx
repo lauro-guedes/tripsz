@@ -2,6 +2,7 @@
 import { countryKey } from "../../lib/countries";
 import { dateOnly } from "../../lib/dateOnly";
 import { seasonOfGame } from "../../lib/gameSeason";
+import { compactKey, searchKey } from "../../lib/searchKey";
 import { checkPassportAccess } from "../../lib/passportAccess";
 import { compareSeasonsDesc } from "../../lib/seasons";
 import { supabaseBrowser } from "../../lib/supabase";
@@ -105,11 +106,22 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   });
   const seasons = Array.from(seasonByKey.values()).sort(compareSeasonsDesc); // [{ key, label, year, kind }]
 
+  // Busca por clube (mandante ou visitante) ou estádio, sem diferenciar acento/maiúscula
+  // ("atletico" acha "Atlético Madrid"; "real madrid" e "realmadrid" também).
+  const searchQ = searchKey(search);
+  const searchCompact = compactKey(search);
+  const matchesSearch = (g) =>
+    [g.home_team, g.away_team, g.stadium].some((v) => {
+      if (!v) return false;
+      const key = searchKey(v);
+      return key.includes(searchQ) || compactKey(v).includes(searchCompact);
+    });
+
   const filtered = all.filter((g) => {
     if (tab === "tripsz" && g.source !== "api") return false;
     if (tab === "manuais" && g.source !== "manual") return false;
     if (seasonFilter !== "todas" && seasonOfGame(g).key !== seasonFilter) return false;
-    if (search && !(g.stadium || "").toLowerCase().includes(search.toLowerCase())) return false;
+    if (searchQ && !matchesSearch(g)) return false;
     return true;
   });
 
@@ -168,7 +180,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16 }}>
           <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
             <Icon name="search" size={18} color={MUTED} />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por estádio..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por clube ou estádio..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT }} />
           </div>
           <select value={seasonFilter} onChange={(e) => setSeasonFilter(e.target.value)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 12, fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: 14, color: TEXT, width: isMobile ? "100%" : 240 }}>
             <option value="todas">Todas as temporadas</option>
@@ -184,7 +196,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
         {games === null && <Loading />}
         {games !== null && filtered.length === 0 && (
           <div style={{ background: "#fff", border: `1px dashed ${BORDER}`, borderRadius: 12, padding: 40, textAlign: "center" }}>
-            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Passaporte de Estádios.</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: BODY, margin: 0 }}>{search.trim() ? `Nenhum jogo encontrado para “${search.trim()}”. Confira o nome do clube ou do estádio.` : "Nenhum jogo encontrado. Registre os jogos que você já assistiu pra eles contarem no seu Passaporte de Estádios."}</p>
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

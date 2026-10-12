@@ -241,7 +241,9 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
   const hasContent = !planLoading && !planError && trip.games.length > 0 && options.length > 0;
   const duration = durationRange(options);
   const durationShort = duration.replace(" a ", "–");
-  const gamesById = new Map(trip.games.map((g) => [g.id, g]));
+  const gamesById = new Map((trip.gamesAll || trip.games).map((g) => [g.id, g]));
+  // "Jogos possíveis": o maior número de jogos entre as opções (a B pode ter mais que a A).
+  const possibleCount = Math.max(trip.games.length, ...options.map((o) => o.gamesCount || 0));
   const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
 
   const handleChoose = (key) => {
@@ -268,7 +270,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
       <div style={{ height: 1, background: BORDER }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {[
-          ["Jogos possíveis", `${trip.games.length} ${trip.games.length === 1 ? "jogo" : "jogos"}`],
+          ["Jogos possíveis", `${possibleCount} ${possibleCount === 1 ? "jogo" : "jogos"}`],
           ["Cidades", `${trip.cities.length} ${trip.cities.length === 1 ? "cidade" : "cidades"}`],
           ["Opções de duração", duration],
           ...(trip.cities.length >= 2 ? [["Deslocamento", trip.cities.join(" → ")]] : []),
@@ -308,7 +310,7 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
         {hasContent && (
           <div style={{ display: "flex", gap: isMobile ? 12 : 24, fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 12, color: MUTED, flexWrap: "wrap" }}>
             <p style={{ margin: 0 }}>• {durationShort}</p>
-            <p style={{ margin: 0 }}>• {trip.games.length} {trip.games.length === 1 ? "jogo possível" : "jogos possíveis"}</p>
+            <p style={{ margin: 0 }}>• {possibleCount} {possibleCount === 1 ? "jogo possível" : "jogos possíveis"}</p>
             <p style={{ margin: 0 }}>• {trip.cities.length} {trip.cities.length === 1 ? "cidade" : "cidades"}</p>
           </div>
         )}

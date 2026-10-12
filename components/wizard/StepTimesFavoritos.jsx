@@ -35,11 +35,17 @@ export function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
+  const noFavorites = !!answers.noFavorites;
+
   const toggleTeam = (team) =>
     setAnswers((a) => ({
       ...a,
+      noFavorites: false, // escolher um time desfaz o "não tenho favoritos"
       favoriteTeams: favoriteTeams.includes(team) ? favoriteTeams.filter((t) => t !== team) : [...favoriteTeams, team],
     }));
+
+  // "Não tenho clubes favoritos": limpa a lista e o roteiro é montado com jogos de vários clubes.
+  const toggleNoFavorites = () => setAnswers((a) => ({ ...a, noFavorites: !a.noFavorites, favoriteTeams: a.noFavorites ? a.favoriteTeams || [] : [] }));
 
   // Autocomplete de verdade: busca times reais na API (não só os ~30 já
   // conhecidos), com debounce pra não gastar cota a cada tecla.
@@ -84,7 +90,7 @@ export function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome
       <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 24 : 32, alignItems: "center", padding: isMobile ? "24px 16px" : "40px 120px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 6 : 12, alignItems: "center", textAlign: "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 24 : 36, color: TEXT, margin: 0 }}>Quais são seus times favoritos?</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 720, margin: 0 }}>Selecione os clubes que você quer acompanhar — montaremos roteiros personalizados para os jogos deles.</p>
+          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 720, margin: 0 }}>Selecione os clubes que você quer acompanhar — montaremos roteiros personalizados para os jogos deles. Sem time do coração? Sem problema.</p>
         </div>
         {isMobile && <MobileProgress step={3 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
 
@@ -118,6 +124,16 @@ export function StepTimesFavoritos({ answers, setAnswers, onNext, onBack, onHome
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: isMobile ? "100%" : 600 }}>
+          <div onClick={toggleNoFavorites} role="button" aria-pressed={noFavorites} style={{ background: noFavorites ? GREEN_BG : "#fff", border: `1.5px solid ${noFavorites ? GREEN : BORDER}`, borderRadius: 8, padding: "12px 20px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: "pointer", width: isMobile ? "100%" : "auto", boxSizing: "border-box" }}>
+            {noFavorites && <Check size={16} color={GREEN} />}
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: noFavorites ? GREEN : TEXT, margin: 0 }}>Não tenho clubes favoritos</p>
+          </div>
+          {noFavorites && (
+            <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: MUTED, margin: 0, textAlign: "center" }}>Tudo bem — vamos montar o roteiro com os melhores jogos de vários clubes.</p>
           )}
         </div>
 
