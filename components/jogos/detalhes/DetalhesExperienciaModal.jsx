@@ -1,5 +1,5 @@
 "use client";
-import { ArrowDown, ChevronRight, X } from "lucide-react";
+import { ArrowDown, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authFetch } from "../../../lib/authFetch";
 import { formatShortDate, formatTimeBrasilia, statusLabel } from "../../../lib/gameDetailsCore";
@@ -17,11 +17,11 @@ import { AbaXP } from "./AbaXP";
 import { EmptyNote, TabLoading } from "./ui";
 
 const TABS = [
-  { id: "escalacao", label: "Escalação", minWidth: 110 },
-  { id: "gols", label: "Gols", minWidth: 72 },
-  { id: "estadio", label: "Estádio", minWidth: 90 },
-  { id: "estatisticas", label: "Estatísticas", minWidth: 126 },
-  { id: "xp", label: "XP", minWidth: 56 },
+  { id: "xp", label: "XP" },
+  { id: "estadio", label: "Estádio" },
+  { id: "escalacao", label: "Escalação" },
+  { id: "gols", label: "Gols" },
+  { id: "estatisticas", label: "Estatísticas" },
 ];
 
 // Reabrir o mesmo jogo é instantâneo: guarda a resposta enquanto a página estiver aberta.
@@ -44,13 +44,11 @@ const ORIGIN = { api: "Via Tripsz", csv: "Importado ✓", manual: "Manual ✓" }
  */
 export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVisit, onClose }) {
   const isMobile = useIsMobile();
-  const [tab, setTab] = useState(game.api_fixture_id ? "escalacao" : "estadio");
+  const [tab, setTab] = useState("xp");
   const [state, setState] = useState("loading"); // loading | ready | error
   const [data, setData] = useState(null);
   const [canScroll, setCanScroll] = useState(false);
-  const [tabsMore, setTabsMore] = useState(false);
   const scrollRef = useRef(null);
-  const tabsRef = useRef(null);
 
   const load = useCallback(async () => {
     const hit = memory.get(game.id);
@@ -91,8 +89,6 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   const measure = useCallback(() => {
     const el = scrollRef.current;
     if (el) setCanScroll(el.scrollHeight - el.clientHeight - el.scrollTop > 8);
-    const tb = tabsRef.current;
-    if (tb) setTabsMore(tb.scrollWidth - tb.clientWidth - tb.scrollLeft > 4);
   }, []);
   useEffect(() => {
     measure();
@@ -195,7 +191,7 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
 
         {/* abas */}
         <div style={{ position: "relative", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
-          <div ref={tabsRef} onScroll={measure} role="tablist" style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", padding: isMobile ? "0 12px" : 0 }}>
+          <div role="tablist" style={{ display: "flex", overflow: "hidden" }}>
             {TABS.map((t) => {
               const on = tab === t.id;
               return (
@@ -204,18 +200,13 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
                   role="tab"
                   aria-selected={on}
                   onClick={() => setTab(t.id)}
-                  style={{ flex: isMobile ? "0 0 auto" : 1, minWidth: isMobile ? t.minWidth : 0, height: 52, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxSizing: "border-box", borderBottom: on ? `3px solid ${GREEN}` : "3px solid transparent", marginBottom: -1 }}
+                  style={{ flex: "1 1 0", minWidth: 0, height: isMobile ? 48 : 52, padding: "0 2px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxSizing: "border-box", borderBottom: on ? `3px solid ${GREEN}` : "3px solid transparent", marginBottom: -1 }}
                 >
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 400, fontSize: 13, lineHeight: 1.4, color: on ? GREEN_DARK : MUTED, margin: 0, whiteSpace: "nowrap" }}>{t.label}</p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 400, fontSize: isMobile ? 12 : 13, lineHeight: 1.4, color: on ? GREEN_DARK : MUTED, margin: 0, whiteSpace: "nowrap" }}>{t.label}</p>
                 </div>
               );
             })}
           </div>
-          {isMobile && tabsMore && (
-            <div aria-hidden="true" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 22, background: "linear-gradient(90deg, rgba(255,255,255,0), #fff 45%)", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-              <ChevronRight size={14} color={MUTED} />
-            </div>
-          )}
         </div>
 
         {/* conteúdo rolável */}
