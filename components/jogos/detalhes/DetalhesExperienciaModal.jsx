@@ -164,7 +164,7 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   else content = <AbaEstatisticas details={details} isMobile={isMobile} />;
 
   const pad = isMobile ? 24 : 28;
-  const note = game.api_fixture_id ? "Dados da partida: API-Football" : "Jogo registrado manualmente";
+  const note = game.api_fixture_id ? "Dados da partida" : "Jogo registrado manualmente";
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.4)", overscrollBehavior: "contain", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>

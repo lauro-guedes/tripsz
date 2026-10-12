@@ -75,7 +75,7 @@ export function AbaEscalacao({ details, isMobile }) {
   const homeRef = useRef(null);
   const awayRef = useRef(null);
   if (!details || !details.lineups) {
-    return <EmptyNote title="Sem escalação para este jogo" text="A API-Football não trouxe a escalação desta partida (isso acontece mais em competições menores)." />;
+    return <EmptyNote title="Sem escalação para este jogo" text="Não encontramos a escalação desta partida (isso acontece mais em competições menores)." />;
   }
   const { lineups, teams } = details;
   const go = (side) => {

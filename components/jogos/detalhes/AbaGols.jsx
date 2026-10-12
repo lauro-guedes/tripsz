@@ -63,7 +63,7 @@ function Summary({ t, details }) {
 export function AbaGols({ details, isMobile }) {
   const [filter, setFilter] = useState("tudo");
   if (!details || details.events.length === 0) {
-    return <EmptyNote title="Sem acontecimentos para este jogo" text="A API-Football não trouxe os gols, cartões e substituições desta partida." />;
+    return <EmptyNote title="Sem acontecimentos para este jogo" text="Não encontramos os gols, cartões e substituições desta partida." />;
   }
   const t = buildTimeline(details);
   const items = filter === "gols" ? t.items.filter((i) => i.isGoal) : t.items;

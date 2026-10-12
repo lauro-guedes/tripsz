@@ -32,7 +32,7 @@ function Dot({ color }) {
 export function AbaEstatisticas({ details, isMobile }) {
   const rows = statRows(details);
   if (rows.length === 0) {
-    return <EmptyNote title="Sem estatísticas para este jogo" text="A API-Football não tem os números desta partida (isso acontece mais em competições menores)." />;
+    return <EmptyNote title="Sem estatísticas para este jogo" text="Não encontramos os números desta partida (isso acontece mais em competições menores)." />;
   }
   const home = teamLabel(details.teams.home.name);
   const away = teamLabel(details.teams.away.name);
