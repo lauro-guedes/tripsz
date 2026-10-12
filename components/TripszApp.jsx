@@ -237,7 +237,7 @@ export default function App() {
       flex_level: answers.flexLevel,
       adults: answers.adults,
       kids: answers.kids,
-      budget: answers.budget,
+      budget: answers.budget || answers.budgetCustom || null,
       priority: answers.priority,
       pace: answers.pace,
       favorite_teams: answers.favoriteTeams || [],
@@ -398,10 +398,11 @@ export default function App() {
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "loading" && <LoadingScreen onWork={handleSaveTrip} onDone={(next) => setScreen(next || "resultado")} />}
-      {screen === "resultado" && <ResultadoRoteiro trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "resultado" && <ResultadoRoteiro answers={answers} trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} selectedOption={chosenOption} paymentNotice={paymentNotice} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
+          answers={answers}
           trip={trip}
           options={options}
           chosenOption={chosenOption}

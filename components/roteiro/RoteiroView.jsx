@@ -213,7 +213,7 @@ export function restrictionBullets(trip, options) {
 }
 
 /** Tela do roteiro: usada logo depois do questionário (Resultado) e ao abrir um roteiro salvo (Detalhe). */
-export function RoteiroView({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout, onBack }) {
+export function RoteiroView({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout, onBack }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -244,6 +244,19 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
   const gamesById = new Map((trip.gamesAll || trip.games).map((g) => [g.id, g]));
   // "Jogos possíveis": o maior número de jogos entre as opções (a B pode ter mais que a A).
   const possibleCount = Math.max(trip.games.length, ...options.map((o) => o.gamesCount || 0));
+
+  // Resumo do que a pessoa pediu: datas, orçamento e clubes favoritos.
+  const fmtDate = (iso) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "");
+  const budgetText = answers ? answers.budget || answers.budgetCustom || "" : "";
+  const favs = answers && Array.isArray(answers.favoriteTeams) ? answers.favoriteTeams : [];
+  const tripInfo = answers
+    ? [
+        answers.dateStart ? ["Ida", fmtDate(answers.dateStart)] : null,
+        answers.dateEnd ? ["Volta", fmtDate(answers.dateEnd)] : null,
+        budgetText ? ["Orçamento", /^R\$/i.test(String(budgetText).trim()) ? String(budgetText).trim() : `R$ ${String(budgetText).trim()}`] : null,
+        ["Clubes favoritos", favs.length > 0 ? favs.map(teamLabel).join(", ") : "Sem clubes favoritos"],
+      ].filter(Boolean)
+    : [];
   const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
 
   const handleChoose = (key) => {
@@ -302,7 +315,8 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
       <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       {/* faixa do título */}
-      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 10 : 24, padding: isMobile ? "14px 16px" : `16px ${px}` }}>
+      <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: isMobile ? 12 : 14, padding: isMobile ? "14px 16px" : `16px ${px}` }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 10 : 24 }}>
         <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
           <Badge>Meus Roteiros</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 20, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
@@ -319,6 +333,17 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>← Voltar para meus roteiros</p>
           </div>
         )}
+      </div>
+      {tripInfo.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? "8px 20px" : "8px 36px" }}>
+          {tripInfo.map(([label, value]) => (
+            <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: isMobile ? 13 : 14, color: TEXT, margin: 0 }}>{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
       </div>
 
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 32, alignItems: "flex-start", padding: isMobile ? "20px 16px 32px" : `40px ${px} 80px` }}>
@@ -400,9 +425,10 @@ export function RoteiroView({ trip, options, chosenOption, onChooseOption, planL
 }
 
 /** Logo depois do questionário. */
-export function ResultadoRoteiro({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
+export function ResultadoRoteiro({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
   return (
     <RoteiroView
+      answers={answers}
       trip={trip}
       options={options}
       chosenOption={chosenOption}
@@ -419,9 +445,10 @@ export function ResultadoRoteiro({ trip, options, chosenOption, onChooseOption, 
 }
 
 /** Roteiro salvo, aberto pela Biblioteca. */
-export function RoteiroDetalhe({ trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
+export function RoteiroDetalhe({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
   return (
     <RoteiroView
+      answers={answers}
       trip={trip}
       options={options}
       chosenOption={chosenOption}
