@@ -74,17 +74,58 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
     load();
   }, [load]);
 
-  // Trava a rolagem da página de trás e fecha com Esc.
+  // Fecha com Esc (sempre a versão mais recente do onClose).
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e) => e.key === "Escape" && onClose();
+    const onKey = (e) => e.key === "Escape" && closeRef.current();
     window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Trava a página de trás de verdade (no iPhone, overflow:hidden sozinho não
+  // basta): congela o body na posição atual e devolve a rolagem ao fechar.
+  useEffect(() => {
+    const y = window.scrollY;
+    const b = document.body.style;
+    const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width, overflow: b.overflow };
+    b.position = "fixed";
+    b.top = `-${y}px`;
+    b.left = "0";
+    b.right = "0";
+    b.width = "100%";
+    b.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
+      Object.assign(b, prev);
+      window.scrollTo(0, y);
     };
-  }, [onClose]);
+  }, []);
+
+  // Celular: arrastar a alça (ou o cabeçalho) pra baixo minimiza; tocar na alça também.
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef(null);
+  const onDragStart = (e) => {
+    if (!isMobile) return;
+    dragRef.current = { startY: e.touches[0].clientY, startT: Date.now(), moved: false };
+    setDragging(true);
+  };
+  const onDragMove = (e) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const dy = e.touches[0].clientY - d.startY;
+    if (Math.abs(dy) > 6) d.moved = true;
+    setDragY(Math.max(0, dy));
+  };
+  const onDragEnd = () => {
+    const d = dragRef.current;
+    dragRef.current = null;
+    setDragging(false);
+    if (!d) return;
+    const fast = d.moved && Date.now() - d.startT < 300 && dragY > 40;
+    if (dragY > 110 || fast) closeRef.current();
+    else setDragY(0);
+  };
 
   const measure = useCallback(() => {
     const el = scrollRef.current;
@@ -126,23 +167,23 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   const note = game.api_fixture_id ? "Dados da partida: API-Football" : "Jogo registrado manualmente";
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.4)", overscrollBehavior: "contain", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
       <style>{"@keyframes tripszShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}"}</style>
       <div
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="detalhes-titulo"
-        style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 880, maxHeight: isMobile ? "calc(100vh - 56px)" : "calc(100vh - 96px)", borderRadius: isMobile ? "20px 20px 0 0" : 20, boxShadow: "0 20px 64px rgba(15,23,42,0.15)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 880, maxHeight: isMobile ? "calc(100vh - 56px)" : "calc(100vh - 96px)", borderRadius: isMobile ? "20px 20px 0 0" : 20, boxShadow: "0 20px 64px rgba(15,23,42,0.15)", display: "flex", flexDirection: "column", overflow: "hidden", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}
       >
         {isMobile && (
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, flexShrink: 0 }}>
-            <div style={{ background: BORDER, width: 36, height: 4, borderRadius: 999 }} />
+          <div onClick={onClose} onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} role="button" aria-label="Minimizar" style={{ display: "flex", justifyContent: "center", padding: "12px 0 6px", flexShrink: 0, cursor: "pointer", touchAction: "none" }}>
+            <div style={{ background: BORDER, width: 44, height: 5, borderRadius: 999 }} />
           </div>
         )}
 
         {/* cabeçalho fixo */}
-        <div style={{ padding: isMobile ? 20 : pad, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 20, flexShrink: 0 }}>
+        <div onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} style={{ padding: isMobile ? 20 : pad, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 20, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <p id="detalhes-titulo" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 18, lineHeight: 1.3, color: TEXT, margin: 0, flex: 1, minWidth: 0 }}>Detalhes da experiência</p>
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -210,7 +251,7 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
         </div>
 
         {/* conteúdo rolável */}
-        <div ref={scrollRef} onScroll={measure} role="tabpanel" style={{ flex: 1, minHeight: isMobile ? 360 : 420, overflowY: "auto", padding: pad, scrollbarWidth: "thin" }}>
+        <div ref={scrollRef} onScroll={measure} role="tabpanel" style={{ flex: 1, minHeight: isMobile ? 360 : 420, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", padding: pad, scrollbarWidth: "thin" }}>
           {content}
         </div>
 

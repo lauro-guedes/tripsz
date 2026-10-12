@@ -1,6 +1,6 @@
 "use client";
 import { CheckCheck, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { flagEmoji, formatInt, formatShortDate } from "../../../lib/gameDetailsCore";
 import { teamLabel } from "../../../lib/textUtils";
 import { BG_ALT, BODY, BORDER, FONT_DISPLAY, FONT_MONO, GREEN_DARK, GREEN_SOFT, MUTED, TEXT } from "../../../lib/tokens";
@@ -10,17 +10,55 @@ import { SectionTitle } from "./ui";
 /** Foto usada quando a API não tem a imagem do estádio. Pra trocar, mude só esta linha (a imagem fica em /public). */
 export const STADIUM_FALLBACK_IMAGE = "/foto-estadio.jpg";
 
+// Cada estádio é buscado na Wikipedia só uma vez enquanto a página estiver aberta.
+const wikiPhotos = new Map();
+
 function StadiumPhoto({ venue, isMobile }) {
-  const [failed, setFailed] = useState(false);
-  const useFallback = failed || !venue || !venue.image;
+  // 1) foto da API-Football; 2) foto real da Wikipedia; 3) imagem genérica.
+  const [apiFailed, setApiFailed] = useState(false);
+  const [wiki, setWiki] = useState(null); // { url } | null
+  const [wikiFailed, setWikiFailed] = useState(false);
+  const apiImage = venue && venue.image && !apiFailed ? venue.image : null;
+  const venueName = venue && venue.name;
+  const venueCity = venue && venue.city;
+
+  useEffect(() => {
+    if (apiImage || !venueName) return;
+    const key = `${venueName}|${venueCity || ""}`;
+    if (wikiPhotos.has(key)) {
+      setWiki(wikiPhotos.get(key));
+      return;
+    }
+    let alive = true;
+    fetch(`/api/venues/photo?name=${encodeURIComponent(venueName)}&city=${encodeURIComponent(venueCity || "")}`)
+      .then((r) => r.json())
+      .then((j) => {
+        const val = j && j.url ? { url: j.url } : null;
+        wikiPhotos.set(key, val);
+        if (alive) setWiki(val);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [apiImage, venueName, venueCity]);
+
+  const wikiImage = !apiImage && wiki && !wikiFailed ? wiki.url : null;
+  const realImage = apiImage || wikiImage;
+  const useFallback = !realImage;
   return (
     <div style={{ position: "relative", height: isMobile ? 230 : 262, borderRadius: 12, overflow: "hidden", background: BG_ALT, width: "100%" }}>
       <img
-        src={useFallback ? STADIUM_FALLBACK_IMAGE : venue.image}
+        src={useFallback ? STADIUM_FALLBACK_IMAGE : realImage}
         alt={useFallback ? "Vista das arquibancadas de um estádio" : `Foto do ${venue.name || "estádio"}`}
-        onError={() => setFailed(true)}
+        onError={() => (apiImage ? setApiFailed(true) : setWikiFailed(true))}
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
+      {wikiImage && (
+        <div style={{ position: "absolute", left: 12, bottom: 12, background: "rgba(15,23,42,0.8)", borderRadius: 4, padding: "4px 8px" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, lineHeight: 1.4, color: "#fff", margin: 0 }}>Foto: Wikipedia</p>
+        </div>
+      )}
       {useFallback && (
         <div style={{ position: "absolute", left: 12, bottom: 12, background: "rgba(15,23,42,0.8)", borderRadius: 4, padding: "4px 8px" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, lineHeight: 1.4, color: "#fff", margin: 0 }}>Imagem ilustrativa</p>

@@ -197,7 +197,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {grouped[season].map((g) => {
                   return (
-                    <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div key={g.id} onClick={() => { if (editingId !== g.id) setDetailsId(g.id); }} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, cursor: editingId === g.id ? "default" : "pointer" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                         <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
                           <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{dateOnly(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
@@ -225,17 +225,17 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                           <MapPin size={16} color={BODY} />
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
                         </div>
-                        <div onClick={() => setDetailsId(g.id)} role="button" style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
+                        <div role="button" style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Ver detalhes da experiência</p>
                           <Icon name="chevronRight" size={14} color={GREEN} />
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
                         <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
                         <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
                       </div>
                       {editingId === g.id && (
-                        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, cursor: "default" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                               {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
                                 <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>

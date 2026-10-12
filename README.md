@@ -28,6 +28,7 @@ app/
     trip/plan                      monta o roteiro com jogos reais
     games/search                   Buscar Jogos por cidade (data + raio)
     games/browse                   Buscar Jogos por país, liga ou clube (lê só do fixtures_calendar, sem gastar API)
+    venues/photo                   Foto real do estádio (Wikipedia) quando a API-Football não tem
     attended-games/*               Registrar Jogo (busca por estádio/time)
     teams/*, cities/suggest        escudos e sugestões de times e cidades
     ranking, profile/*, public-profile/[slug]
