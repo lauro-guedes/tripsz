@@ -12,9 +12,22 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
   const FLEX_OPTS = [{ id: "fixed", label: "Datas fixas" }, { id: "some", label: "Posso variar alguns dias" }, { id: "flex", label: "Bastante flexibilidade" }];
   const [error, setError] = useState(null);
 
+  const TOO_FAR = "Só dá pra montar viagens dos próximos 6 meses — os calendários além disso ainda não foram divulgados.";
+  // Valida de verdade: o atributo max do campo de data não impede de digitar.
+  const checkDates = (start, end) => {
+    const today = todayInSaoPaulo();
+    const max = maxSearchDate();
+    if (!start || !end) return "Escolha a data de ida e a data de volta antes de continuar.";
+    if (start < today || end < today) return "Escolha datas de hoje em diante.";
+    if (start > max || end > max) return TOO_FAR;
+    if (end < start) return "A data de volta não pode ser antes da ida.";
+    return null;
+  };
+
   const handleNext = () => {
-    if (!answers.dateStart || !answers.dateEnd) {
-      setError("Escolha a data de ida e a data de volta antes de continuar.");
+    const problem = checkDates(answers.dateStart, answers.dateEnd);
+    if (problem) {
+      setError(problem);
       return;
     }
     setError(null);
@@ -44,6 +57,12 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   max={maxSearchDate()}
                   onChange={(e) => {
                     const newStart = e.target.value;
+                    if (newStart && (newStart > maxSearchDate() || newStart < todayInSaoPaulo())) {
+                      setError(newStart > maxSearchDate() ? TOO_FAR : "Escolha datas de hoje em diante.");
+                      setAnswers((a) => ({ ...a, dateStart: "", dateEnd: "" }));
+                      return;
+                    }
+                    setError(null);
                     setAnswers((a) => ({
                       ...a,
                       dateStart: newStart,
@@ -63,7 +82,16 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   value={answers.dateEnd || ""}
                   min={answers.dateStart || todayInSaoPaulo()}
                   max={maxSearchDate()}
-                  onChange={(e) => setAnswers((a) => ({ ...a, dateEnd: e.target.value }))}
+                  onChange={(e) => {
+                    const newEnd = e.target.value;
+                    if (newEnd && (newEnd > maxSearchDate() || newEnd < (answers.dateStart || todayInSaoPaulo()))) {
+                      setError(newEnd > maxSearchDate() ? TOO_FAR : "A data de volta não pode ser antes da ida.");
+                      setAnswers((a) => ({ ...a, dateEnd: "" }));
+                      return;
+                    }
+                    setError(null);
+                    setAnswers((a) => ({ ...a, dateEnd: newEnd }));
+                  }}
                   style={{ flex: 1, border: "none", outline: "none", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, background: "transparent" }}
                 />
               </div>
