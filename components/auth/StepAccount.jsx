@@ -1,4 +1,5 @@
 "use client";
+import { NomeUsuarioFields } from "./NomeUsuarioFields";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar } from "../nav/WizardChrome";
@@ -37,7 +38,7 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
   };
   const passwordValid = passChecks.upper && passChecks.lower && passChecks.len;
   const confirmValid = (answers.passwordConfirm || "") === password && password.length > 0;
-  const nameValid = (answers.name || "").trim().length > 1;
+  const [nameState, setNameState] = useState({});
   const whatsappDigits = (answers.whatsapp || "").replace(/\D/g, "");
   const whatsappValid = whatsappDigits.length === 10 || whatsappDigits.length === 11;
 
@@ -58,9 +59,11 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
 
   const handleCreateAccount = async () => {
     setError(null);
-    setTouched({ name: true, email: true, whatsapp: true, password: true, passwordConfirm: true });
+    setTouched({ name: true, first: true, email: true, whatsapp: true, password: true, passwordConfirm: true });
 
-    if (!nameValid) return setError("Preencha seu nome completo.");
+    if (!nameState.firstOk || !nameState.lastOk) return setError("Preencha nome e sobrenome.");
+    if (nameState.checking) return setError("Aguarde a verificação do nome de usuário.");
+    if (!nameState.usernameValid) return setError("Escolha um nome de usuário válido e disponível.");
     if (!emailValid) return setError("Digite um e-mail válido.");
     if (!whatsappValid) return setError("Digite um WhatsApp válido, com DDD.");
     if (!passwordValid) return setError("A senha precisa atender aos critérios abaixo.");
@@ -72,7 +75,7 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
       const { data, error } = await supabase.auth.signUp({
         email: answers.email,
         password: answers.password,
-        options: { data: { name: answers.name, whatsapp: answers.whatsapp } },
+        options: { data: { name: `${(answers.firstName || "").trim()} ${(answers.lastName || "").trim()}`.trim(), first_name: (answers.firstName || "").trim(), last_name: (answers.lastName || "").trim(), username: answers.username, whatsapp: answers.whatsapp } },
       });
       if (error) {
         setError(error.message);
@@ -155,21 +158,16 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
           <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "flex-start", width: "100%" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Criar conta</p>
 
-            {/* Nome */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Nome</p>
-              <input
-                type="text"
-                value={answers.name || ""}
-                onChange={(e) => set("name", e.target.value)}
-                onBlur={() => touch("name")}
-                placeholder="Seu nome completo"
-                style={fieldStyle(touched.name && !nameValid)}
-              />
-              {touched.name && !nameValid && (
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", margin: 0 }}>Digite seu nome completo.</p>
-              )}
-            </div>
+            {/* Nome, sobrenome e @usuário */}
+            <NomeUsuarioFields
+              firstName={answers.firstName}
+              lastName={answers.lastName}
+              username={answers.username}
+              fieldStyle={fieldStyle(false)}
+              showErrors={!!touched.first}
+              onValidity={setNameState}
+              onChange={(k, v) => setAnswers((a) => ({ ...a, [k]: v, ...(k === "firstName" || k === "lastName" ? { name: `${(k === "firstName" ? v : a.firstName) || ""} ${(k === "lastName" ? v : a.lastName) || ""}`.trim() } : {}) }))}
+            />
 
             {/* E-mail */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>

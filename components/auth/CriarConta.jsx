@@ -1,4 +1,5 @@
 "use client";
+import { NomeUsuarioFields } from "./NomeUsuarioFields";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
@@ -20,7 +21,11 @@ export function CriteriaDot({ ok, label }) {
 
 export function CriarConta({ onDone, onLogin, onHome }) {
   const isMobile = useIsMobile();
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [nameState, setNameState] = useState({});
+  const [showNameErrors, setShowNameErrors] = useState(false);
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +46,7 @@ export function CriarConta({ onDone, onLogin, onHome }) {
   const passChecks = { upper: /[A-Z]/.test(password), lower: /[a-z]/.test(password), len: password.length >= 8 };
   const passwordValid = passChecks.upper && passChecks.lower && passChecks.len;
   const confirmValid = passwordConfirm === password && password.length > 0;
-  const nameValid = name.trim().length > 1;
+  const name = `${firstName.trim()} ${lastName.trim()}`.trim();
   const whatsappDigits = whatsapp.replace(/\D/g, "");
   const whatsappValid = whatsappDigits.length === 10 || whatsappDigits.length === 11;
 
@@ -57,7 +62,10 @@ export function CriarConta({ onDone, onLogin, onHome }) {
 
   const handleCreateAccount = async () => {
     setError(null);
-    if (!nameValid) return setError("Preencha seu nome completo.");
+    setShowNameErrors(true);
+    if (!nameState.firstOk || !nameState.lastOk) return setError("Preencha nome e sobrenome.");
+    if (nameState.checking) return setError("Aguarde a verificação do nome de usuário.");
+    if (!nameState.usernameValid) return setError("Escolha um nome de usuário válido e disponível.");
     if (!emailValid) return setError("Digite um e-mail válido.");
     if (!whatsappValid) return setError("Digite um WhatsApp válido, com DDD.");
     if (!passwordValid) return setError("A senha precisa atender aos critérios abaixo.");
@@ -69,7 +77,7 @@ export function CriarConta({ onDone, onLogin, onHome }) {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name, whatsapp } },
+        options: { data: { name, first_name: firstName.trim(), last_name: lastName.trim(), username, whatsapp } },
       });
       if (signUpError) {
         setError(signUpError.message);
@@ -120,10 +128,15 @@ export function CriarConta({ onDone, onLogin, onHome }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Cadastro</p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Nome</p>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" style={fieldStyle} />
-            </div>
+            <NomeUsuarioFields
+              firstName={firstName}
+              lastName={lastName}
+              username={username}
+              fieldStyle={fieldStyle}
+              showErrors={showNameErrors}
+              onValidity={setNameState}
+              onChange={(k, v) => (k === "firstName" ? setFirstName(v) : k === "lastName" ? setLastName(v) : setUsername(v))}
+            />
             <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>E-mail</p>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome@exemplo.com" style={fieldStyle} />

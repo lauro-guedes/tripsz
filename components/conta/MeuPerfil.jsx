@@ -43,6 +43,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [country, setCountry] = useState("");
@@ -83,6 +84,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
       prefs: user.user_metadata?.preferences || [],
     };
     setName(loaded.name);
+    supabase.from("profiles").select("username").eq("user_id", user.id).maybeSingle().then(({ data }) => setUsername(data?.username || ""));
     setEmail(loaded.email);
     setWhatsapp(loaded.whatsapp);
     setCountry(loaded.country);
@@ -331,9 +333,15 @@ export function MeuPerfil({ onNavigate, onLogout }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome do Usuário</p>
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome</p>
                 <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} />
               </div>
+              {username && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome de usuário</p>
+                  <input value={`@${username}`} readOnly style={{ ...fieldStyle, color: MUTED, background: "#f1f5f9" }} />
+                </div>
+              )}
               <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>E-mail</p>

@@ -38,6 +38,14 @@ export async function POST(request) {
       return Response.json({ slug: existing.slug });
     }
 
+    // Se a pessoa já tem @usuário, o link público é o próprio @ (único na plataforma e sem hífen,
+    // então nunca colide com os links antigos "nome-xxxx").
+    const { data: prof } = await supabase.from("profiles").select("username").eq("user_id", userId).maybeSingle();
+    if (prof?.username) {
+      const { error: uErr } = await supabase.from("public_profiles").insert({ user_id: userId, slug: prof.username });
+      if (!uErr) return Response.json({ slug: prof.username });
+    }
+
     const base = slugify(name);
     let slug = null;
     // Tenta um sufixo aleatório algumas vezes, pro caso raro de colisão.

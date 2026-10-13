@@ -205,3 +205,10 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 - Consultoria: Pix ou cartão via `/api/checkout` (API de Pagamentos); o Pix é confirmado por `/api/checkout/status` e pelo webhook.
 - Tela: `components/pagamento/PagamentoModal.jsx` (Card Payment Brick + QR Code Pix). Precisa de `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` e `MERCADOPAGO_ACCESS_TOKEN`.
 - Migração aplicada: coluna `subscriptions.mercadopago_payment_id`.
+
+## @usuário, nome e sobrenome
+
+- Cadastro pede **Nome**, **Sobrenome** e **@usuário** (`components/auth/NomeUsuarioFields.jsx`); `user_metadata.name` continua sendo "Nome Sobrenome".
+- Regras do @ em `lib/username.js` (3–20 caracteres, a–z, 0–9, `.` e `_`, sem repetição) e conferência em `GET /api/username/check`.
+- Unicidade garantida no banco: `supabase-profiles-username.sql` (rodar uma vez no SQL Editor) cria `public.profiles` (índice único no @), as funções que geram o @ e um gatilho em `auth.users`. Quem entra com Google recebe `nome.sobrenome` (com número se já existir).
+- O link público do perfil passa a ser o próprio @.
