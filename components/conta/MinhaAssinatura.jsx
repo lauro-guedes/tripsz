@@ -229,7 +229,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
 
   const sub = access.subscription;
   const planLabel = sub?.plan === "annual" ? "Plano Assinante — Anual" : sub?.plan === "monthly" ? "Plano Assinante — Mensal" : null;
-  const planPrice = sub?.plan === "annual" ? "R$ 99,90/ano" : "R$ 9,90/mês";
+  const planPrice = sub?.plan === "annual" ? "R$ 175,00/ano" : "R$ 16,90/mês";
   // Próxima cobrança estimada a partir da data de início — o Mercado Pago
   // não devolve essa data pronta pra gente exibir, então calculamos com
   // base na frequência do plano (mensal = +1 mês, anual = +1 ano).

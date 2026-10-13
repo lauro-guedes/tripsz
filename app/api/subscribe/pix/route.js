@@ -3,10 +3,10 @@ import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { activatePixPassport, mpFetch, paymentUserOk, pixInfo } from "@/lib/mpServer";
 
-const ANNUAL_PRICE = 99.9;
+const ANNUAL_PRICE = 175;
 
 /**
- * POST /api/subscribe/pix — gera um Pix do plano anual (R$ 99,90, acesso por 365 dias,
+ * POST /api/subscribe/pix — gera um Pix do plano anual (R$ 175,00, acesso por 365 dias,
  * sem renovação automática). Devolve o QR Code para a tela mostrar.
  */
 export async function POST(request) {

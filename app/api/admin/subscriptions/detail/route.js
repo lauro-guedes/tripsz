@@ -68,7 +68,7 @@ export async function GET(request) {
       userEmail: user?.email || "—",
       plan: sub.plan === "annual" ? "Anual" : "Mensal",
       status: sub.status,
-      amount: sub.plan === "annual" ? 99.9 : 9.9,
+      amount: sub.plan === "annual" ? 175 : 16.9,
       currentPeriodEnd: sub.current_period_end,
       paymentMethod: PAYMENT_METHOD_NAMES[sub.payment_method_id] || sub.payment_method_id || "—",
       createdAt: sub.created_at,

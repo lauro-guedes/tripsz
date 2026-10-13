@@ -61,7 +61,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
     ["Posso cancelar a assinatura a qualquer momento?", "Sim, sem multa. Seu acesso continua até o fim do período pago."],
     ["O que acontece com meu Passaporte de Estádios se eu cancelar?", "Seus dados ficam salvos, mas o acesso ao Passaporte de Estádios e às conquistas fica pausado até reativar."],
     ["Preciso ser assinante para contratar a consultoria?", "Não, a consultoria é um add-on avulso. Mas assinantes ganham 15% de desconto."],
-    ["Como funciona o desconto anual?", "No plano anual você paga R$ 99,90/ano em vez de R$ 118,80 (12x R$ 9,90), economizando R$ 18,90."],
+    ["Como funciona o desconto anual?", "No plano anual você paga R$ 175,00/ano em vez de R$ 202,80 (12x R$ 16,90), economizando R$ 27,80."],
     ["É só futebol europeu ou inclui jogos no Brasil?", "A plataforma cobre 13 países, incluindo Brasil, Argentina, Uruguai, Chile e Colômbia, além das principais ligas europeias."],
   ];
 
@@ -223,7 +223,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
           <div onClick={() => setBillingAnnual((v) => !v)} style={{ width: 44, height: 24, borderRadius: 12, background: GREEN, position: "relative", cursor: "pointer" }}>
             <div style={{ position: "absolute", top: 2, left: billingAnnual ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left .15s" }} />
           </div>
-          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? TEXT : MUTED, margin: 0 }}>Anual (-16%)</p>
+          <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: billingAnnual ? TEXT : MUTED, margin: 0 }}>Anual (-14%)</p>
         </div>
 
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 20 : 32, width: "100%", maxWidth: 1000 }}>
@@ -257,10 +257,10 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#fff", margin: 0 }}>MAIS POPULAR</p>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "baseline" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 99,90" : "R$ 9,90"}</p>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>{billingAnnual ? "R$ 175,00" : "R$ 16,90"}</p>
                 <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: "#6b7280", margin: 0 }}>{billingAnnual ? "/ ano" : "/ mês"}</p>
               </div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 18,90/ano" : "ou R$ 99,90/ano e economize 16%"}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN, margin: 0 }}>{billingAnnual ? "Economia de R$ 27,80/ano" : "ou R$ 175,00/ano e economize 14%"}</p>
             </div>
             <div onClick={onSubscribe} style={{ background: GREEN, borderRadius: 999, padding: "12px 20px", textAlign: "center", cursor: "pointer" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Assinar agora</p>

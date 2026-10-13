@@ -1,5 +1,5 @@
 "use client";
-import { BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
+import { BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { Check, Copy, CreditCard, QrCode, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -138,7 +138,7 @@ export function PagamentoModal({ amount, title, subtitle, allowPix, onCard, onPi
             {tab === "card" && (
               <CardPayment
                 initialization={{ amount }}
-                customization={{ paymentMethods: { maxInstallments: 1 }, visual: { hideFormTitle: true } }}
+                customization={{ paymentMethods: { maxInstallments: 1 }, visual: { hideFormTitle: true, style: { theme: "default", customVariables: { baseColor: GREEN, baseColorFirstVariant: "#00a844", baseColorSecondVariant: "#00a844", buttonTextColor: "#ffffff", successColor: GREEN } } } }}
                 onSubmit={handleCard}
                 onError={(e) => console.error("Brick de cartão:", e)}
               />
@@ -149,7 +149,7 @@ export function PagamentoModal({ amount, title, subtitle, allowPix, onCard, onPi
                 {!pix ? (
                   <>
                     <p style={{ fontFamily: FONT_BODY, fontSize: 14, color: MUTED, margin: 0 }}>Gere o QR Code, pague no app do seu banco e o acesso é liberado na hora. O Pix vale por 30 minutos.</p>
-                    <div onClick={pixLoading ? undefined : startPix} style={{ background: GREEN_BUTTON, borderRadius: 8, padding: "14px 20px", textAlign: "center", cursor: pixLoading ? "default" : "pointer", opacity: pixLoading ? 0.6 : 1 }}>
+                    <div onClick={pixLoading ? undefined : startPix} style={{ background: GREEN, borderRadius: 8, padding: "14px 20px", textAlign: "center", cursor: pixLoading ? "default" : "pointer", opacity: pixLoading ? 0.6 : 1 }}>
                       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{pixLoading ? "Gerando..." : "Gerar Pix"}</p>
                     </div>
                   </>

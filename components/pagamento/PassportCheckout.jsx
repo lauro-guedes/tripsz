@@ -18,7 +18,7 @@ export function PassportCheckout({ plan, onClose, onDone }) {
   const annual = plan === "annual";
   return (
     <PagamentoModal
-      amount={annual ? 99.9 : 9.9}
+      amount={annual ? 175 : 16.9}
       title={annual ? "Passaporte — Plano Anual" : "Passaporte — Plano Mensal"}
       subtitle={annual ? "Cartão (renova todo ano) ou Pix (acesso por 12 meses, sem renovação automática)." : "Cobrança mensal no cartão, cancele quando quiser."}
       allowPix={annual}
