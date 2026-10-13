@@ -1,6 +1,8 @@
 "use client";
+import { authFetch } from "../../lib/authFetch";
 import { checkPassportAccess } from "../../lib/passportAccess";
 import { supabaseBrowser } from "../../lib/supabase";
+import { UsernameEditField } from "./UsernameEditField";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
@@ -44,6 +46,8 @@ export function MeuPerfil({ onNavigate, onLogout }) {
   const [success, setSuccess] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [originalUsername, setOriginalUsername] = useState("");
+  const [usernameBlocked, setUsernameBlocked] = useState(false);
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [country, setCountry] = useState("");
@@ -84,7 +88,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
       prefs: user.user_metadata?.preferences || [],
     };
     setName(loaded.name);
-    supabase.from("profiles").select("username").eq("user_id", user.id).maybeSingle().then(({ data }) => setUsername(data?.username || ""));
+    supabase.from("profiles").select("username").eq("user_id", user.id).maybeSingle().then(({ data }) => { setUsername(data?.username || ""); setOriginalUsername(data?.username || ""); });
     setEmail(loaded.email);
     setWhatsapp(loaded.whatsapp);
     setCountry(loaded.country);
@@ -177,6 +181,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
   const handleDiscard = () => {
     if (!original) return;
     setName(original.name);
+    setUsername(originalUsername);
     setEmail(original.email);
     setWhatsapp(original.whatsapp);
     setCountry(original.country);
@@ -207,9 +212,21 @@ export function MeuPerfil({ onNavigate, onLogout }) {
       }
     }
 
+    if (usernameBlocked) {
+      setError("Corrija o nome de usuário antes de salvar.");
+      return false;
+    }
+
     setSaving(true);
     try {
       const supabase = supabaseBrowser();
+
+      if (username && username !== originalUsername) {
+        const res = await authFetch("/api/username/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Não foi possível trocar o @.");
+        setOriginalUsername(data.username);
+      }
 
       // Trocar de senha exige confirmar a senha atual primeiro — o Supabase
       // não faz essa checagem sozinho, então reautenticamos antes de aplicar.
@@ -251,6 +268,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
     country !== original.country ||
     !sameArray(favoriteTeams, original.favoriteTeams) ||
     !sameArray(prefs, original.prefs) ||
+    (!!originalUsername && username !== originalUsername) ||
     !!currentPassword || !!newPassword || !!confirmPassword
   );
 
@@ -336,11 +354,8 @@ export function MeuPerfil({ onNavigate, onLogout }) {
                 <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome</p>
                 <input value={name} onChange={(e) => setName(e.target.value)} style={fieldStyle} />
               </div>
-              {username && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Nome de usuário</p>
-                  <input value={`@${username}`} readOnly style={{ ...fieldStyle, color: MUTED, background: "#f1f5f9" }} />
-                </div>
+              {originalUsername && (
+                <UsernameEditField value={username} original={originalUsername} onChange={setUsername} onValidity={setUsernameBlocked} fieldStyle={fieldStyle} />
               )}
               <div style={{ display: "flex", gap: 20, flexDirection: isMobile ? "column" : "row" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>

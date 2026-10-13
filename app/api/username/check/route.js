@@ -1,3 +1,4 @@
+import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { normalizeUsername, suggestUsername, usernameError } from "@/lib/username";
 
@@ -13,10 +14,12 @@ export async function GET(request) {
 
   try {
     const supabase = supabaseAdmin();
+    // Se a pessoa está logada, o próprio @ dela conta como livre (tela de editar perfil).
+    const me = request.headers.get("authorization") ? await authUser(request).catch(() => null) : null;
     const isTaken = async (name) => {
       const { data, error } = await supabase.from("profiles").select("user_id").eq("username", name).maybeSingle();
       if (error) throw error;
-      return !!data;
+      return !!data && data.user_id !== me?.id;
     };
     if (!(await isTaken(u))) return Response.json({ valid: true, available: true });
 
