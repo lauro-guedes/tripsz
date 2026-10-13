@@ -1,4 +1,5 @@
-import { MercadoPagoConfig, Preference } from "mercadopago";
+import { randomUUID } from "crypto";
+import { mpFetch, pixInfo } from "@/lib/mpServer";
 import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -20,7 +21,13 @@ export async function POST(request) {
       return Response.json({ error: "Usuário não autenticado." }, { status: 401 });
     }
     const userId = user.id; // vem do token conferido, nunca do corpo da requisição
-    const { tripAnswersId, scheduledDate, scheduledTime, selectedOption } = await request.json();
+    const { tripAnswersId, scheduledDate, scheduledTime, selectedOption, method, card } = await request.json();
+    if (method !== "pix" && method !== "card") {
+      return Response.json({ error: "Escolha a forma de pagamento (Pix ou cartão)." }, { status: 400 });
+    }
+    if (method === "card" && !card?.token) {
+      return Response.json({ error: "Dados do cartão incompletos." }, { status: 400 });
+    }
     if (!scheduledDate || !scheduledTime) {
       return Response.json({ error: "Escolha uma data e um horário para a consultoria." }, { status: 400 });
     }
@@ -59,8 +66,6 @@ export async function POST(request) {
       );
     }
 
-    const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN });
-    const preference = new Preference(client);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     const supabase = supabaseAdmin();
 
@@ -77,53 +82,53 @@ export async function POST(request) {
         .select("status")
         .eq("user_id", userId)
         .eq("status", "active")
+        .or(`current_period_end.is.null,current_period_end.gte.${new Date().toISOString().slice(0, 10)}`)
         .limit(1)
         .maybeSingle();
       hasPassport = !!sub;
     }
     const unitPrice = hasPassport ? 127.42 : 149.9;
 
-    const result = await preference.create({
-      body: {
-        items: [
-          {
-            title: "Consultoria humana — tripsz",
-            quantity: 1,
-            unit_price: unitPrice,
-            currency_id: "BRL",
-          },
-        ],
-        back_urls: {
-          success: `${siteUrl}/conta/roteiros/detalhe?status=paid`,
-          failure: `${siteUrl}/checkout?status=failed`,
-          pending: `${siteUrl}/checkout?status=pending`,
-        },
-        auto_return: "approved",
-        notification_url: `${siteUrl}/api/webhook`,
-        metadata: { userId, tripAnswersId, scheduledDate, scheduledTime, selectedOption: chosenOption },
-      },
-    });
+    const metadata = { user_id: userId, trip_answers_id: tripAnswersId, scheduled_date: scheduledDate, scheduled_time: scheduledTime, selected_option: chosenOption, kind: "consultoria" };
+    const common = {
+      transaction_amount: unitPrice,
+      description: "Consultoria humana — tripsz",
+      payer: { email: user.email || card?.payer?.email },
+      external_reference: userId,
+      metadata,
+      notification_url: `${siteUrl}/api/webhook`,
+    };
+    const body =
+      method === "pix"
+        ? { ...common, payment_method_id: "pix", date_of_expiration: new Date(Date.now() + 30 * 60 * 1000).toISOString().replace("Z", "-00:00") }
+        : {
+            ...common,
+            token: card.token,
+            installments: Number(card.installments) || 1,
+            payment_method_id: card.payment_method_id,
+            ...(card.issuer_id ? { issuer_id: card.issuer_id } : {}),
+            payer: { email: user.email || card.payer?.email, ...(card.payer?.identification ? { identification: card.payer.identification } : {}) },
+          };
 
-    // Registra o agendamento como "pending" até o webhook confirmar o
-    // pagamento. Diferente de antes, isto NUNCA bloqueia o acesso ao
-    // roteiro — só representa a compra opcional da consultoria.
+    const payment = await mpFetch("/v1/payments", { method: "POST", headers: { "X-Idempotency-Key": randomUUID() }, body: JSON.stringify(body) });
+
+    // Registra o pedido; o webhook (ou a consulta da tela) confirma o pagamento depois.
+    // NUNCA bloqueia o acesso ao roteiro — representa só a compra opcional da consultoria.
     const { error: dbError } = await supabase.from("orders").insert({
       user_id: userId,
       trip_answers_id: tripAnswersId,
-      mercadopago_preference_id: result.id,
-      status: "pending",
+      mercadopago_payment_id: String(payment.id),
+      status: payment.status === "approved" ? "paid" : payment.status === "rejected" ? "cancelled" : "pending",
+      paid_at: payment.status === "approved" ? new Date().toISOString() : null,
       item_type: "consultoria",
       amount_cents: Math.round(unitPrice * 100),
       scheduled_date: scheduledDate,
       scheduled_time: scheduledTime,
     });
-    if (dbError) {
-      console.error("Erro ao salvar pedido no Supabase:", dbError.message);
-      // Não bloqueia o pagamento por causa disso — o webhook confirma o
-      // status depois; só registramos o erro para investigar.
-    }
+    if (dbError) console.error("Erro ao salvar pedido no Supabase:", dbError.message);
 
-    return Response.json({ checkoutUrl: result.init_point });
+    if (method === "pix") return Response.json(pixInfo(payment));
+    return Response.json({ status: payment.status, statusDetail: payment.status_detail || null });
   } catch (e) {
     console.error("Erro em /api/checkout:", e);
     return Response.json(

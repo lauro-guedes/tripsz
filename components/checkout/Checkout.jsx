@@ -2,17 +2,24 @@
 import { authFetch } from "../../lib/authFetch";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GOLD_BORDER, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
+import { checkPassportAccess } from "../../lib/passportAccess";
 import { AuthedNav } from "../nav/AuthedNav";
+import { PagamentoModal } from "../pagamento/PagamentoModal";
 import { Badge } from "../ui/Badge";
 import { Icon } from "../ui/Icon";
 import { Loading } from "../ui/Loading";
 import { useIsMobile } from "../ui/useIsMobile";
-import { CreditCard, Info, Lock, QrCode, Receipt, Shield } from "lucide-react";
+import { CreditCard, Info, Lock, QrCode, Shield } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export function Checkout({ answers, selectedOption, paymentNotice, onBack, onDone, onNavigate, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPay, setShowPay] = useState(false);
+  const [price, setPrice] = useState(149.9);
+  useEffect(() => {
+    checkPassportAccess().then((a) => { if (a.legacy || a.subscription) setPrice(127.42); }).catch(() => {});
+  }, []);
   // Quem está contratando já está logada: o topo é o da área logada (antes era o da página
   // inicial, e clicar no logo ou no menu levava pra Home e apagava o roteiro em andamento).
   const [userName, setUserName] = useState("");
@@ -72,40 +79,44 @@ export function Checkout({ answers, selectedOption, paymentNotice, onBack, onDon
     })();
   }, [scheduledDateStr]);
 
-  const handlePayConsultoria = async () => {
-    setError(null);
-    setLoading(true);
+  const post = async (url, body) => {
+    const res = await authFetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    let data;
     try {
-      const res = await authFetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: answers.userId,
-          tripAnswersId: answers.tripAnswersId,
-          selectedOption,
-          scheduledDate: scheduledDateStr,
-          scheduledTime: selectedTime,
-        }),
-      });
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("O servidor não respondeu corretamente. Tente novamente em instantes.");
-      }
-      if (!res.ok) throw new Error(data.error || "Não foi possível iniciar o pagamento.");
-      // Manda o usuário pro checkout de verdade do Mercado Pago
-      window.location.href = data.checkoutUrl;
-    } catch (e) {
-      setError(e.message);
-      setLoading(false);
+      data = await res.json();
+    } catch {
+      throw new Error("O servidor não respondeu corretamente. Tente novamente em instantes.");
     }
+    if (!res.ok) throw new Error(data.error || "Não foi possível processar o pagamento.");
+    return data;
+  };
+  const base = { tripAnswersId: answers.tripAnswersId, selectedOption, scheduledDate: scheduledDateStr, scheduledTime: selectedTime };
+  const handlePayConsultoria = () => {
+    setError(null);
+    setShowPay(true);
   };
 
   const isMobile = useIsMobile();
 
   return (
     <div style={{ background: BG, width: "100%" }}>
+      {showPay && (
+        <PagamentoModal
+          amount={price}
+          title="Consultoria humana"
+          subtitle="Pix ou cartão de crédito, sem sair do site."
+          allowPix
+          doneText="Sua consultoria foi contratada. Ela aparece em Meus Roteiros."
+          onClose={() => setShowPay(false)}
+          onApproved={() => (onDone ? onDone() : window.location.reload())}
+          onCard={(formData) => post("/api/checkout", { ...base, method: "card", card: { token: formData.token, installments: formData.installments, payment_method_id: formData.payment_method_id, issuer_id: formData.issuer_id, payer: formData.payer } })}
+          onPix={() => post("/api/checkout", { ...base, method: "pix" })}
+          checkPix={async (id) => {
+            const res = await authFetch(`/api/checkout/status?paymentId=${encodeURIComponent(id)}`);
+            return (await res.json()).status;
+          }}
+        />
+      )}
       <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
       <div style={{ padding: isMobile ? "24px 16px" : 80, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
         <div onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", width: "fit-content" }}>
@@ -235,17 +246,13 @@ export function Checkout({ answers, selectedOption, paymentNotice, onBack, onDon
                     <QrCode size={14} color={TEXT} />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Pix</p>
                   </div>
-                  <div style={{ background: BG, border: `1px solid ${BORDER}`, display: "flex", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 999 }}>
-                    <Receipt size={14} color={TEXT} />
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Boleto</p>
-                  </div>
                 </div>
               </div>
               <div style={{ background: BG_ALT, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 12, width: "100%" }}>
                 <div style={{ background: "#fff", border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Icon name="arrowRight" size={16} color={TEXT} />
                 </div>
-                <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>Você será redirecionado ao ambiente seguro do Mercado Pago para concluir o pagamento com Pix, cartão ou boleto.</p>
+                <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>Você paga aqui mesmo, sem sair do site, com Pix ou cartão de crédito.</p>
               </div>
             </div>
             <div style={{ background: BG_ALT, borderRadius: 12, padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
@@ -254,7 +261,7 @@ export function Checkout({ answers, selectedOption, paymentNotice, onBack, onDon
             </div>
             {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
             <div onClick={loading || !selectedTime ? undefined : handlePayConsultoria} style={{ background: GREEN, opacity: loading || !selectedTime ? 0.5 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "16px 24px", borderRadius: 8, cursor: loading || !selectedTime ? "default" : "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase", margin: 0 }}>{loading ? "Redirecionando..." : "Confirmar e ir para o Mercado Pago"}</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", textTransform: "uppercase", margin: 0 }}>Confirmar e pagar</p>
               {!loading && <Icon name="arrowRight" size={16} color="#fff" />}
             </div>
           </div>

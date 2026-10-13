@@ -42,6 +42,7 @@ export async function POST(request) {
     const userId = user.id; // vem do token conferido, nunca do corpo da requisição
     const body = await request.json();
     const plan = body.plan;
+    const cardTokenId = body.cardTokenId || null;
     const email = user.email || body.email;
     if (!email) {
       return Response.json({ error: "Usuário sem e-mail." }, { status: 400 });
@@ -66,6 +67,9 @@ export async function POST(request) {
         external_reference: userId,
         payer_email: email,
         back_url: `${siteUrl}/conta/assinatura?status=success`,
+        // Checkout transparente: com o token do cartão a assinatura já nasce autorizada,
+        // sem mandar a pessoa para o site do Mercado Pago.
+        ...(cardTokenId ? { card_token_id: cardTokenId, status: "authorized" } : {}),
         auto_recurring: {
           frequency: cfg.frequency,
           frequency_type: cfg.frequency_type,
@@ -79,13 +83,17 @@ export async function POST(request) {
     const { error: dbError } = await supabase.from("subscriptions").insert({
       user_id: userId,
       plan,
-      status: "pending",
+      status: preapproval.status === "authorized" ? "active" : "pending",
       mercadopago_preapproval_id: preapproval.id,
+      payment_method_id: preapproval.payment_method_id || null,
     });
     if (dbError) {
       console.error("Erro ao salvar assinatura no Supabase:", dbError.message);
     }
 
+    if (cardTokenId) {
+      return Response.json({ ok: true, status: preapproval.status === "authorized" ? "active" : "pending" });
+    }
     return Response.json({ checkoutUrl: preapproval.init_point });
   } catch (e) {
     console.error("Erro em /api/subscribe:", e);

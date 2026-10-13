@@ -1,8 +1,8 @@
 "use client";
-import { authFetch } from "../../lib/authFetch";
 import { FAN_LEVEL_TEXTS } from "../../lib/fanLevels";
 import { initials } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BG, GREEN_BUTTON, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
+import { PassportCheckout } from "../pagamento/PassportCheckout";
 import { Badge } from "../ui/Badge";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Award, BarChart2, Clipboard, Share2, Star, TrendingUp } from "lucide-react";
@@ -14,22 +14,9 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleSubscribe = async (plan) => {
+  const handleSubscribe = (plan) => {
     setError(null);
     setLoadingPlan(plan);
-    try {
-      const res = await authFetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, email: userEmail, plan }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Não foi possível iniciar a assinatura.");
-      window.location.href = data.checkoutUrl;
-    } catch (e) {
-      setError(e.message);
-      setLoadingPlan(null);
-    }
   };
 
   const features = [
@@ -43,6 +30,7 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
 
   return (
     <div style={{ background: BG, width: "100%" }}>
+      {loadingPlan && <PassportCheckout plan={loadingPlan} onClose={() => setLoadingPlan(null)} />}
       <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `64px ${px}` }}>
         <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24, padding: isMobile ? `0 ${px}` : 0 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
@@ -103,8 +91,8 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
             <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: 0 }}>Plano Mensal</p>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 9,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/mês</span></p>
-              <div onClick={loadingPlan ? undefined : () => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{loadingPlan === "monthly" ? "Redirecionando..." : "Assinar Mensal"}</p>
+              <div onClick={() => handleSubscribe("monthly")} style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Assinar Mensal</p>
               </div>
             </div>
             <div style={{ flex: 1, background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column", gap: 16, position: "relative" }}>
@@ -114,8 +102,8 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: GREEN, textTransform: "uppercase", margin: 0 }}>Plano Anual</p>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 28, color: TEXT, margin: 0 }}>R$ 99,90<span style={{ fontSize: 13, color: MUTED, fontWeight: 500 }}>/ano</span></p>
               <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>Economia de R$ 18,90/ano</p>
-              <div onClick={loadingPlan ? undefined : () => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: loadingPlan ? "default" : "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>{loadingPlan === "annual" ? "Redirecionando..." : "Assinar Anual"}</p>
+              <div onClick={() => handleSubscribe("annual")} style={{ background: GREEN_BUTTON, padding: "12px 20px", borderRadius: 8, textAlign: "center", cursor: "pointer" }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Assinar Anual</p>
               </div>
             </div>
           </div>

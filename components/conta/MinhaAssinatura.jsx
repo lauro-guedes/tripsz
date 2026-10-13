@@ -9,6 +9,7 @@ import { AuthedNav } from "../nav/AuthedNav";
 import { Badge } from "../ui/Badge";
 import { Loading } from "../ui/Loading";
 import { useIsMobile } from "../ui/useIsMobile";
+import { PassportCheckout } from "../pagamento/PassportCheckout";
 import { PassportPaywall } from "./PassportPaywall";
 import { CardNumber, ExpirationDate, SecurityCode, createCardToken, initMercadoPago } from "@mercadopago/sdk-react";
 import { AlertCircle, Check, CreditCard } from "lucide-react";
@@ -143,6 +144,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
   const [access, setAccess] = useState(null);
   const [canceling, setCanceling] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
   const [error, setError] = useState(null);
   const [invoices, setInvoices] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -195,7 +197,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
   // o Mercado Pago não tem uma troca direta de valor/frequência numa
   // assinatura já ativa, então esse é o jeito real de fazer isso.
   const handleSwitchPlan = async (newPlan) => {
-    if (!window.confirm(`Trocar para o plano ${newPlan === "annual" ? "anual" : "mensal"}? Sua assinatura atual será cancelada e você será redirecionado para confirmar a nova.`)) return;
+    if (!window.confirm(`Trocar para o plano ${newPlan === "annual" ? "anual" : "mensal"}? Sua assinatura atual será cancelada e você confirma o pagamento da nova em seguida.`)) return;
     setSwitching(true);
     setError(null);
     try {
@@ -208,14 +210,8 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
         const d = await cancelRes.json();
         throw new Error(d.error || "Não foi possível cancelar o plano atual.");
       }
-      const res = await authFetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: access.userId, email: access.userEmail, plan: newPlan }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Não foi possível iniciar o novo plano.");
-      window.location.href = data.checkoutUrl;
+      setCheckoutPlan(newPlan);
+      setSwitching(false);
     } catch (e) {
       setError(e.message);
       setSwitching(false);
@@ -237,7 +233,9 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
   // Próxima cobrança estimada a partir da data de início — o Mercado Pago
   // não devolve essa data pronta pra gente exibir, então calculamos com
   // base na frequência do plano (mensal = +1 mês, anual = +1 ano).
-  const nextBilling = sub?.created_at
+  const isPix = sub?.payment_method_id === "pix";
+  const validUntil = sub?.current_period_end ? new Date(`${sub.current_period_end}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : null;
+  const nextBilling = !isPix && sub?.created_at
     ? (() => {
         const d = new Date(sub.created_at);
         if (sub.plan === "annual") d.setFullYear(d.getFullYear() + 1);
@@ -250,6 +248,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
+      {checkoutPlan && <PassportCheckout plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} onDone={() => { setCheckoutPlan(null); load(); }} />}
       <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
@@ -281,15 +280,24 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: GREEN, margin: 0 }}>{planPrice}</p>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {nextBilling && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Próxima cobrança: {nextBilling}</p>}
-                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Renovação automática ativada</p>
+                  {isPix ? (
+                    <>
+                      {validUntil && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Acesso válido até: {validUntil}</p>}
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Pago por Pix — não renova automaticamente</p>
+                    </>
+                  ) : (
+                    <>
+                      {nextBilling && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Próxima cobrança: {nextBilling}</p>}
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Renovação automática ativada</p>
+                    </>
+                  )}
                 </div>
                 {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
                 <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-                  <div onClick={switching || canceling ? undefined : () => handleSwitchPlan(sub.plan === "annual" ? "monthly" : "annual")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", cursor: switching ? "default" : "pointer", opacity: switching ? 0.6 : 1 }}>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{switching ? "Processando..." : `Trocar para ${sub.plan === "annual" ? "mensal" : "anual"}`}</p>
+                  <div onClick={switching || canceling ? undefined : isPix ? () => setCheckoutPlan("annual") : () => handleSwitchPlan(sub.plan === "annual" ? "monthly" : "annual")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", cursor: switching ? "default" : "pointer", opacity: switching ? 0.6 : 1 }}>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{switching ? "Processando..." : isPix ? "Renovar por mais 12 meses" : `Trocar para ${sub.plan === "annual" ? "mensal" : "anual"}`}</p>
                   </div>
-                  <p onClick={() => setShowCancelModal(true)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Cancelar assinatura</p>
+                  {!isPix && <p onClick={() => setShowCancelModal(true)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Cancelar assinatura</p>}
                 </div>
               </div>
 

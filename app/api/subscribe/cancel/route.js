@@ -43,10 +43,12 @@ export async function POST(request) {
       return Response.json({ error: "Nenhuma assinatura ativa encontrada." }, { status: 404 });
     }
 
-    await mpFetch(`/preapproval/${sub.mercadopago_preapproval_id}`, {
-      method: "PUT",
-      body: JSON.stringify({ status: "cancelled" }),
-    });
+    if (sub.mercadopago_preapproval_id) {
+      await mpFetch(`/preapproval/${sub.mercadopago_preapproval_id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+    }
 
     await supabase.from("subscriptions").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("id", sub.id);
 

@@ -197,3 +197,11 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 ## Priorização de jogos principais
 
 `lib/gameImportance.js` pontua cada jogo (competição: Champions/Libertadores > Europa/Sul-Americana > 1ª divisão > copas; fase; clubes grandes). O planner soma essa importância ao peso, então mesmo sem clubes favoritos as 3 opções (A, B, C) preferem os jogos principais. Favoritos continuam acima de tudo. A lista de clubes é estática (grafias da API).
+
+## Pagamentos (checkout transparente Mercado Pago)
+
+- Passaporte mensal: cartão, assinatura recorrente (`/api/subscribe` com `cardTokenId`).
+- Passaporte anual: cartão (recorrente) ou Pix avulso de 365 dias (`/api/subscribe/pix`, sem renovação automática; acesso até `subscriptions.current_period_end`).
+- Consultoria: Pix ou cartão via `/api/checkout` (API de Pagamentos); o Pix é confirmado por `/api/checkout/status` e pelo webhook.
+- Tela: `components/pagamento/PagamentoModal.jsx` (Card Payment Brick + QR Code Pix). Precisa de `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY` e `MERCADOPAGO_ACCESS_TOKEN`.
+- Migração aplicada: coluna `subscriptions.mercadopago_payment_id`.

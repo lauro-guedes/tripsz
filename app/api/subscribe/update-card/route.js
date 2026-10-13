@@ -49,6 +49,10 @@ export async function POST(request) {
       return Response.json({ error: "Nenhuma assinatura ativa encontrada." }, { status: 404 });
     }
 
+    if (!sub.mercadopago_preapproval_id) {
+      return Response.json({ error: "Essa assinatura foi paga por Pix e não tem cartão para trocar." }, { status: 400 });
+    }
+
     const updated = await mpFetch(`/preapproval/${sub.mercadopago_preapproval_id}`, {
       method: "PUT",
       body: JSON.stringify({ card_token_id: cardTokenId }),

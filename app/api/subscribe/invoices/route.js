@@ -40,7 +40,7 @@ export async function GET(request) {
     const planByPreapproval = Object.fromEntries(subs.map((s) => [s.mercadopago_preapproval_id, s.plan]));
 
     const results = await Promise.all(
-      subs.map((s) => mpFetch(`/authorized_payments/search?preapproval_id=${s.mercadopago_preapproval_id}`).catch(() => ({ results: [] })))
+      subs.filter((s) => s.mercadopago_preapproval_id).map((s) => mpFetch(`/authorized_payments/search?preapproval_id=${s.mercadopago_preapproval_id}`).catch(() => ({ results: [] })))
     );
 
     const invoices = results

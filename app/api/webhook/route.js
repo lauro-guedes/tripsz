@@ -1,5 +1,6 @@
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { supabaseAdmin } from "@/lib/supabase";
+import { activatePixPassport, syncConsultoriaOrder } from "@/lib/mpServer";
 
 async function mpFetch(path) {
   const res = await fetch(`https://api.mercadopago.com${path}`, {
@@ -58,6 +59,17 @@ export async function POST(request) {
     const payment = await paymentClient.get({ id: body.data.id });
 
     const supabase = supabaseAdmin();
+
+    // Pix do Passaporte anual e pagamentos transparentes da consultoria: casam pelo ID do pagamento.
+    if (payment.metadata?.kind === "passport_pix") {
+      await activatePixPassport(payment);
+      return Response.json({ received: true });
+    }
+    if (payment.metadata?.kind === "consultoria") {
+      await syncConsultoriaOrder(payment);
+      return Response.json({ received: true });
+    }
+
     const tripAnswersId = payment.metadata?.trip_answers_id ?? payment.metadata?.tripAnswersId;
 
     if (payment.status === "approved" && tripAnswersId) {
