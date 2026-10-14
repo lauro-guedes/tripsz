@@ -20,7 +20,7 @@ import { Loading } from "../ui/Loading";
 import { useIsMobile } from "../ui/useIsMobile";
 import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
 import { MapPin } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const isMobile = useIsMobile();
@@ -35,6 +35,31 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [detailsId, setDetailsId] = useState(null); // jogo cujo modal "Detalhes da experiência" está aberto
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ stadium: "", city: "", country: "", competition: "" });
+  // Sugestões de estádio enquanto a pessoa digita no "Editar local" (a partir de 3 letras, com pausa de 0,4 s).
+  const [stadiumSug, setStadiumSug] = useState({ items: [], loading: false, open: false });
+  const stadiumTouched = useRef(false);
+  useEffect(() => {
+    const q = editForm.stadium.trim();
+    if (!editingId || !stadiumTouched.current || q.length < 3) {
+      setStadiumSug((s) => (s.items.length || s.loading ? { items: [], loading: false, open: s.open } : s));
+      return;
+    }
+    setStadiumSug((s) => ({ ...s, loading: true }));
+    let alive = true;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/attended-games/search-stadium/suggest?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (alive) setStadiumSug({ items: data.suggestions || [], loading: false, open: true });
+      } catch {
+        if (alive) setStadiumSug({ items: [], loading: false, open: true });
+      }
+    }, 400);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [editForm.stadium, editingId]);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState(null);
 
@@ -68,6 +93,8 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
 
   const startEdit = (g) => {
     setEditError(null);
+    stadiumTouched.current = false;
+    setStadiumSug({ items: [], loading: false, open: false });
     setEditForm({ stadium: g.stadium || "", city: g.city || "", country: g.country || "", competition: g.competition || "" });
     setEditingId(g.id);
   };
@@ -255,7 +282,27 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                               {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
                                 <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                                   <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
-                                  <input value={editForm[k]} onChange={(e) => setEditForm((f) => ({ ...f, [k]: e.target.value }))} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 12px", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none", width: "100%", boxSizing: "border-box" }} />
+                                  <input value={editForm[k]} onChange={(e) => { if (k === "stadium") { stadiumTouched.current = true; setStadiumSug((st) => ({ ...st, open: true })); } setEditForm((f) => ({ ...f, [k]: e.target.value })); }} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 12px", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none", width: "100%", boxSizing: "border-box" }} />
+                                  {k === "stadium" && stadiumSug.open && editForm.stadium.trim().length >= 3 && (stadiumSug.loading || stadiumSug.items.length > 0 || stadiumTouched.current) && (
+                                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, background: "#fff", overflow: "hidden" }}>
+                                      {stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Buscando estádios...</p>}
+                                      {!stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Nenhum estádio encontrado. Pode manter o nome digitado.</p>}
+                                      {stadiumSug.items.map((sg) => (
+                                        <div
+                                          key={`${sg.name}|${sg.city || ""}`}
+                                          onClick={() => {
+                                            setEditForm((f) => ({ ...f, stadium: sg.name, city: sg.city || f.city, country: sg.country || f.country }));
+                                            stadiumTouched.current = false;
+                                            setStadiumSug({ items: [], loading: false, open: false });
+                                          }}
+                                          style={{ padding: "10px 12px", borderTop: `1px solid ${BORDER}`, cursor: "pointer" }}
+                                        >
+                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{sg.name}</p>
+                                          {(sg.city || sg.country) && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: "2px 0 0" }}>{[sg.city, sg.country].filter(Boolean).join(", ")}</p>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                               {editError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{editError}</p>}
