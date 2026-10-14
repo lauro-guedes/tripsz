@@ -45,6 +45,9 @@ import { MeusJogosHistorico } from "./jogos/MeusJogosHistorico";
 import { RegistrarJogo } from "./jogos/RegistrarJogo";
 import { PATH_TO_SCREEN, SCREEN_TO_PATH } from "./routes";
 import { BoasVindasConvite } from "./conta/BoasVindasConvite";
+import { JogoSalvo } from "./jogos/acompanhantes/JogoSalvo";
+import { QuemFoiComVoce } from "./jogos/acompanhantes/QuemFoiComVoce";
+import { saveDraft } from "../lib/companionDraft";
 import { FINAL_INVITE_ERRORS, clearPendingInvite, readPendingInvite, redeemAndPrepareWelcome } from "../lib/pendingInvite";
 
 
@@ -462,6 +465,8 @@ export default function App() {
         />
       )}
       {screen === "bem-vindo" && <BoasVindasConvite onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "acompanhantes" && <QuemFoiComVoce onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "jogo-salvo" && <JogoSalvo onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "jogos" && (
         <MeusJogosHistorico
           onNavigate={(key) => setScreen(key)}
@@ -476,6 +481,7 @@ export default function App() {
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onDone={() => setScreen("jogos")}
+          onCompanions={(game) => { saveDraft({ game, tagged: [] }); setScreen("acompanhantes"); }}
         />
       )}
       {screen === "nivel" && (

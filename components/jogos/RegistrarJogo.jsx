@@ -17,7 +17,7 @@ import { Check, Download, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 /* --- Registrar Jogo: fluxo guiado, busca por estádio na API-Football --- */
-export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
+export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -33,6 +33,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
   const [venue, setVenue] = useState(null);
   const [games, setGames] = useState([]);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [addedIds, setAddedIds] = useState({}); // id do jogo na API -> id do jogo salvo (pra "Quem foi com você?")
   const [saving, setSaving] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ home: "", away: "", date: "", stadium: "", city: "", country: "", competition: "" });
@@ -222,7 +223,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       const userId = userData.user?.id;
       if (!userId) throw new Error("Sessão expirada. Entre novamente.");
 
-      const { error: insertError } = await supabase.from("attended_games").insert({
+      const { data: inserted, error: insertError } = await supabase.from("attended_games").insert({
         user_id: userId,
         source: "api",
         api_fixture_id: g.apiFixtureId,
@@ -237,8 +238,9 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         city: g.city || venue.city,
         country: g.country || venue.country,
         competition: g.competition,
-      });
+      }).select("id").single();
       if (insertError) throw insertError;
+      if (inserted) setAddedIds((m) => ({ ...m, [g.apiFixtureId]: inserted.id }));
       setSelectedIds((prev) => new Set(prev).add(g.apiFixtureId));
       setAddedThisSession((n) => n + 1);
     } catch (e) {
@@ -525,7 +527,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) throw new Error("Sessão expirada. Entre novamente.");
-      const { error: insertError } = await supabase.from("attended_games").insert({
+      const { data: saved, error: insertError } = await supabase.from("attended_games").insert({
         user_id: userId,
         source: "manual",
         home_team: manual.home,
@@ -535,10 +537,12 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
         city: manual.city || null,
         country: manual.country,
         competition: manual.competition || null,
-      });
+      }).select("id").single();
       if (insertError) throw insertError;
       setAddedThisSession((n) => n + 1);
-      onDone();
+      // Jogo salvo: segue pra "Quem foi com você?" (marcar amigos / convidar). Sem a tela nova, volta como antes.
+      if (onCompanions && saved) onCompanions({ id: saved.id, source: "manual", home_team: manual.home, away_team: manual.away, home_score: null, away_score: null, match_date: manual.date, stadium: manual.stadium || null, city: manual.city || null, country: manual.country, competition: manual.competition || null });
+      else onDone();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -933,10 +937,15 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone }) {
                           </div>
                           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
                         </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", gap: 8, flexShrink: 0 }}>
                         <div onClick={() => (selected ? handleRemoveGame(g) : handleAddGame(g))} style={{ background: selected ? BORDER : GREEN_BUTTON, opacity: isSaving ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: isSaving ? "default" : "pointer", flexShrink: 0 }}>
                           {selected && <Check size={14} color={MUTED} />}
                           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: selected ? MUTED : "#fff", margin: 0 }}>{isSaving ? "Salvando..." : selected ? "Adicionado · desmarcar" : "+ Adicionar"}</p>
                         </div>
+                        {selected && addedIds[g.apiFixtureId] && onCompanions && (
+                          <p role="button" onClick={() => onCompanions({ id: addedIds[g.apiFixtureId], source: "api", api_fixture_id: g.apiFixtureId, home_team: g.home, away_team: g.away, home_logo: g.homeLogo, away_logo: g.awayLogo, home_score: g.homeScore, away_score: g.awayScore, match_date: g.date.split("T")[0], stadium: g.stadium || venue.name, city: g.city || venue.city, country: g.country || venue.country, competition: g.competition })} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0, cursor: "pointer" }}>+ Quem foi com você?</p>
+                        )}
+                      </div>
                       </div>
                     );
                   })}

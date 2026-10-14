@@ -18,6 +18,10 @@ import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
 import { Loading } from "../ui/Loading";
 import { useIsMobile } from "../ui/useIsMobile";
+import { fetchCompanionsMap } from "../../lib/companionsClient";
+import { DetalhesJogoModal } from "./acompanhantes/DetalhesJogoModal";
+import { MarcacoesPendentes } from "./acompanhantes/MarcacoesPendentes";
+import { PessoasLinha } from "./acompanhantes/PessoasLinha";
 import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -33,6 +37,12 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   const [seasonFilter, setSeasonFilter] = useState("todas");
   const [access, setAccess] = useState(null);
   const [detailsId, setDetailsId] = useState(null); // jogo cujo modal "Detalhes da experiência" está aberto
+  const [people, setPeople] = useState({}); // id do jogo -> { people, invites } (quem foi com a pessoa)
+  const [companionsId, setCompanionsId] = useState(null); // jogo cujo modal "Detalhes do jogo" está aberto
+  const refreshPeople = async () => {
+    const r = await fetchCompanionsMap();
+    if (r.ok) setPeople(r.games || {});
+  };
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ stadium: "", city: "", country: "", competition: "" });
   // Sugestões de estádio enquanto a pessoa digita no "Editar local" (a partir de 3 letras, com pausa de 0,4 s).
@@ -78,6 +88,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
     setGames(data || []);
     // Aquece a foto dos estádios mais recentes: ao abrir os detalhes, ela já está pronta.
     prefetchVenuePhotos((data || []).map((g) => ({ name: g.stadium, city: g.city })));
+    refreshPeople(); // quem foi com ela em cada jogo (não segura a lista)
   };
 
   useEffect(() => {
@@ -127,6 +138,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
   // XP que cada jogo gerou (lib/xpRules.js) — calculado sobre TODOS os jogos, sem depender dos filtros da tela.
   const xpInfo = xpBreakdown(all);
   const detailsGame = detailsId ? all.find((g) => g.id === detailsId) || null : null;
+  const companionsGame = companionsId ? all.find((g) => g.id === companionsId) || null : null;
   const stadiums = new Set(all.map((g) => g.stadium).filter(Boolean));
   const countries = new Set(all.map((g) => countryKey(g.country)).filter(Boolean));
   const seasonByKey = new Map();
@@ -193,6 +205,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
       </div>
 
       <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
+        <MarcacoesPendentes onAccepted={loadGames} />
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: 16 }}>
           <div style={{ display: "flex", gap: 8 }}>
             {[["todos", "Todos"], ["tripsz", "Via Tripsz"], ["manuais", "Manuais"]].map(([id, label]) => (
@@ -272,6 +285,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                           <Icon name="chevronRight" size={14} color={GREEN} />
                         </div>
                       </div>
+                      {people[g.id] && <PessoasLinha info={people[g.id]} onOpen={() => setCompanionsId(g.id)} />}
                       <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
                         <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
                         <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
@@ -335,6 +349,8 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
           onClose={() => setDetailsId(null)}
         />
       )}
+
+      {companionsGame && <DetalhesJogoModal key={companionsGame.id} game={companionsGame} info={people[companionsGame.id]} onClose={() => setCompanionsId(null)} onRefresh={refreshPeople} />}
 
       <AuthedFooter />
     </div>

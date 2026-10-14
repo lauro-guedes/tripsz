@@ -130,6 +130,25 @@ folha de baixo pra cima; no desktop, centralizado (Figma 516:*).
   reserva `STADIUM_FALLBACK_IMAGE` (`components/jogos/detalhes/AbaEstadio.jsx`).
 - Editar local e Remover jogo ficam no próprio cartão (o cartão não expande mais).
 
+### Quem foi com você? (marcar amigos e convidar)
+
+Depois de registrar um jogo, a pessoa marca quem foi com ela. **Quem já tem conta NÃO recebe o jogo sozinho**: recebe um
+aviso ("Fulano te marcou em [jogo]") com "Adicionar ao meu Passaporte" ou "Ignorar", então ninguém grava dado em conta
+alheia nem infla o XP/ranking de outra pessoa. Quem não tem conta entra por convite (seção acima).
+
+- **Telas** (`components/jogos/acompanhantes/*`): `QuemFoiComVoce` (etapa depois do registro), `ConvidarModal`, `JogoSalvo`
+  (confirmação + "Seus convites"), `DetalhesJogoModal` (abre pela linha "Com Ana e Bruno" em Meus Jogos; o modal de 5 abas
+  continua sendo o "Ver detalhes da experiência") e `MarcacoesPendentes` (os avisos, no topo de Meus Jogos).
+- **Registrar Jogo**: o registro manual segue pra "Quem foi com você?"; nos jogos adicionados pela busca (que podem ser vários),
+  cada cartão ganha o link "+ Quem foi com você?". O jogo já está salvo nessa etapa; "Salvar jogo" ali salva as marcações.
+- **Servidor**: `lib/companion*.js` e `app/api/{friends,games/companions,games/[gameId]/companions,companion-requests}`. Tabela
+  `game_companions` (`supabase-acompanhantes.sql`, RLS ligado e sem política).
+- **Busca de amigos**: pelo `@` EXATO (`profiles.username`), mínimo de 3 caracteres, devolve no máximo uma pessoa (nunca lista
+  usuários), 15 buscas/min por pessoa. "Amigo" (sugestões) = quem você já marcou ou convidou e que tem conta.
+- **Limites**: 10 marcados por jogo, 30 marcações por dia. Quem ignora a marcação continua "aguardando" para quem marcou.
+- **Convite**: WhatsApp/e-mail abrem já com a mensagem (o telefone/e-mail digitado só monta o link e nunca é guardado); no celular
+  há também o compartilhamento nativo. "Enviado" significa "convite criado"; só "Cadastrou" é confirmado.
+
 ## Variáveis de ambiente
 ### Convites de jogo ("Quem foi com você?")
 

@@ -20,6 +20,8 @@ export const SCREEN_TO_PATH = {
   roteiro: "/conta/roteiros/detalhe",
   jogos: "/conta/jogos",
   "bem-vindo": "/conta/bem-vindo",
+  acompanhantes: "/conta/jogos/acompanhantes",
+  "jogo-salvo": "/conta/jogos/salvo",
   buscar: "/conta/buscar-jogos",
   calendario: "/conta/calendario",
   "registrar-jogo": "/conta/jogos/registrar",
