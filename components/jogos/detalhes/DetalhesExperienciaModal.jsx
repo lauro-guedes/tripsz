@@ -149,7 +149,9 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   const awayLogo = (details && details.teams.away.logo) || game.away_logo;
   const competition = [game.competition || (details && details.league.name), details && details.league.roundLabel].filter(Boolean).join(" · ");
   const when = [formatShortDate(game.match_date) || dateOnly(game.match_date).toLocaleDateString("pt-BR"), details && formatTimeBrasilia(details.kickoff) ? `${formatTimeBrasilia(details.kickoff)} BRT` : null].filter(Boolean).join(" · ");
-  const place = [game.city, game.country].filter(Boolean).join(", ");
+  // A cidade certa vem do cadastro do estádio (o texto do jogo às vezes erra: "Bello Harisanta").
+  // Enquanto carrega, mostra só o país pra não piscar a cidade errada.
+  const place = [state === "loading" ? null : (venue && venue.city) || game.city, game.country].filter(Boolean).join(", ");
   const status = details ? statusLabel(details.status.short) : score ? "ENCERRADO" : null;
   const penalty = details && details.penalty ? `(${details.penalty.home}–${details.penalty.away} pên.)` : null;
 
