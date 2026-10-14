@@ -314,6 +314,15 @@ export async function GET(request) {
       // Governador Magalhães Pinto). Achado o ID do estádio por um jogo, valem todos os jogos daquele ID.
       const venueIds = new Set(matches.map((f) => f.fixture.venue?.id).filter(Boolean));
       if (venueIds.size > 0) matches = fixtures.filter((f) => nameMatches(f) || venueIds.has(f.fixture.venue?.id));
+      // Estaduais e outras competições menores às vezes vêm sem o estádio cadastrado. Se o time já joga em casa
+      // nesse estádio (achamos jogos dele aqui), os jogos em casa sem estádio informado entram também.
+      if (matches.length > 0) {
+        const have = new Set(matches.map((f) => f.fixture.id));
+        for (const f of fixtures) {
+          if (!have.has(f.fixture.id) && !f.fixture.venue?.name && f.teams.home.id === teamId) matches.push(f);
+        }
+        matches.sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
+      }
 
       if (matches.length > 0) {
         matchedGames = mapGames(matches);
