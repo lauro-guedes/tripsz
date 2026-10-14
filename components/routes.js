@@ -19,6 +19,7 @@ export const SCREEN_TO_PATH = {
   roteiros: "/conta/roteiros",
   roteiro: "/conta/roteiros/detalhe",
   jogos: "/conta/jogos",
+  "bem-vindo": "/conta/bem-vindo",
   buscar: "/conta/buscar-jogos",
   calendario: "/conta/calendario",
   "registrar-jogo": "/conta/jogos/registrar",
