@@ -36,7 +36,7 @@ async function lookup(lang, query) {
   set("pithumbsize", "800");
   set("exintro", "1");
   set("explaintext", "1");
-  set("exchars", "400");
+  set("exchars", "700");
   set("exlimit", "6");
   try {
     const res = await fetch(url.toString(), { headers: { "User-Agent": "tripsz/1.0 (https://tripsz.vercel.app)" }, next: { revalidate: 60 * 60 * 24 * 30 }, signal: AbortSignal.timeout(4000) });
@@ -63,21 +63,30 @@ function score(page, variants, cityTokens) {
   if (!STADIUM_WORDS.test(page.description || "") && !STADIUM_WORDS.test(page.extract || "")) return { ok: false, why: "página não é de estádio" };
   const titleKey = searchKey(page.title);
   const aboutKey = searchKey(about);
-  // Vale a variação do nome que mais bate com o título da página.
+  // Vale a variação do nome que mais bate com o título da página — ou, se o título usa outro
+  // nome (ex.: "Mineirão" para "Estádio Governador Magalhães Pinto"), com o texto de abertura da
+  // página, onde a Wikipedia lista os nomes oficiais. Pelo texto, a cidade precisa bater também.
+  const cityHit = cityTokens.some((t) => titleKey.includes(t) || aboutKey.includes(t));
   let coverage = 0;
   let nameTokens = [];
   let hits = 0;
+  let viaAbout = false;
   for (const v of variants) {
     const toks = distinctive(v);
     if (toks.length === 0) continue;
-    const h = toks.filter((t) => titleKey.includes(t)).length;
-    if (h / toks.length > coverage || nameTokens.length === 0) {
-      coverage = h / toks.length;
+    const hTitle = toks.filter((t) => titleKey.includes(t)).length;
+    const hAbout = cityHit || cityTokens.length === 0 ? toks.filter((t) => aboutKey.includes(t)).length : 0;
+    const h = Math.max(hTitle, hAbout);
+    const cov = Math.max(hTitle / toks.length, (hAbout / toks.length) * 0.9);
+    if (cov > coverage || nameTokens.length === 0) {
+      coverage = cov;
       nameTokens = toks;
       hits = h;
+      viaAbout = (hAbout / toks.length) * 0.9 > hTitle / toks.length;
     }
   }
-  const cityHit = cityTokens.some((t) => titleKey.includes(t) || aboutKey.includes(t));
+  // Casar só pelo texto exige que a descrição curta da página diga que é um estádio (não um clube que o cita).
+  if (viaAbout && !STADIUM_WORDS.test(page.description || "")) return { ok: false, why: "nome só no texto e a página não é de estádio" };
   // Nome com 1 palavra distintiva só vale se a cidade também bater (evita "Estádio Municipal" de outro lugar).
   const needsCity = nameTokens.length < 2;
   if (coverage < 0.6) return { ok: false, why: `título não bate (${hits}/${nameTokens.length})` };
