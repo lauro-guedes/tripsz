@@ -1,4 +1,5 @@
 import { searchKey } from "@/lib/searchKey";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,29 @@ function score(page, variants, cityTokens) {
   return { ok: true, value: coverage * 10 + (cityHit ? 3 : 0) - (page.index || 0) * 0.1 };
 }
 
+const FOUND_TTL_MS = 90 * 24 * 3600 * 1000; // foto achada: vale 90 dias
+const MISS_TTL_MS = 7 * 24 * 3600 * 1000; // "não achei": tenta de novo em 7 dias
+
+// Cache permanente no banco (tabela venue_photos). Se a tabela não existir, segue sem cache.
+async function readCache(key) {
+  try {
+    const { data } = await supabaseAdmin().from("venue_photos").select("url, source, page, fetched_at").eq("cache_key", key).maybeSingle();
+    if (!data) return null;
+    const age = Date.now() - new Date(data.fetched_at).getTime();
+    if (age > (data.url ? FOUND_TTL_MS : MISS_TTL_MS)) return null;
+    return data.url ? { url: data.url, source: data.source, page: data.page } : { url: null };
+  } catch {
+    return null;
+  }
+}
+async function writeCache(key, body) {
+  try {
+    await supabaseAdmin().from("venue_photos").upsert({ cache_key: key, url: body.url || null, source: body.source || null, page: body.page || null, fetched_at: new Date().toISOString() });
+  } catch {
+    /* sem tabela: ignora */
+  }
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const name = (searchParams.get("name") || "").trim().slice(0, 120);
@@ -95,6 +119,12 @@ export async function GET(request) {
   const nameTokens = [...new Set(variants.flatMap(distinctive))];
   const cityTokens = distinctive(city);
   if (nameTokens.length === 0) return Response.json({ url: null, reason: "nome genérico" });
+
+  const cacheKey = `${searchKey(name)}|${searchKey(city)}`;
+  if (!debug) {
+    const cached = await readCache(cacheKey);
+    if (cached) return Response.json(cached, { headers: { "Cache-Control": "public, s-maxage=86400" } });
+  }
 
   try {
     // Todas as buscas (idiomas × variações do nome) saem ao mesmo tempo, em vez de uma depois da outra.
@@ -116,6 +146,8 @@ export async function GET(request) {
     const body = best
       ? { url: best.thumb, source: `Wikipedia (${best.lang})`, page: `https://${best.lang}.wikipedia.org/wiki/${encodeURIComponent(best.title.replace(/ /g, "_"))}` }
       : { url: null };
+    // Só grava no cache quando nenhuma consulta falhou (lentidão não vira "sem foto" permanente).
+    if (!debug && (best || !results.some((r) => r.failed))) await writeCache(cacheKey, body);
     if (debug) return Response.json({ ...body, nameTokens, cityTokens, candidates: candidates.map(({ thumb, ...c }) => c) });
     return Response.json(body, { headers: best ? headers : { "Cache-Control": results.some((r) => r.failed) ? "no-store" : "public, s-maxage=86400" } });
   } catch (e) {

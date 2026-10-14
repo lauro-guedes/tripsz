@@ -9,6 +9,7 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import { stadiumVisits } from "../../lib/gameDetailsCore";
+import { prefetchVenuePhotos } from "../../lib/venuePhoto";
 import { xpBreakdown } from "../../lib/xpRules";
 import TeamBadge from "../TeamBadge";
 import { PassportPaywall } from "../conta/PassportPaywall";
@@ -50,6 +51,8 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
 
     const { data } = await supabase.from("attended_games").select("*").order("match_date", { ascending: false });
     setGames(data || []);
+    // Aquece a foto dos estádios mais recentes: ao abrir os detalhes, ela já está pronta.
+    prefetchVenuePhotos((data || []).map((g) => ({ name: g.stadium, city: g.city })));
   };
 
   useEffect(() => {
