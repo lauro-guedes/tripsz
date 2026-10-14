@@ -103,6 +103,16 @@ async function footballFetchRaw(path, params) {
   return data.response;
 }
 
+// Garante que o jogo é mesmo do estádio procurado: por ID, ou (se o ID não vier) pelo nome.
+// Sem isso, se a API ignorar o filtro de estádio, entra a liga inteira.
+function isAtVenue(f, venueId, venueName) {
+  const v = f.fixture?.venue || {};
+  if (venueId && v.id) return v.id === venueId;
+  const a = searchKey(v.name || "");
+  const b = searchKey(venueName || "");
+  return !!a && !!b && (a.includes(b) || b.includes(a));
+}
+
 function mapGames(fixtures) {
   return fixtures.map((f) => ({
     apiFixtureId: f.fixture.id,
@@ -228,6 +238,7 @@ export async function GET(request) {
           try {
             const fixtures = await footballFetchRaw("/fixtures", { venue: venue.id, league: leagueId, season });
             for (const f of fixtures) {
+              if (!isAtVenue(f, venue.id, venue.name)) continue;
               if (!seenIds.has(f.fixture.id)) {
                 seenIds.add(f.fixture.id);
                 collected.push(f);
@@ -293,10 +304,11 @@ export async function GET(request) {
     // travar num time só, pra pegar esses outros jogos.
     const leagueIds = usedNeutralFallback ? [] : [...new Set(matchedGames.map((g) => g.leagueId).filter(Boolean))];
     const seenIds = new Set(matchedGames.map((g) => g.apiFixtureId));
-    for (const leagueId of leagueIds) {
+    for (const leagueId of matchedVenueInfo.id ? leagueIds : []) { // sem ID do estádio a API ignora o filtro e traria a liga inteira
       try {
         const extra = await footballFetchRaw("/fixtures", { venue: matchedVenueInfo.id, league: leagueId, season });
         for (const f of extra) {
+          if (!isAtVenue(f, matchedVenueInfo.id, matchedVenueInfo.name)) continue;
           if (!seenIds.has(f.fixture.id)) {
             seenIds.add(f.fixture.id);
             matchedGames.push(mapGames([f])[0]);
