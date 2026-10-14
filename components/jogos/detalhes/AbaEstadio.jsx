@@ -8,21 +8,35 @@ import { BG_ALT, BODY, BORDER, FONT_DISPLAY, FONT_MONO, GREEN_DARK, GREEN_SOFT, 
 import { Icon } from "../../ui/Icon";
 import { SectionTitle } from "./ui";
 
+// Esqueleto com brilho animado, enquanto a foto é buscada/baixada.
+function PhotoSkeleton({ height, overlay }) {
+  return (
+    <div aria-hidden="true" style={{ ...(overlay ? { position: "absolute", inset: 0 } : { height, borderRadius: 12, width: "100%" }), background: `linear-gradient(90deg, ${BG_ALT} 0%, #e8edf3 50%, ${BG_ALT} 100%)`, backgroundSize: "200% 100%", animation: "tripszShimmer 1.3s ease-in-out infinite" }}>
+      <style>{"@keyframes tripszShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}"}</style>
+    </div>
+  );
+}
+
 function StadiumPhoto({ venue, isMobile }) {
   // 1) foto do cadastro de estádios; 2) foto real da Wikipedia; 3) sem foto: não mostra imagem nenhuma.
   const [apiFailed, setApiFailed] = useState(false);
   const [wiki, setWiki] = useState(null); // { url } | null
-  const [looking, setLooking] = useState(false); // buscando a foto (mostra um espaço cinza, sem pular o layout)
+  const [looking, setLooking] = useState(true); // buscando a foto: mostra o esqueleto, sem pular o layout
+  const [loaded, setLoaded] = useState(false); // a imagem já terminou de baixar?
   const [wikiFailed, setWikiFailed] = useState(false);
   const apiImage = venue && venue.image && !apiFailed ? venue.image : null;
   const venueName = venue && venue.name;
   const venueCity = venue && venue.city;
 
   useEffect(() => {
-    if (apiImage || !venueName) return;
+    if (apiImage || !venueName) {
+      setLooking(false);
+      return;
+    }
     const seen = peekVenuePhoto(venueName, venueCity);
     if (seen.done) {
       setWiki(seen.value);
+      setLooking(false);
       return;
     }
     let alive = true;
@@ -43,15 +57,17 @@ function StadiumPhoto({ venue, isMobile }) {
   const realImage = apiImage || wikiImage;
   // Sem foto (nem do cadastro nem da Wikipedia): a aba segue sem imagem — nada de imagem ilustrativa.
   if (!realImage) {
-    return looking ? <div aria-hidden="true" style={{ height: isMobile ? 230 : 262, borderRadius: 12, background: BG_ALT, width: "100%" }} /> : null;
+    return looking ? <PhotoSkeleton height={isMobile ? 230 : 262} /> : null;
   }
   return (
     <div style={{ position: "relative", height: isMobile ? 230 : 262, borderRadius: 12, overflow: "hidden", background: BG_ALT, width: "100%" }}>
+      {!loaded && <PhotoSkeleton height="100%" overlay />}
       <img
         src={realImage}
+        onLoad={() => setLoaded(true)}
         alt={`Foto do ${venue.name || "estádio"}`}
         onError={() => (apiImage ? setApiFailed(true) : setWikiFailed(true))}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0, transition: "opacity 0.25s" }}
       />
       {wikiImage && (
         <div style={{ position: "absolute", left: 12, bottom: 12, background: "rgba(15,23,42,0.8)", borderRadius: 4, padding: "4px 8px" }}>
