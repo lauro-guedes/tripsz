@@ -10,14 +10,18 @@ import { Avatar, matchLabel, matchPlace, matchTitle, mono } from "./ui";
  * Avisos "Fulano te marcou em [jogo]" no topo de Meus Jogos. O jogo só entra no Passaporte se a pessoa aceitar
  * ("Adicionar ao meu Passaporte"); "Ignorar" não avisa quem marcou.
  */
-export function MarcacoesPendentes({ onAccepted }) {
+export function MarcacoesPendentes({ onAccepted, onCount, emptyText }) {
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(null);
   const [flash, setFlash] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    fetchCompanionRequests().then((r) => alive && r.ok && setItems(r.requests || []));
+    fetchCompanionRequests().then((r) => {
+      if (alive && r.ok) setItems(r.requests || []);
+      if (alive) setLoaded(true);
+    });
     return () => {
       alive = false;
     };
@@ -36,7 +40,11 @@ export function MarcacoesPendentes({ onAccepted }) {
     if (onAccepted) await onAccepted();
   };
 
-  if (items.length === 0 && !flash) return null;
+  useEffect(() => {
+    if (onCount) onCount(items.length);
+  }, [items.length]);
+
+  if (items.length === 0 && !flash) return emptyText && loaded ? <p style={text(14)}>{emptyText}</p> : null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <p style={mono(10)}>Jogos em que te marcaram</p>

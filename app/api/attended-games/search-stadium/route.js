@@ -87,6 +87,17 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "estadio governador helio prates da silveira": ["Flamengo", "Sao Paulo", "Botafogo", "Palmeiras", "Brazil"],
 };
 
+// Apelido popular -> parte do nome oficial que a API usa nos jogos (ambos já sem acento, minúsculos).
+const ALT_NAMES = [
+  [/mineirao/, /magalhaes pinto|mineirao/],
+  [/morumb/, /cicero pompeu|morumb/],
+  [/itaquerao|neo quimica|arena corinthians/, /neo quimica|corinthians|itaquer/],
+  [/beira.?rio/, /beira.?rio|jose pinheiro borda/],
+  [/allianz parque|palestra italia|nubank parque/, /allianz|palestra|nubank/],
+  [/castelao/, /castelao|placido castelo/],
+  [/arena da baixada|ligga/, /baixada|ligga|joaquim americo/],
+];
+
 // Apelidos com a mesma normalização da busca (hífen, ponto e acento não atrapalham).
 const NICKNAME_BY_KEY = Object.fromEntries(Object.entries(STADIUM_NICKNAME_TO_TEAM).map(([k, v]) => [searchKey(k), v]));
 
@@ -270,13 +281,19 @@ export async function GET(request) {
     for (const teamId of matchedGames ? [] : [...new Set(teamIdCandidates)]) {
       const fixtures = await footballFetchRaw("/fixtures", { team: teamId, season });
 
-      const matches = fixtures.filter((f) => {
+      const nameMatches = (f) => {
         const venueName = searchKey(f.fixture.venue?.name || "");
         if (!venueName) return false;
         const venueCompact = venueName.replace(/ /g, "");
         if (/maracana|mario filho/.test(queryNorm) && /maracana|mario filho/.test(venueName)) return true; // mesmo estádio, nomes diferentes
+        if (ALT_NAMES.some(([q, v]) => q.test(queryNorm) && v.test(venueName))) return true; // apelido x nome oficial
         return venueName.includes(queryNorm) || queryNorm.includes(venueName) || venueCompact.includes(queryCompact) || queryCompact.includes(venueCompact);
-      });
+      };
+      let matches = fixtures.filter(nameMatches);
+      // A API registra o mesmo estádio com nomes diferentes de uma competição para outra (Mineirão x
+      // Governador Magalhães Pinto). Achado o ID do estádio por um jogo, valem todos os jogos daquele ID.
+      const venueIds = new Set(matches.map((f) => f.fixture.venue?.id).filter(Boolean));
+      if (venueIds.size > 0) matches = fixtures.filter((f) => nameMatches(f) || venueIds.has(f.fixture.venue?.id));
 
       if (matches.length > 0) {
         matchedGames = mapGames(matches);

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/serverAuth";
+import { loadUsernames } from "@/lib/adminUsernames";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export async function GET(request) {
       gamesByUser.get(g.user_id).push(g);
     });
 
+    const handles = await loadUsernames(supabase);
     const users = authUsers.map((u) => {
       const userGames = gamesByUser.get(u.id) || [];
       const stadiums = new Set(userGames.map((g) => g.stadium).filter(Boolean));
@@ -66,6 +68,7 @@ export async function GET(request) {
         id: u.id,
         name: u.user_metadata?.name || "Sem nome",
         email: u.email,
+        username: handles.get(u.id) || null,
         country: u.user_metadata?.country || null,
         createdAt: u.created_at,
         level: tierName(xp),

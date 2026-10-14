@@ -252,7 +252,7 @@ function UserDetailPanel({ email, userId, onClose }) {
                 <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 16, color: "#008e4a", margin: 0 }}>{data.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</p>
               </div>
               <div>
-                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{data.name}</p>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{data.name}{data.username ? <span style={{ fontWeight: 600, color: "#008e4a" }}> @{data.username}</span> : null}</p>
                 <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>{data.email}</p>
               </div>
             </div>
@@ -420,7 +420,7 @@ function UsersView({ email }) {
 
   const filtered = users.filter((u) => {
     const matchesFilter = filter === "todos" || u.subscriptionStatus === filter;
-    const matchesSearch = !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()) || (u.username || "").includes(search.toLowerCase().replace(/^@/, ""));
     return matchesFilter && matchesSearch;
   });
 
@@ -470,7 +470,7 @@ function UsersView({ email }) {
                 <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: i % 2 ? "#008e4a" : BLUE, margin: 0 }}>{u.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}</p>
               </div>
               <div>
-                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{u.name}</p>
+                <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{u.name}{u.username ? <span style={{ fontWeight: 600, color: "#008e4a" }}> @{u.username}</span> : null}</p>
                 <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{u.email}</p>
               </div>
             </div>
@@ -896,7 +896,7 @@ function GamificationView({ email }) {
   if (status === "loading") return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>;
   if (status === "error" || !data) return <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar o ranking.</p>;
 
-  const filtered = data.ranking.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()));
+  const filtered = data.ranking.filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.email.toLowerCase().includes(search.toLowerCase()) || (r.username || "").includes(search.toLowerCase().replace(/^@/, "")));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -989,7 +989,7 @@ function GamificationView({ email }) {
           <div key={r.userId} style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "8px 14px", minHeight: 47, borderTop: `1px solid ${BORDER}`, alignItems: "center" }}>
             <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: MUTED_LIGHT, margin: 0 }}>#{r.position}</p>
             <div>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{r.name}</p>
+              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 10, color: TEXT, margin: 0 }}>{r.name}{r.username ? <span style={{ fontWeight: 600, color: "#008e4a" }}> @{r.username}</span> : null}</p>
               <p style={{ fontFamily: "Inter, sans-serif", fontSize: 8, color: MUTED_LIGHT, margin: 0 }}>{r.email}</p>
             </div>
             <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: MUTED, margin: 0 }}>{r.country}</p>

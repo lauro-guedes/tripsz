@@ -69,6 +69,14 @@ export async function GET(request) {
     else if (sub?.status === "pending") subscriptionLabel = "Pendente";
     else if (isLegacy) subscriptionLabel = "Legado (grátis)";
 
+    let username = null;
+    try {
+      const { data: prof } = await supabase.from("profiles").select("username").eq("user_id", userId).maybeSingle();
+      username = prof?.username || null;
+    } catch {
+      /* sem a tabela */
+    }
+
     const { data: publicProfile } = await supabase
       .from("public_profiles")
       .select("slug")
@@ -87,6 +95,7 @@ export async function GET(request) {
       id: user.id,
       name: user.user_metadata?.name || "Sem nome",
       email: user.email,
+      username,
       country: user.user_metadata?.country || null,
       favoriteTeams: user.user_metadata?.favorite_teams || [],
       createdAt: user.created_at,

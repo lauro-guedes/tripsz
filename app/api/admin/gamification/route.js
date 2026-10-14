@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/serverAuth";
+import { loadUsernames } from "@/lib/adminUsernames";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ function tierName(xp) {
 // jogos — usado duas vezes: uma com TODOS os jogos (hoje), outra só com
 // os jogos registrados até 30 dias atrás (pra comparar o crescimento
 // real, sem inventar nenhuma variação).
-function computeRanking(games, usersById) {
+function computeRanking(games, usersById, handles = new Map()) {
   const byUser = new Map();
   games.forEach((g) => {
     if (!byUser.has(g.user_id)) byUser.set(g.user_id, []);
@@ -38,6 +39,7 @@ function computeRanking(games, usersById) {
       userId: uid,
       name: user.user_metadata?.name || "Sem nome",
       email: user.email,
+      username: handles.get(uid) || null,
       country: user.user_metadata?.country || "—",
       tier: tierName(xp),
       xp,
@@ -85,7 +87,8 @@ export async function GET(request) {
     const { data: userList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const usersById = new Map((userList?.users || []).map((u) => [u.id, u]));
 
-    const ranking = computeRanking(games, usersById);
+    const handles = await loadUsernames(supabase);
+    const ranking = computeRanking(games, usersById, handles);
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
     const gamesBefore = games.filter((g) => g.created_at && g.created_at <= thirtyDaysAgo);
