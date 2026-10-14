@@ -1,4 +1,4 @@
-import { getFixtureDetails, venueByName, venuePayload } from "@/lib/gameDetails";
+import { getFixtureDetails, lookupVenueById, venueByName, venuePayload } from "@/lib/gameDetails";
 import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -37,16 +37,19 @@ export async function GET(request) {
   const got = await getFixtureDetails(supabase, game.api_fixture_id);
   if (got.error) return json({ available: false, reason: "unavailable", venue: await venueByName(supabase, game) });
 
-  // O que a pessoa registrou (estádio/cidade/país) vale mais que o cadastro da API.
-  // Se a API não trouxe o ID ou a capacidade do estádio, completa procurando pelo nome.
+  // Estádio e país: vale o que a pessoa registrou. A CIDADE vem do cadastro do estádio (por ID), que
+  // escreve certo ("Belo Horizonte"); o texto do jogo às vezes erra ("Bello Harisanta") — inclusive nos
+  // detalhes que já ficaram guardados. Se a API não trouxe o ID ou a capacidade, completa pelo nome.
   const v = got.details.venue || {};
-  const extra = !v.id || !v.capacity ? await venueByName(supabase, game) : null;
+  const reg = v.id ? await lookupVenueById(supabase, v.id) : null;
+  const capacity = v.capacity || (reg && reg.capacity) || null;
+  const extra = !v.id || !capacity ? await venueByName(supabase, game) : null;
   const venue = venuePayload({
     id: v.id || (extra && extra.id) || null,
     name: game.stadium || v.name || null,
-    city: game.city || v.city || null,
+    city: (reg && reg.city) || (extra && extra.city) || v.city || game.city || null,
     country: game.country || v.country || null,
-    capacity: v.capacity || (extra && extra.capacity) || null,
+    capacity,
     image: v.image || (extra && extra.image) || null,
   });
   return json({ available: true, details: { ...got.details, venue } });
