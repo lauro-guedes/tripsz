@@ -44,6 +44,8 @@ import { MeuCalendario } from "./jogos/MeuCalendario";
 import { MeusJogosHistorico } from "./jogos/MeusJogosHistorico";
 import { RegistrarJogo } from "./jogos/RegistrarJogo";
 import { PATH_TO_SCREEN, SCREEN_TO_PATH } from "./routes";
+import { BoasVindasConvite } from "./conta/BoasVindasConvite";
+import { FINAL_INVITE_ERRORS, clearPendingInvite, readPendingInvite, redeemAndPrepareWelcome } from "../lib/pendingInvite";
 
 
 export default function App() {
@@ -195,7 +197,21 @@ export default function App() {
       });
     }
 
+    // Convite guardado antes do Google/confirmação de e-mail: resgata assim que há sessão. O resgate é no
+    // servidor (pelo código), idempotente, e só é descartado em erro definitivo (vencido, já usado...).
+    const redeemPendingInvite = async () => {
+      const code = readPendingInvite();
+      if (!code) return;
+      const r = await redeemAndPrepareWelcome(code);
+      if (r.ok) {
+        clearPendingInvite();
+        setScreen("bem-vindo");
+      } else if (FINAL_INVITE_ERRORS.includes(r.code)) clearPendingInvite();
+    };
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      // setTimeout: não se chama o Supabase de dentro desta função (pode travar o login).
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) setTimeout(redeemPendingInvite, 0);
       if (event === "SIGNED_IN" && session?.user) {
         setAnswers((a) => ({ ...a, userId: session.user.id }));
         const target = readAndClearPostLoginTarget();
@@ -445,6 +461,7 @@ export default function App() {
           onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
+      {screen === "bem-vindo" && <BoasVindasConvite onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "jogos" && (
         <MeusJogosHistorico
           onNavigate={(key) => setScreen(key)}
