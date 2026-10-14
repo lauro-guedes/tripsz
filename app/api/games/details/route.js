@@ -1,3 +1,4 @@
+import { wikiVenueInfo } from "@/lib/venueWiki";
 import { getFixtureDetails, lookupVenueById, venueByName, venuePayload } from "@/lib/gameDetails";
 import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -42,8 +43,17 @@ export async function GET(request) {
   // detalhes que já ficaram guardados. Se a API não trouxe o ID ou a capacidade, completa pelo nome.
   const v = got.details.venue || {};
   const reg = v.id ? await lookupVenueById(supabase, v.id) : null;
-  const capacity = v.capacity || (reg && reg.capacity) || null;
+  let capacity = v.capacity || (reg && reg.capacity) || null;
   const extra = !v.id || !capacity ? await venueByName(supabase, game) : null;
+  if (!capacity && extra && extra.capacity) capacity = extra.capacity;
+  // Ainda sem capacidade (a API-Football não cobre todos os estádios): busca no Wikidata, com limite de tempo.
+  if (!capacity && (game.stadium || v.name)) {
+    const wiki = await Promise.race([
+      wikiVenueInfo(game.stadium || v.name, (reg && reg.city) || (extra && extra.city) || v.city || game.city),
+      new Promise((resolve) => setTimeout(() => resolve(null), 6000)),
+    ]).catch(() => null);
+    if (wiki && wiki.capacity) capacity = wiki.capacity;
+  }
   const venue = venuePayload({
     id: v.id || (extra && extra.id) || null,
     name: game.stadium || v.name || null,

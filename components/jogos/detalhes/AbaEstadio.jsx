@@ -17,59 +17,63 @@ function PhotoSkeleton({ height, overlay }) {
   );
 }
 
-function StadiumPhoto({ venue, isMobile }) {
-  // 1) foto do cadastro de estádios; 2) foto real da Wikipedia; 3) sem foto: não mostra imagem nenhuma.
-  const [apiFailed, setApiFailed] = useState(false);
-  const [wiki, setWiki] = useState(null); // { url } | null
-  const [looking, setLooking] = useState(true); // buscando a foto: mostra o esqueleto, sem pular o layout
-  const [loaded, setLoaded] = useState(false); // a imagem já terminou de baixar?
-  const [wikiFailed, setWikiFailed] = useState(false);
-  const apiImage = venue && venue.image && !apiFailed ? venue.image : null;
-  const venueName = venue && venue.name;
-  const venueCity = venue && venue.city;
-
+// Foto e capacidade vindas da Wikipedia/Wikidata (buscadas ao abrir o modal; ver lib/venuePhoto.js).
+function useWikiVenue(venueName, venueCity) {
+  const seen = venueName ? peekVenuePhoto(venueName, venueCity) : { done: true, value: null };
+  const [state, setState] = useState({ done: seen.done, value: seen.value });
   useEffect(() => {
-    if (apiImage || !venueName) {
-      setLooking(false);
+    if (!venueName) {
+      setState({ done: true, value: null });
       return;
     }
-    const seen = peekVenuePhoto(venueName, venueCity);
-    if (seen.done) {
-      setWiki(seen.value);
-      setLooking(false);
+    const peek = peekVenuePhoto(venueName, venueCity);
+    if (peek.done) {
+      setState({ done: true, value: peek.value });
       return;
     }
     let alive = true;
-    setLooking(true);
-    getVenuePhoto(venueName, venueCity)
-      .then((val) => {
-        if (alive) setWiki(val);
-      })
-      .finally(() => {
-        if (alive) setLooking(false);
-      });
+    setState({ done: false, value: null });
+    getVenuePhoto(venueName, venueCity).then((val) => {
+      if (alive) setState({ done: true, value: val });
+    });
     return () => {
       alive = false;
     };
-  }, [apiImage, venueName, venueCity]);
+  }, [venueName, venueCity]);
+  return state;
+}
 
-  const wikiImage = !apiImage && wiki && !wikiFailed ? wiki.url : null;
-  const realImage = apiImage || wikiImage;
-  // Sem foto (nem do cadastro nem da Wikipedia): a aba segue sem imagem — nada de imagem ilustrativa.
-  if (!realImage) {
-    return looking ? <PhotoSkeleton height={isMobile ? 230 : 262} /> : null;
-  }
+function StadiumPhoto({ venue, wikiState, isMobile }) {
+  // Foto real da Wikipedia primeiro; se não houver, a imagem do cadastro de estádios; sem nenhuma: sem imagem.
+  const [wikiFailed, setWikiFailed] = useState(false);
+  const [apiFailed, setApiFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const height = isMobile ? 230 : 262;
+  const wikiUrl = wikiState.value && wikiState.value.url && !wikiFailed ? wikiState.value.url : null;
+  const apiUrl = venue && venue.image && !apiFailed ? venue.image : null;
+  const realImage = wikiUrl || (wikiState.done ? apiUrl : null);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [realImage]);
+
+  if (!wikiState.done && !realImage) return <PhotoSkeleton height={height} />;
+  if (!realImage) return null; // sem foto: nada de imagem ilustrativa
   return (
-    <div style={{ position: "relative", height: isMobile ? 230 : 262, borderRadius: 12, overflow: "hidden", background: BG_ALT, width: "100%" }}>
+    <div style={{ position: "relative", height, borderRadius: 12, overflow: "hidden", background: BG_ALT, width: "100%" }}>
       {!loaded && <PhotoSkeleton height="100%" overlay />}
       <img
+        key={realImage}
         src={realImage}
+        alt={`Foto do ${(venue && venue.name) || "estádio"}`}
+        ref={(el) => {
+          if (el && el.complete && el.naturalWidth > 0) setLoaded(true); // já veio do cache do navegador
+        }}
         onLoad={() => setLoaded(true)}
-        alt={`Foto do ${venue.name || "estádio"}`}
-        onError={() => (apiImage ? setApiFailed(true) : setWikiFailed(true))}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0, transition: "opacity 0.25s" }}
+        onError={() => (wikiUrl ? setWikiFailed(true) : setApiFailed(true))}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
-      {wikiImage && (
+      {wikiUrl && loaded && (
         <div style={{ position: "absolute", left: 12, bottom: 12, background: "rgba(15,23,42,0.8)", borderRadius: 4, padding: "4px 8px" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, lineHeight: 1.4, color: "#fff", margin: 0 }}>Foto: Wikipedia</p>
         </div>
@@ -89,7 +93,8 @@ export function AbaEstadio({ game, venue, visits, isFirstVisit, isMobile }) {
   const country = (venue && venue.country) || game.country || null;
   const place = [city, country].filter(Boolean).join(", ");
   const flag = venue && venue.cc ? flagEmoji(venue.cc) : "";
-  const capacity = venue && venue.capacity;
+  const wikiState = useWikiVenue(name !== "Estádio não informado" ? name : null, city);
+  const capacity = (venue && venue.capacity) || (wikiState.value && wikiState.value.capacity) || null;
   const first = visits.first ? formatShortDate(visits.first) : "";
 
   const capacityBlock = (
@@ -125,7 +130,7 @@ export function AbaEstadio({ game, venue, visits, isFirstVisit, isMobile }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%" }}>
       <SectionTitle title={name} subtitle={`Onde você acompanhou ${teamLabel(game.home_team)} × ${teamLabel(game.away_team)}.`} />
-      <StadiumPhoto venue={venue} isMobile={isMobile} />
+      <StadiumPhoto venue={venue} wikiState={wikiState} isMobile={isMobile} />
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
