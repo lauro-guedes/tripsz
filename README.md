@@ -131,7 +131,24 @@ folha de baixo pra cima; no desktop, centralizado (Figma 516:*).
 - Editar local e Remover jogo ficam no próprio cartão (o cartão não expande mais).
 
 ## Variáveis de ambiente
+### Convites de jogo ("Quem foi com você?")
 
+Quem registrou um jogo pode convidar quem estava com ele. Quem recebe o link cria a conta (ou entra) e o jogo
+cai no Passaporte dela. **Fase 1 (feita): o lado de quem RECEBE e todo o servidor.** A tela que CRIA o convite
+("Convidar alguém novo") e a marcação de amigos que já têm conta (com aceite) são as fases seguintes.
+
+- **Página pública:** `/convite/<código>` (`components/convite/*`, estado e ações em `useConvite.js`). Estados: válido
+  (cadastro), expirado, já usado (login), link inexistente, dono do convite, pessoa já logada. Não é indexada.
+- **Boas-vindas:** `/conta/bem-vindo` (`components/conta/BoasVindasConvite.jsx`), com os dados do resgate guardados no navegador.
+- **Servidor:** `lib/inviteServer.js` (criar, listar, reenviar), `lib/inviteRedeem.js` (página pública e resgate) e
+  `lib/inviteShared.js`; rotas em `app/api/invites/*`. Tabela `game_invites` (`supabase-convites.sql`): RLS ligado e sem política.
+- **Segurança:** o código tem 128 bits e **só o hash** vai pro banco; vale 14 dias, uso único; "Reenviar" cria link novo e
+  invalida o anterior; limite de 20 convites por pessoa por dia (+ limites por minuto em memória, `lib/rateLimit.js`);
+  o convite guarda uma **cópia** do jogo; resgate idempotente, sem duplicar, e o dono não resgata o próprio.
+  Guarda só o **nome** digitado de quem foi convidado (nunca telefone ou e-mail).
+- **Resgate depois do Google/confirmação de e-mail:** o código fica em `localStorage` (`tripsz_pending_invite`, 14 dias) e o
+  app (`TripszApp.jsx`) resgata na primeira sessão (`SIGNED_IN`/`INITIAL_SESSION`), pelo CÓDIGO, nunca pelo e-mail digitado.
+- **Quem convida aparece** como primeiro nome + `@` (`profiles.first_name` e `profiles.username`); sobrenome nunca sai.
 Configure na Vercel (Settings → Environment Variables) e, para rodar local, copie `.env.example` para `.env.local` e preencha.
 
 | Variável | Para quê |
