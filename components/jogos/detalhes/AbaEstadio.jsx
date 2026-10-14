@@ -1,14 +1,12 @@
 "use client";
 import { CheckCheck, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getVenuePhoto, peekVenuePhoto } from "../../../lib/venuePhoto";
 import { flagEmoji, formatInt, formatShortDate } from "../../../lib/gameDetailsCore";
 import { teamLabel } from "../../../lib/textUtils";
 import { BG_ALT, BODY, BORDER, FONT_DISPLAY, FONT_MONO, GREEN_DARK, GREEN_SOFT, MUTED, TEXT } from "../../../lib/tokens";
 import { Icon } from "../../ui/Icon";
 import { SectionTitle } from "./ui";
-
-// Cada estádio é buscado na Wikipedia só uma vez enquanto a página estiver aberta.
-const wikiPhotos = new Map();
 
 function StadiumPhoto({ venue, isMobile }) {
   // 1) foto do cadastro de estádios; 2) foto real da Wikipedia; 3) sem foto: não mostra imagem nenhuma.
@@ -22,21 +20,17 @@ function StadiumPhoto({ venue, isMobile }) {
 
   useEffect(() => {
     if (apiImage || !venueName) return;
-    const key = `${venueName}|${venueCity || ""}`;
-    if (wikiPhotos.has(key)) {
-      setWiki(wikiPhotos.get(key));
+    const seen = peekVenuePhoto(venueName, venueCity);
+    if (seen.done) {
+      setWiki(seen.value);
       return;
     }
     let alive = true;
     setLooking(true);
-    fetch(`/api/venues/photo?name=${encodeURIComponent(venueName)}&city=${encodeURIComponent(venueCity || "")}`)
-      .then((r) => r.json())
-      .then((j) => {
-        const val = j && j.url ? { url: j.url } : null;
-        wikiPhotos.set(key, val);
+    getVenuePhoto(venueName, venueCity)
+      .then((val) => {
         if (alive) setWiki(val);
       })
-      .catch(() => {})
       .finally(() => {
         if (alive) setLooking(false);
       });

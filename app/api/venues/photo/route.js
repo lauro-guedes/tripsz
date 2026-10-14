@@ -32,15 +32,19 @@ async function lookup(lang, query) {
   set("gsrlimit", "6");
   set("prop", "pageimages|description|extracts");
   set("piprop", "thumbnail|name");
-  set("pithumbsize", "1000");
+  set("pithumbsize", "800");
   set("exintro", "1");
   set("explaintext", "1");
   set("exchars", "400");
   set("exlimit", "6");
-  const res = await fetch(url.toString(), { headers: { "User-Agent": "tripsz/1.0 (https://tripsz.vercel.app)" }, next: { revalidate: 60 * 60 * 24 * 30 } });
-  if (!res.ok) return [];
-  const json = await res.json();
-  return Object.values(json.query?.pages || {}).map((p) => ({ ...p, lang }));
+  try {
+    const res = await fetch(url.toString(), { headers: { "User-Agent": "tripsz/1.0 (https://tripsz.vercel.app)" }, next: { revalidate: 60 * 60 * 24 * 30 }, signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return Object.assign([], { failed: true });
+    const json = await res.json();
+    return Object.values(json.query?.pages || {}).map((p) => ({ ...p, lang }));
+  } catch {
+    return Object.assign([], { failed: true }); // lento demais ou fora do ar: segue com o que tiver
+  }
 }
 
 /** "Estádio Jornalista Mário Filho (Maracanã)" -> o nome inteiro, o de fora dos parênteses e o de dentro. */
@@ -93,25 +97,27 @@ export async function GET(request) {
   if (nameTokens.length === 0) return Response.json({ url: null, reason: "nome genérico" });
 
   try {
+    // Todas as buscas (idiomas × variações do nome) saem ao mesmo tempo, em vez de uma depois da outra.
+    const queries = [...new Set(variants.flatMap((v) => [v, `${v} ${city}`.trim()]))].slice(0, 4);
+    const jobs = WIKIS.flatMap((lang) => queries.map((q) => lookup(lang, q)));
+    const results = await Promise.all(jobs);
     const candidates = [];
-    for (const lang of WIKIS) {
-      const queries = variants.flatMap((v) => [v, `${v} ${city}`.trim()]);
-      for (const q of [...new Set(queries)]) {
-        const pages = await lookup(lang, q);
-        for (const p of pages) {
-          const s = score(p, variants, cityTokens);
-          candidates.push({ lang, title: p.title, image: p.pageimage, desc: p.description, ...s, thumb: p.thumbnail?.source });
-        }
+    for (const pages of results) {
+      for (const p of pages) {
+        const s = score(p, variants, cityTokens);
+        candidates.push({ lang: p.lang, title: p.title, image: p.pageimage, desc: p.description, ...s, thumb: p.thumbnail?.source });
       }
-      if (candidates.some((c) => c.ok)) break; // achou em inglês: não precisa do português
     }
+    // Inglês tem preferência: o português só entra se o inglês não achou nada confiável.
+    const okEn = candidates.filter((c) => c.ok && c.lang === "en");
+    if (okEn.length) candidates.forEach((c) => { if (c.lang !== "en") c.ok = false; });
     const best = candidates.filter((c) => c.ok).sort((a, b) => b.value - a.value)[0];
     const headers = { "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400" };
     const body = best
       ? { url: best.thumb, source: `Wikipedia (${best.lang})`, page: `https://${best.lang}.wikipedia.org/wiki/${encodeURIComponent(best.title.replace(/ /g, "_"))}` }
       : { url: null };
     if (debug) return Response.json({ ...body, nameTokens, cityTokens, candidates: candidates.map(({ thumb, ...c }) => c) });
-    return Response.json(body, { headers: best ? headers : { "Cache-Control": "public, s-maxage=86400" } });
+    return Response.json(body, { headers: best ? headers : { "Cache-Control": results.some((r) => r.failed) ? "no-store" : "public, s-maxage=86400" } });
   } catch (e) {
     console.error("Erro em /api/venues/photo:", e.message);
     return Response.json({ url: null });

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { authFetch } from "../../../lib/authFetch";
 import { formatShortDate, formatTimeBrasilia, statusLabel } from "../../../lib/gameDetailsCore";
 import { dateOnly } from "../../../lib/dateOnly";
+import { getVenuePhoto } from "../../../lib/venuePhoto";
 import { teamLabel } from "../../../lib/textUtils";
 import { BG_ALT, BODY, BORDER, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_DARK, GREEN_SOFT, MUTED, TEXT } from "../../../lib/tokens";
 import TeamBadge from "../../TeamBadge";
@@ -134,6 +135,11 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   useEffect(() => {
     measure();
   }, [tab, state, data, isMobile, measure]);
+
+  // Já começa a buscar a foto do estádio ao abrir o modal, sem esperar a aba Estádio.
+  useEffect(() => {
+    if (game && game.stadium) getVenuePhoto(game.stadium, game.city);
+  }, [game && game.stadium, game && game.city]);
 
   const details = data && data.available ? data.details : null;
   const venue = details ? details.venue : data ? data.venue : null;
