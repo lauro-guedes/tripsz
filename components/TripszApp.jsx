@@ -472,6 +472,7 @@ export default function App() {
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onRegisterNew={() => setScreen("registrar-jogo")}
+          onCompanions={(game) => { saveDraft({ game, tagged: [] }); setScreen("acompanhantes"); }}
         />
       )}
       {screen === "buscar" && <BuscarJogos onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}

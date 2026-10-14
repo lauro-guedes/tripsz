@@ -26,7 +26,7 @@ import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
+export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onCompanions }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -287,6 +287,11 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew }) {
                       </div>
                       {people[g.id] && <PessoasLinha info={people[g.id]} onOpen={() => setCompanionsId(g.id)} />}
                       <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                        {onCompanions && (
+                          <p role="button" onClick={() => onCompanions(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0, cursor: "pointer" }}>
+                            {people[g.id] && ((people[g.id].people || []).length + (people[g.id].invites || []).length) > 0 ? "+ Adicionar mais companhia" : "+ Adicionar companhia"}
+                          </p>
+                        )}
                         <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
                         <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
                       </div>
