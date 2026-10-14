@@ -935,7 +935,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
                             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{teamLabel(g.home)} {g.homeScore ?? "-"}×{g.awayScore ?? "-"} {teamLabel(g.away)}</p>
                             <TeamBadge name={g.away} url={g.awayLogo} size={24} />
                           </div>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{g.competition}</p>
+                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{[g.competition, g.stadium].filter(Boolean).join(" · ")}</p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", gap: 8, flexShrink: 0 }}>
                         <div onClick={() => (selected ? handleRemoveGame(g) : handleAddGame(g))} style={{ background: selected ? BORDER : GREEN_BUTTON, opacity: isSaving ? 0.6 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 10, cursor: isSaving ? "default" : "pointer", flexShrink: 0 }}>

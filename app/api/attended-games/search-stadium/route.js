@@ -148,6 +148,8 @@ function mapGames(fixtures) {
     competition: f.league.name,
     country: f.league.country,
     leagueId: f.league.id,
+    stadium: f.fixture.venue?.name || null,
+    city: f.fixture.venue?.city || null,
   }));
 }
 
