@@ -291,6 +291,15 @@ export async function GET(request) {
 
     for (const teamId of matchedGames ? [] : [...new Set(teamIdCandidates)]) {
       const fixtures = await footballFetchRaw("/fixtures", { team: teamId, season });
+      if (searchParams.get("debug") === "1") {
+        // Diagnóstico: como a API registra o estádio em cada jogo do time (nome e ID), por competição.
+        return Response.json({
+          teamId,
+          queryNorm,
+          total: fixtures.length,
+          games: fixtures.map((f) => ({ date: f.fixture.date?.slice(0, 10), league: f.league.name, home: f.teams.home.name, away: f.teams.away.name, venueId: f.fixture.venue?.id ?? null, venueName: f.fixture.venue?.name ?? null, city: f.fixture.venue?.city ?? null })),
+        });
+      }
 
       const nameMatches = (f) => {
         const venueName = searchKey(f.fixture.venue?.name || "");
