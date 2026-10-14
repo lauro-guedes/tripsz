@@ -318,8 +318,17 @@ export async function GET(request) {
       // nesse estádio (achamos jogos dele aqui), os jogos em casa sem estádio informado entram também.
       if (matches.length > 0) {
         const have = new Set(matches.map((f) => f.fixture.id));
+        // A cidade do estádio = a mais frequente entre os jogos achados (a API tem erros pontuais, tipo "Bello Harisanta").
+        const cityCount = new Map();
+        matches.forEach((f) => {
+          const c = searchKey(f.fixture.venue?.city || "");
+          if (c) cityCount.set(c, (cityCount.get(c) || 0) + 1);
+        });
+        const stadiumCity = [...cityCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
         for (const f of fixtures) {
-          if (!have.has(f.fixture.id) && !f.fixture.venue?.name && f.teams.home.id === teamId) matches.push(f);
+          if (have.has(f.fixture.id) || f.fixture.venue?.name || f.teams.home.id !== teamId) continue;
+          // Só entra se o jogo diz estar na cidade do estádio (amistosos e copas sem local não entram).
+          if (stadiumCity && searchKey(f.fixture.venue?.city || "") === stadiumCity) matches.push(f);
         }
         matches.sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
       }
