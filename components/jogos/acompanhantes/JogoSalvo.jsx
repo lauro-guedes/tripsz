@@ -1,7 +1,7 @@
 "use client";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
-import { clearDraft, readDraft } from "../../../lib/companionDraft";
+import { clearDraft, readDraft, saveDraft } from "../../../lib/companionDraft";
 import { namesLabel } from "../../../lib/companions";
 import { listInvites } from "../../../lib/companionsClient";
 import { GREEN_DARK, TEXT } from "../../../lib/tokens";
@@ -17,6 +17,7 @@ export function JogoSalvo({ onNavigate, onLogout }) {
   const isMobile = useIsMobile();
   const user = useAuthedUser();
   const [draft] = useState(() => readDraft());
+  const [tagged, setTagged] = useState(() => ((readDraft() || {}).tagged) || []); // quem foi marcado (nesta tela ou na etapa anterior)
   const [invites, setInvites] = useState(null);
   const [inviting, setInviting] = useState(false);
   const loadInvites = async () => {
@@ -32,7 +33,13 @@ export function JogoSalvo({ onNavigate, onLogout }) {
   if (!draft) return null;
 
   const game = draft.game;
-  const names = (draft.tagged || []).map((p) => p.firstName);
+  const names = tagged.map((p) => p.firstName);
+  const addTagged = (p) => {
+    if (tagged.some((x) => x.username === p.username)) return;
+    const next = [...tagged, p];
+    setTagged(next);
+    saveDraft({ ...draft, tagged: next });
+  };
   const many = names.length > 1;
   const back = () => {
     clearDraft();
@@ -75,7 +82,7 @@ export function JogoSalvo({ onNavigate, onLogout }) {
           <SecondaryBtn onClick={back}>Voltar aos meus jogos</SecondaryBtn>
         </div>
       </div>
-      {inviting && <ConvidarModal game={game} onClose={() => setInviting(false)} onCreated={() => loadInvites()} />}
+      {inviting && <ConvidarModal game={game} onClose={() => setInviting(false)} onCreated={() => loadInvites()} onTagged={addTagged} selectedUsernames={tagged.map((p) => p.username)} />}
     </PageShell>
   );
 }
