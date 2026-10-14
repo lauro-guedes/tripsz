@@ -28,6 +28,7 @@ export default function PrivacyPolicyPage() {
         <li style={S.li}><strong>Dados de cadastro:</strong> nome, e-mail e número de WhatsApp, fornecidos por você ao criar uma conta (ou, se você optar por entrar com o Google, recebemos nome e e-mail associados à sua conta Google).</li>
         <li style={S.li}><strong>Respostas do questionário de viagem:</strong> países de interesse, datas, número de viajantes, orçamento e preferências, usadas para montar seu roteiro.</li>
         <li style={S.li}><strong>Dados de pagamento:</strong> ao contratar a consultoria humana opcional, o pagamento é processado inteiramente pelo Mercado Pago. Nós não armazenamos número de cartão, CVC ou dados bancários — apenas o status do pedido (pago, pendente) e a data/horário escolhidos para a sessão de consultoria.</li>
+        <li style={S.li}><strong>Convites de jogo:</strong> quando você convida alguém para um jogo, guardamos o nome que você digitou para essa pessoa, o canal escolhido (WhatsApp, e-mail ou link) e uma cópia dos dados do jogo (times, placar, estádio e data). Não guardamos o telefone nem o e-mail de quem foi convidado. Quem recebe o link vê o jogo, o seu primeiro nome e o seu @, e mais nada.</li>
         <li style={S.li}><strong>Dados de uso:</strong> informações técnicas básicas de navegação (como progresso no questionário), guardadas localmente no seu navegador para você não perder o preenchimento entre uma etapa e outra.</li>
       </ul>
 
