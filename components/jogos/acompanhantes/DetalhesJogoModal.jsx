@@ -6,8 +6,9 @@ import { BORDER, GREEN, MUTED, TEXT } from "../../../lib/tokens";
 import { AMBER_BG, Message, PrimaryBtn, SLATE_BG, SecondaryBtn, text } from "../../convite/ConviteUi";
 import { useIsMobile } from "../../ui/useIsMobile";
 import { ConvidarModal } from "./ConvidarModal";
-import { Avatar, matchLabel, matchPlace, matchTitle, mono, useBodyLock } from "./ui";
+import { Avatar, SheetHandle, matchLabel, matchPlace, matchTitle, mono, useBodyLock } from "./ui";
 import { useReenviar } from "./useReenviar";
+import { useSheetDrag } from "./useSheetDrag";
 
 const ORIGIN = { api: "Via Tripsz", csv: "Importado", manual: "Manual", invite: "Por convite" };
 
@@ -15,6 +16,7 @@ const ORIGIN = { api: "Via Tripsz", csv: "Importado", manual: "Manual", invite: 
 export function DetalhesJogoModal({ game, info, onClose, onRefresh }) {
   const isMobile = useIsMobile();
   useBodyLock();
+  const { dragY, dragging, dragProps } = useSheetDrag(onClose);
   const [inviting, setInviting] = useState(false);
   const again = useReenviar({ game, onDone: onRefresh });
   const people = (info && info.people) || [];
@@ -23,9 +25,14 @@ export function DetalhesJogoModal({ game, info, onClose, onRefresh }) {
   const where = [game.city, game.country].filter(Boolean).join(", ");
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
-      <div role="dialog" aria-modal="true" aria-label="Detalhes do jogo" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 560, borderRadius: isMobile ? "20px 20px 0 0" : 12, padding: isMobile ? 20 : 24, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, maxHeight: isMobile ? "92vh" : "calc(100vh - 48px)", overflowY: "auto" }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, overscrollBehavior: "contain", background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
+      <div role="dialog" aria-modal="true" aria-label="Detalhes do jogo" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 560, borderRadius: isMobile ? "20px 20px 0 0" : 12, padding: isMobile ? 20 : 24, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, maxHeight: isMobile ? "92vh" : "calc(100vh - 48px)", overflowY: "auto", overscrollBehavior: "contain", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
+        {isMobile && (
+          <div style={{ margin: "-20px -20px -8px" }}>
+            <SheetHandle onClose={onClose} dragProps={dragProps} />
+          </div>
+        )}
+        <div {...(isMobile ? dragProps(false) : {})} style={{ display: "flex", gap: 12, alignItems: "center", touchAction: isMobile ? "none" : undefined }}>
           <p style={{ ...text(20, TEXT, { fontWeight: 700 }), flex: 1 }}>Detalhes do jogo</p>
           <span role="button" aria-label="Fechar" onClick={onClose} style={{ cursor: "pointer", display: "flex" }}>
             <X size={20} color={TEXT} />
@@ -82,7 +89,7 @@ export function DetalhesJogoModal({ game, info, onClose, onRefresh }) {
         <SecondaryBtn onClick={() => setInviting(true)}>+ Convidar mais alguém</SecondaryBtn>
         <PrimaryBtn onClick={onClose}>Voltar aos meus jogos</PrimaryBtn>
       </div>
-      {inviting && <ConvidarModal game={game} onClose={() => setInviting(false)} onCreated={() => onRefresh && onRefresh()} />}
+      {inviting && <ConvidarModal game={game} onClose={() => setInviting(false)} onCreated={() => onRefresh && onRefresh()} onTagged={() => onRefresh && onRefresh()} selectedUsernames={people.map((p) => p.username)} />}
     </div>
   );
 }
