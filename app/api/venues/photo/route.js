@@ -104,6 +104,8 @@ async function readCache(key) {
     if (!data) return null;
     const age = Date.now() - new Date(data.fetched_at).getTime();
     if (age > (data.url ? FOUND_TTL_MS : MISS_TTL_MS)) return null;
+    // "Não achei" de antes da regra de nomes oficiais (14/10/2026) é ignorado: o estádio é procurado de novo.
+    if (!data.url && new Date(data.fetched_at) < new Date("2026-10-14T01:10:00Z")) return null;
     return data.url ? { url: data.url, source: data.source, page: data.page } : { url: null };
   } catch {
     return null;
