@@ -321,6 +321,22 @@ export async function GET(request) {
     // travar num time só, pra pegar esses outros jogos.
     const leagueIds = usedNeutralFallback ? [] : [...new Set(matchedGames.map((g) => g.leagueId).filter(Boolean))];
     const seenIds = new Set(matchedGames.map((g) => g.apiFixtureId));
+    // Primeiro: TODOS os jogos do estádio na temporada, de qualquer competição (estaduais, copas...).
+    // Cada jogo é conferido pelo ID do estádio, então se a API ignorar o filtro nada de fora entra.
+    if (!usedNeutralFallback && matchedVenueInfo.id) {
+      try {
+        const all = await footballFetchRaw("/fixtures", { venue: matchedVenueInfo.id, season });
+        for (const f of all) {
+          if (!isAtVenue(f, matchedVenueInfo.id, matchedVenueInfo.name)) continue;
+          if (!seenIds.has(f.fixture.id)) {
+            seenIds.add(f.fixture.id);
+            matchedGames.push(mapGames([f])[0]);
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao buscar todos os jogos do estádio:", e.message);
+      }
+    }
     for (const leagueId of matchedVenueInfo.id ? leagueIds : []) { // sem ID do estádio a API ignora o filtro e traria a liga inteira
       try {
         const extra = await footballFetchRaw("/fixtures", { venue: matchedVenueInfo.id, league: leagueId, season });
