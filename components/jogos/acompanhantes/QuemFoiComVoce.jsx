@@ -1,4 +1,5 @@
 "use client";
+import { MAX_COMPANIONS } from "../../../lib/companions";
 import { Card, Message, PrimaryBtn, text } from "../../convite/ConviteUi";
 import { BORDER, GREEN_DARK, MUTED, TEXT } from "../../../lib/tokens";
 import { useIsMobile } from "../../ui/useIsMobile";
@@ -44,7 +45,7 @@ export function QuemFoiComVoce({ onNavigate, onLogout }) {
         </div>
       </div>
       <div style={isMobile ? { position: "sticky", bottom: 0, background: "#f8fafc", borderTop: `1px solid ${BORDER}`, margin: "0 -16px -32px", padding: "12px 16px", zIndex: 5 } : { display: "flex", justifyContent: "flex-end" }}>{actions}</div>
-      {s.inviting && <ConvidarModal game={game} onClose={() => s.setInviting(false)} onCreated={(inv) => s.setInvited((l) => [...l, inv])} />}
+      {s.inviting && <ConvidarModal game={game} onClose={() => s.setInviting(false)} onCreated={(inv) => s.setInvited((l) => [...l, inv])} onPickFriend={(p) => { if (s.isSelected(p.username)) return null; if (s.selected.length >= MAX_COMPANIONS) return `Você pode marcar até ${MAX_COMPANIONS} amigos em um jogo.`; s.toggle(p); return null; }} selectedUsernames={s.selected.map((p) => p.username)} />}
     </PageShell>
   );
 }
