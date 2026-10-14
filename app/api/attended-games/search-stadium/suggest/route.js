@@ -11,9 +11,14 @@ function stripDiacritics(str) {
 // (é só um mapa pequeno) pra essa rota de sugestões não depender da
 // outra e poder responder rapidinho, sem chamar a API-Football quando
 // o apelido já é conhecido.
+// [nome, país] — o país decide se o menu de temporada mostra "2026" (ano-calendário) ou "2026/27" (europeia).
 const STADIUM_NICKNAMES = [
-  "Anfield", "Old Trafford", "San Siro", "Giuseppe Meazza", "Wanda Metropolitano",
-  "Signal Iduna Park", "Westfalenstadion", "Mineirão", "Itaquerão", "Ali Sami Yen", "Maracanã",
+  ["Anfield", "England"], ["Old Trafford", "England"], ["San Siro", "Italy"], ["Giuseppe Meazza", "Italy"],
+  ["Wanda Metropolitano", "Spain"], ["Signal Iduna Park", "Germany"], ["Westfalenstadion", "Germany"],
+  ["Ali Sami Yen", "Turkey"],
+  ["Mineirão", "Brazil"], ["Itaquerão", "Brazil"], ["Maracanã", "Brazil"], ["Morumbi", "Brazil"], ["Beira-Rio", "Brazil"],
+  ["Allianz Parque", "Brazil"], ["Neo Química Arena", "Brazil"], ["Castelão", "Brazil"], ["Arena da Baixada", "Brazil"], ["Mané Garrincha", "Brazil"],
+  ["La Bombonera", "Argentina"], ["El Monumental", "Argentina"], ["El Cilindro", "Argentina"],
 ];
 
 /**
@@ -34,10 +39,10 @@ export async function GET(request) {
   }
 
   const qNorm = searchKey(q);
-  const nicknameMatches = STADIUM_NICKNAMES.filter((n) => searchKey(n).includes(qNorm)).map((n) => ({
+  const nicknameMatches = STADIUM_NICKNAMES.filter(([n]) => searchKey(n).includes(qNorm)).map(([n, country]) => ({
     name: n,
     city: null,
-    country: null,
+    country,
   }));
 
   let apiMatches = [];

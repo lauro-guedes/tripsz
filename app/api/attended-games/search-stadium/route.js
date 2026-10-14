@@ -70,6 +70,15 @@ const STADIUM_NICKNAME_TO_TEAM = {
   "mangueirao": "Remo",
   "morumbi": "Sao Paulo",
   "morumbis": "Sao Paulo",
+  "el cilindro": "Racing Club",
+  "cilindro": "Racing Club",
+  "estadio presidente peron": "Racing Club",
+  "beira rio": "Internacional",
+  "allianz parque": "Palmeiras",
+  "nubank parque": "Palmeiras",
+  "neo quimica arena": "Corinthians",
+  "castelao": "Fortaleza",
+  "arena da baixada": "Athletico Paranaense",
   // Estádio Nacional Mané Garrincha (Brasília) — sem "dono" fixo. O
   // usuário confirmou uma lista real de jogos lá entre 2022-2024; usamos
   // os times que mais aparecem nela, do mais frequente pro menos.
