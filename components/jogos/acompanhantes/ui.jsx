@@ -16,15 +16,44 @@ export const matchTitle = (g) => `${teamLabel(g.home_team)} ${g.home_score != nu
 export const matchPlace = (g) => [g.stadium, g.city].filter(Boolean).join(" · ");
 export const matchLabel = (g) => [g.competition, formatShortDate(g.match_date)].filter(Boolean).join(" · ");
 
-/** Trava a rolagem da página de trás enquanto um modal está aberto. */
+let lockCount = 0; // quantos modais estão abertos (um por cima do outro): a trava só sai quando fecha o último
+let lockSaved = null;
+
+/**
+ * Trava a página de trás DE VERDADE enquanto um modal está aberto: `overflow: hidden` sozinho não segura a rolagem no
+ * iPhone, então o body é congelado na posição atual e a rolagem volta ao mesmo ponto ao fechar.
+ */
 export function useBodyLock() {
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const b = document.body.style;
+    if (lockCount++ === 0) {
+      const y = window.scrollY;
+      lockSaved = { y, position: b.position, top: b.top, left: b.left, right: b.right, width: b.width, overflow: b.overflow };
+      b.position = "fixed";
+      b.top = `-${y}px`;
+      b.left = "0";
+      b.right = "0";
+      b.width = "100%";
+      b.overflow = "hidden";
+    }
     return () => {
-      document.body.style.overflow = prev;
+      if (--lockCount === 0 && lockSaved) {
+        const { y, ...prev } = lockSaved;
+        Object.assign(b, prev);
+        lockSaved = null;
+        window.scrollTo(0, y);
+      }
     };
   }, []);
+}
+
+/** A alça no topo da folha do celular: tocar ou arrastar pra baixo minimiza. */
+export function SheetHandle({ onClose, dragProps }) {
+  return (
+    <div data-testid="alca" role="button" aria-label="Minimizar" onClick={onClose} {...dragProps(true)} style={{ display: "flex", justifyContent: "center", padding: "12px 0 6px", flexShrink: 0, cursor: "pointer", touchAction: "none" }}>
+      <div style={{ background: BORDER, width: 44, height: 5, borderRadius: 999 }} />
+    </div>
+  );
 }
 
 /** Página das telas novas: menu de cima, conteúdo com o respiro do design e rodapé. */
