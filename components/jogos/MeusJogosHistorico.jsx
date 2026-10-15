@@ -210,6 +210,10 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, textTransform: "uppercase", margin: 0 }}>Registrar Novo Jogo</p>
           </div>
         </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0 }}>Histórico de Partidas</p>
+        </div>
+
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16 }}>
           <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
             <Icon name="search" size={18} color={MUTED} />
@@ -219,10 +223,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
             <option value="todas">Todas as temporadas</option>
             {seasons.map((se) => <option key={se.key} value={se.key}>Temporada {se.label}</option>)}
           </select>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0 }}>Histórico de Partidas</p>
         </div>
 
         {games === null && <Loading />}

@@ -32,7 +32,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
   const [addingId, setAddingId] = useState(null);
   const [lastAdded, setLastAdded] = useState(null);
   // Abas: "cidade" (data + raio) ou, por período, "pais" | "liga" | "clube".
-  const [mode, setMode] = useState("cidade");
+  const [mode, setMode] = useState("clube");
   const [options, setOptions] = useState({ countries: [], leagues: [] });
   const [country, setCountry] = useState("");
   const [leagueId, setLeagueId] = useState("");
@@ -352,15 +352,15 @@ export function BuscarJogos({ onNavigate, onLogout }) {
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 36 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Buscar jogos</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 16 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Escolha uma data e uma cidade. Encontre sua próxima experiência de arquibancada.</p>
         </div>
-        <div onClick={() => onNavigate("calendario")} style={{ background: BG_ALT, borderRadius: 8, padding: "13px 20px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer", flexShrink: 0 }}>
-          <Calendar size={20} color={TEXT} />
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0, whiteSpace: "nowrap" }}>Meu calendário</p>
+        <div onClick={() => onNavigate("calendario")} style={{ background: GREEN, borderRadius: 8, padding: "13px 20px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer", flexShrink: 0 }}>
+          <Calendar size={20} color="#fff" />
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>Meu calendário</p>
         </div>
       </div>
 
       <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: isMobile ? `24px ${px}` : `32px ${px}`, display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "flex", gap: 24, alignItems: "flex-end", overflowX: "auto" }}>
-          {[["cidade", "Cidade"], ["pais", "País"], ["liga", "Liga"], ["clube", "Clube"]].map(([m, label]) => (
+          {[["clube", "Clube"], ["liga", "Liga"], ["cidade", "Cidade"], ["pais", "País"]].map(([m, label]) => (
             <div key={m} onClick={() => switchMode(m)} style={{ display: "flex", flexDirection: "column", gap: 8, cursor: "pointer", flexShrink: 0 }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 14, color: mode === m ? TEXT : MUTED, margin: 0 }}>{label}</p>
               <div style={{ background: mode === m ? GREEN : BORDER, height: 2, borderRadius: 1, width: mode === m ? 72 : 44 }} />
