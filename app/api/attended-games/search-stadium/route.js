@@ -185,6 +185,37 @@ async function teamIdsForVenue(venueId) {
   }
 }
 
+/** O nome do clube (como a API grafa) do time `teamId`, lido de um dos jogos dele. */
+function clubNameOf(fixtures, teamId) {
+  for (const f of fixtures) {
+    if (f.teams?.home?.id === teamId) return f.teams.home.name;
+    if (f.teams?.away?.id === teamId) return f.teams.away.name;
+  }
+  return null;
+}
+
+/** O time feminino do mesmo clube ("Arsenal" -> "Arsenal W" ou "Arsenal Women"), se a API tiver. */
+async function womenTeamIdsOf(clubName) {
+  if (!clubName) return [];
+  try {
+    const teams = await searchTeams(clubName);
+    const want = new Set([`${clubName} w`, `${clubName} women`].map((n) => n.toLowerCase()));
+    return (teams || []).filter((t) => t.team?.id && want.has(String(t.team.name || "").toLowerCase())).map((t) => t.team.id).slice(0, 2);
+  } catch {
+    return []; // sem o feminino a busca segue só com o que já achou
+  }
+}
+
+/** O estádio do jogo bate com o procurado (nome digitado, apelido ou nome oficial)? */
+function venueNameMatches(f, queryNorm, queryCompact) {
+  const venueName = searchKey(f.fixture.venue?.name || "");
+  if (!venueName) return false;
+  const venueCompact = venueName.replace(/ /g, "");
+  if (/maracana|mario filho/.test(queryNorm) && /maracana|mario filho/.test(venueName)) return true; // mesmo estádio, nomes diferentes
+  if (ALT_NAMES.some(([q, v]) => q.test(queryNorm) && v.test(venueName))) return true; // apelido x nome oficial
+  return venueName.includes(queryNorm) || queryNorm.includes(venueName) || venueCompact.includes(queryCompact) || queryCompact.includes(venueCompact);
+}
+
 /**
  * GET /api/attended-games/search-stadium?stadium=Morumbi&season=2024
  *
@@ -245,6 +276,7 @@ export async function GET(request) {
     let matchedGames = null;
     let matchedVenueInfo = null;
     let usedNeutralFallback = false;
+    let anchorClubName = null; // o clube do time-âncora (pra achar o time feminino dele)
 
     if (teamIdCandidates.length === 0) {
       // Nenhum time-âncora confiável (estádio provavelmente neutro/multiuso,
@@ -269,6 +301,20 @@ export async function GET(request) {
           } catch (e) {
             console.error(`Fallback estádio neutro (liga ${leagueId}) falhou:`, e.message);
           }
+        }
+        // Todas as competições do estádio na temporada (inclui futebol feminino e copas): as ligas masculinas
+        // principais acima não cobrem. Cada jogo é conferido pelo ID do estádio.
+        try {
+          const all = await footballFetchRaw("/fixtures", { venue: venue.id, season });
+          for (const f of all) {
+            if (!isAtVenue(f, venue.id, venue.name)) continue;
+            if (!seenIds.has(f.fixture.id)) {
+              seenIds.add(f.fixture.id);
+              collected.push(f);
+            }
+          }
+        } catch (e) {
+          console.error("Fallback estádio neutro (todas as competições) falhou:", e.message);
         }
         if (collected.length > 0) {
           usedNeutralFallback = true;
@@ -301,14 +347,7 @@ export async function GET(request) {
         });
       }
 
-      const nameMatches = (f) => {
-        const venueName = searchKey(f.fixture.venue?.name || "");
-        if (!venueName) return false;
-        const venueCompact = venueName.replace(/ /g, "");
-        if (/maracana|mario filho/.test(queryNorm) && /maracana|mario filho/.test(venueName)) return true; // mesmo estádio, nomes diferentes
-        if (ALT_NAMES.some(([q, v]) => q.test(queryNorm) && v.test(venueName))) return true; // apelido x nome oficial
-        return venueName.includes(queryNorm) || queryNorm.includes(venueName) || venueCompact.includes(queryCompact) || queryCompact.includes(venueCompact);
-      };
+      const nameMatches = (f) => venueNameMatches(f, queryNorm, queryCompact);
       let matches = fixtures.filter(nameMatches);
       // A API registra o mesmo estádio com nomes diferentes de uma competição para outra (Mineirão x
       // Governador Magalhães Pinto). Achado o ID do estádio por um jogo, valem todos os jogos daquele ID.
@@ -343,6 +382,7 @@ export async function GET(request) {
           country: lastFixture.league.country,
           capacity: null,
         };
+        anchorClubName = clubNameOf(fixtures, teamId);
         break;
       }
     }
@@ -387,6 +427,25 @@ export async function GET(request) {
         }
       } catch (e) {
         console.error("Erro ao expandir busca por estádio+competição:", e.message);
+      }
+    }
+    // Futebol feminino: o time feminino do mesmo clube também joga nesse estádio, e a API às vezes registra o jogo só
+    // com o NOME do estádio (sem o ID), que a busca por ID acima não pega. Entra só jogo que diz estar neste estádio
+    // (pelo ID ou, se não vier ID, pelo nome): jogo sem estádio informado ou em outro estádio não entra.
+    if (!usedNeutralFallback && anchorClubName) {
+      for (const womenId of await womenTeamIdsOf(anchorClubName)) {
+        try {
+          const womenFixtures = await footballFetchRaw("/fixtures", { team: womenId, season });
+          for (const f of womenFixtures) {
+            if (seenIds.has(f.fixture.id)) continue;
+            const atVenue = f.fixture.venue?.id ? isAtVenue(f, matchedVenueInfo.id, matchedVenueInfo.name) : venueNameMatches(f, queryNorm, queryCompact);
+            if (!atVenue) continue;
+            seenIds.add(f.fixture.id);
+            matchedGames.push(mapGames([f])[0]);
+          }
+        } catch (e) {
+          console.error("Erro ao buscar jogos do time feminino:", e.message);
+        }
       }
     }
     matchedGames.sort((a, b) => new Date(a.date) - new Date(b.date));

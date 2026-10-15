@@ -1,8 +1,9 @@
 "use client";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BORDER, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
+import { Spinner } from "../ui/Spinner";
 
 export const GREEN_TINT = "#e8faef";
 export const AMBER_BG = "#fffbeb";
@@ -81,8 +82,22 @@ export function Message({ msg }) {
   );
 }
 
+/** Botão do Google: depois do clique mostra "Conectando ao Google..." (a ida ao Google leva alguns segundos). Se der erro, a tela libera `disabled` e o botão volta. */
 export function GoogleButton({ onClick, disabled }) {
-  return <SecondaryBtn onClick={onClick} disabled={disabled} icon={<Icon name="google" size={18} />}>Entrar com Google</SecondaryBtn>;
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!disabled) setLoading(false);
+  }, [disabled]);
+  const go = () => {
+    if (loading) return;
+    setLoading(true);
+    onClick();
+  };
+  return (
+    <SecondaryBtn onClick={go} disabled={disabled || loading} icon={loading ? <Spinner size={18} /> : <Icon name="google" size={18} />}>
+      {loading ? "Conectando ao Google..." : "Entrar com Google"}
+    </SecondaryBtn>
+  );
 }
 
 export function OrDivider() {

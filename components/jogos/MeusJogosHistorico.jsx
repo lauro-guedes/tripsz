@@ -153,7 +153,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
   const searchQ = searchKey(search);
   const searchCompact = compactKey(search);
   const matchesSearch = (g) =>
-    [g.home_team, g.away_team, g.stadium].some((v) => {
+    [g.home_team, g.away_team, teamLabel(g.home_team), teamLabel(g.away_team), g.stadium].some((v) => { // teamLabel: "feminino" acha "Arsenal W"
       if (!v) return false;
       const key = searchKey(v);
       return key.includes(searchQ) || compactKey(v).includes(searchCompact);
@@ -206,18 +206,19 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
 
       <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
         <MarcacoesPendentes onAccepted={loadGames} />
-        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "center", gap: 16 }}>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[["todos", "Todos"], ["tripsz", "Via Tripsz"], ["manuais", "Manuais"]].map(([id, label]) => (
-              <div key={id} onClick={() => setTab(id)} style={{ background: tab === id ? GREEN_BG : "#fff", border: `1px solid ${tab === id ? GREEN : BORDER}`, padding: "8px 16px", borderRadius: 999, cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: tab === id ? 700 : 500, fontSize: 14, color: tab === id ? GREEN : BODY, margin: 0 }}>{label}</p>
-              </div>
-            ))}
-          </div>
-          <div onClick={onRegisterNew} style={{ background: GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "12px 20px", borderRadius: 8, cursor: "pointer" }}>
+        {/* O botão de ação fica sozinho em cima; os filtros vêm ABAIXO, pra não parecerem ações de registrar jogo. */}
+        <div style={{ display: "flex", justifyContent: isMobile ? "stretch" : "flex-end" }}>
+          <div role="button" onClick={onRegisterNew} style={{ background: GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "12px 20px", borderRadius: 8, cursor: "pointer", width: isMobile ? "100%" : undefined, boxSizing: "border-box" }}>
             <Icon name="pen" size={16} color={TEXT} />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, textTransform: "uppercase", margin: 0 }}>Registrar Novo Jogo</p>
           </div>
+        </div>
+        <div role="group" aria-label="Filtrar jogos por origem" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[["todos", "Todos"], ["tripsz", "Via Tripsz"], ["manuais", "Manuais"]].map(([id, label]) => (
+            <div key={id} role="button" aria-pressed={tab === id} onClick={() => setTab(id)} style={{ background: tab === id ? GREEN_BG : "#fff", border: `1px solid ${tab === id ? GREEN : BORDER}`, padding: "8px 16px", borderRadius: 999, cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: tab === id ? 700 : 500, fontSize: 14, color: tab === id ? GREEN : BODY, margin: 0 }}>{label}</p>
+            </div>
+          ))}
         </div>
 
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16 }}>

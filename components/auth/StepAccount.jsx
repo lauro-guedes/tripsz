@@ -1,21 +1,29 @@
 "use client";
 import { NomeUsuarioFields } from "./NomeUsuarioFields";
 import { supabaseBrowser } from "../../lib/supabase";
-import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
+import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar } from "../nav/WizardChrome";
 import { Icon } from "../ui/Icon";
+import { Spinner } from "../ui/Spinner";
 import { Wordmark } from "../ui/Wordmark";
 import { useIsMobile } from "../ui/useIsMobile";
 import { CriteriaDot } from "./CriarConta";
 import { LoginModal } from "./LoginModal";
+import { useGoogleLoading } from "./useGoogleLoading";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) {
   const set = (k, v) => setAnswers((a) => ({ ...a, [k]: v }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [info, setInfo] = useState(null); // aviso que não é erro (ex.: confirmar o e-mail)
   const [fieldErrors, setFieldErrors] = useState({});
+  const messageRef = useRef(null);
+  // O botão "Continuar" fica no pé da página e a mensagem no alto do formulário: leva a mensagem pra vista.
+  useEffect(() => {
+    if ((error || info) && messageRef.current && messageRef.current.scrollIntoView) messageRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [error, info]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [touched, setTouched] = useState({});
@@ -45,20 +53,24 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
   const [showLoginModal, setShowLoginModal] = useState(!!openLogin);
   const isMobile = useIsMobile();
 
-  const handleGoogleLogin = async () => {
-    setError(null);
-    const supabase = supabaseBrowser();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
+  const google = useGoogleLoading();
+  const handleGoogleLogin = () =>
+    google.run(async () => {
+      setError(null);
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) setError(error.message);
+      // O Supabase redireciona pro Google e volta sozinho; o onAuthStateChange
+      // no App() detecta a sessão e avança o passo automaticamente.
+      return !!error;
     });
-    if (error) setError(error.message);
-    // O Supabase redireciona pro Google e volta sozinho; o onAuthStateChange
-    // no App() detecta a sessão e avança o passo automaticamente.
-  };
 
   const handleCreateAccount = async () => {
     setError(null);
+    setInfo(null);
     setTouched({ name: true, first: true, email: true, whatsapp: true, password: true, passwordConfirm: true });
 
     if (!nameState.firstOk || !nameState.lastOk) return setError("Preencha nome e sobrenome.");
@@ -81,6 +93,12 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
         setError(error.message);
         return;
       }
+      if (!data.session) {
+        // Conta criada, mas o projeto pede a confirmação do e-mail: sem sessão não dá pra salvar o roteiro lá na frente.
+        // O link do e-mail traz a pessoa de volta já logada e o app segue sozinho.
+        setInfo(`Enviamos um link de confirmação para ${answers.email}. Confirme o e-mail e depois toque em Continuar.`);
+        return;
+      }
       setAnswers((a) => ({ ...a, userId: data.user?.id }));
       onNext();
     } catch (e) {
@@ -89,6 +107,24 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
     } finally {
       setLoading(false);
     }
+  };
+
+  // "Continuar" é o único botão: quem já está logado (Google, ou conta criada antes) só segue; quem não está,
+  // tem a conta criada AGORA com o formulário (nada de esperar o fim do roteiro) e já avança.
+  const handleContinue = async () => {
+    if (loading) return;
+    setError(null);
+    setInfo(null);
+    try {
+      const { data } = await supabaseBrowser().auth.getSession();
+      if (data.session) {
+        setAnswers((a) => ({ ...a, userId: data.session.user.id }));
+        return onNext();
+      }
+    } catch {
+      // sem conseguir ler a sessão: tenta criar a conta mesmo assim
+    }
+    return handleCreateAccount();
   };
 
   const fieldStyle = (invalid) => ({
@@ -139,16 +175,19 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, alignItems: "center", width: isMobile ? "100%" : 800 }}>
-          <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
-            <Icon name="google" size={20} color={TEXT} />
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{isMobile ? "Cadastrar com Google" : "Entrar com Google"}</p>
+          <div role="button" aria-busy={google.loading} onClick={google.loading ? undefined : handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: google.loading ? "default" : "pointer", opacity: google.loading ? 0.75 : 1 }}>
+            {google.loading ? <Spinner size={20} /> : <Icon name="google" size={20} color={TEXT} />}
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{google.loading ? "Conectando ao Google..." : isMobile ? "Cadastrar com Google" : "Entrar com Google"}</p>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", width: "100%" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontSize: isMobile ? 12 : 14, color: MUTED, margin: 0 }}>Já tem conta?</p>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 12 : 14, color: GREEN, margin: 0, cursor: "pointer" }} onClick={() => { setShowLoginModal(true); }}>Entrar</p>
           </div>
           {error && (
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{error}</p>
+            <p ref={messageRef} role="alert" style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, width: "100%" }}>{error}</p>
+          )}
+          {info && (
+            <p ref={messageRef} role="status" style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: GREEN_DARK, margin: 0, width: "100%" }}>{info}</p>
           )}
           <div style={{ display: "flex", gap: 12, alignItems: "center", width: "100%" }}>
             <div style={{ flex: 1, height: 1, background: BORDER }} />
@@ -250,28 +289,13 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
               <CriteriaDot ok={passChecks.len} label="No mínimo 8 caracteres" />
             </div>
 
-            <div onClick={handleCreateAccount} style={{ background: GREEN_BUTTON2, opacity: loading ? 0.6 : 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: loading ? "default" : "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{loading ? "Criando conta..." : "Criar conta"}</p>
-            </div>
           </div>
         </div>
       </div>
 
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
 
-      <WizardBottomBar
-        onBack={onBack}
-        onNext={async () => {
-          const supabase = supabaseBrowser();
-          const { data } = await supabase.auth.getSession();
-          if (!data.session) {
-            setError("Entre com Google ou crie sua conta antes de continuar.");
-            return;
-          }
-          setAnswers((a) => ({ ...a, userId: data.session.user.id }));
-          onNext();
-        }}
-      />
+      <WizardBottomBar onBack={onBack} onNext={handleContinue} loading={loading} nextLabel={loading ? "Criando conta..." : "Continuar"} />
     </div>
   );
 }

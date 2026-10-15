@@ -44,10 +44,21 @@ export const viewport = {
   themeColor: "#00c853",
 };
 
+// Aquece a conexão (DNS + TLS) com o Supabase e o Google: "Entrar com Google" sai do site por esses dois endereços.
+const SUPABASE_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin;
+  } catch {
+    return null;
+  }
+})();
+
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <head>
+        {SUPABASE_ORIGIN && <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" />}
+        <link rel="preconnect" href="https://accounts.google.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

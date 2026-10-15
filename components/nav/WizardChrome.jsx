@@ -1,6 +1,7 @@
 "use client";
 import { BG_ALT, BORDER, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
+import { Spinner } from "../ui/Spinner";
 import { Wordmark } from "../ui/Wordmark";
 import { useIsMobile } from "../ui/useIsMobile";
 
@@ -59,7 +60,7 @@ export function WizardTopBar({ step, onExit, onLogoClick, total = WIZARD_TOTAL }
   );
 }
 
-export function WizardBottomBar({ onBack, onNext, nextLabel = "Continuar", mutedBack }) {
+export function WizardBottomBar({ onBack, onNext, nextLabel = "Continuar", mutedBack, loading = false }) {
   const isMobile = useIsMobile();
   return (
     <div style={{ width: "100%" }}>
@@ -68,9 +69,9 @@ export function WizardBottomBar({ onBack, onNext, nextLabel = "Continuar", muted
         <div onClick={onBack} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "12px 20px" : "14px 24px", borderRadius: 8, cursor: "pointer" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: mutedBack ? MUTED : TEXT, textTransform: "uppercase", margin: 0 }}>Voltar</p>
         </div>
-        <div onClick={onNext} style={{ background: GREEN_BUTTON, display: "flex", gap: 6, alignItems: "center", justifyContent: "center", padding: isMobile ? "12px 24px" : "14px 24px", borderRadius: 8, cursor: "pointer" }}>
+        <div role="button" aria-busy={loading} onClick={loading ? undefined : onNext} style={{ background: GREEN_BUTTON, display: "flex", gap: 6, alignItems: "center", justifyContent: "center", padding: isMobile ? "12px 24px" : "14px 24px", borderRadius: 8, cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1 }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{nextLabel}</p>
-          <Icon name="arrowRight" size={isMobile ? 12 : 16} color={TEXT} />
+          {loading ? <Spinner size={isMobile ? 14 : 16} /> : <Icon name="arrowRight" size={isMobile ? 12 : 16} color={TEXT} />}
         </div>
       </div>
     </div>

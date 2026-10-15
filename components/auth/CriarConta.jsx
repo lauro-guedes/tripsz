@@ -3,6 +3,8 @@ import { NomeUsuarioFields } from "./NomeUsuarioFields";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
+import { Spinner } from "../ui/Spinner";
+import { useGoogleLoading } from "./useGoogleLoading";
 import { Wordmark } from "../ui/Wordmark";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Eye, EyeOff } from "lucide-react";
@@ -50,15 +52,18 @@ export function CriarConta({ onDone, onLogin, onHome }) {
   const whatsappDigits = whatsapp.replace(/\D/g, "");
   const whatsappValid = whatsappDigits.length === 10 || whatsappDigits.length === 11;
 
-  const handleGoogleSignup = async () => {
-    setError(null);
-    const supabase = supabaseBrowser();
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
+  const google = useGoogleLoading();
+  const handleGoogleSignup = () =>
+    google.run(async () => {
+      setError(null);
+      const supabase = supabaseBrowser();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (oauthError) setError(oauthError.message);
+      return !!oauthError; // sem erro: a página já está indo pro Google
     });
-    if (oauthError) setError(oauthError.message);
-  };
 
   const handleCreateAccount = async () => {
     setError(null);
@@ -109,9 +114,9 @@ export function CriarConta({ onDone, onLogin, onHome }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, width: isMobile ? "100%" : 500 }}>
-          <div onClick={handleGoogleSignup} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: 260, maxWidth: "100%", cursor: "pointer" }}>
-            <Icon name="google" size={24} />
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>Entrar com Google</p>
+          <div role="button" aria-busy={google.loading} onClick={google.loading ? undefined : handleGoogleSignup} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: 260, maxWidth: "100%", cursor: google.loading ? "default" : "pointer", opacity: google.loading ? 0.75 : 1 }}>
+            {google.loading ? <Spinner size={22} /> : <Icon name="google" size={24} />}
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, textTransform: "uppercase", margin: 0 }}>{google.loading ? "Conectando ao Google..." : "Entrar com Google"}</p>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

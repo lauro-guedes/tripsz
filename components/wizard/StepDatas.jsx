@@ -3,52 +3,15 @@ import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, 
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar, WizardTopBar } from "../nav/WizardChrome";
 import { maxSearchDate, todayInSaoPaulo } from "../../lib/calendarUtils";
 import { useIsMobile } from "../ui/useIsMobile";
-import { Calendar } from "lucide-react";
-import { useRef, useState } from "react";
-
-const fmtBR = (iso) => (iso ? iso.split("-").reverse().join("/") : "");
-
-/**
- * Campo de data com o rótulo DENTRO ("Data de Ida" / "Data de Volta") quando
- * ainda está vazio. O <input type="date"> de verdade fica por cima, invisível,
- * então o toque abre o calendário nativo do aparelho.
- */
-function DateField({ label, value, min, max, onChange, isMobile }) {
-  const ref = useRef(null);
-  const open = () => {
-    try {
-      ref.current?.showPicker?.();
-    } catch {
-      // navegador sem showPicker: o toque direto no campo já abre o calendário
-    }
-  };
-  return (
-    <div style={{ position: "relative", background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: isMobile ? "14px 16px" : "16px 24px", borderRadius: 8, cursor: "pointer" }}>
-      <Calendar size={20} color={TEXT} />
-      <p style={{ flex: 1, margin: 0, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: value ? TEXT : MUTED }}>{value ? fmtBR(value) : label}</p>
-      <input
-        ref={ref}
-        type="date"
-        aria-label={label}
-        value={value || ""}
-        min={min}
-        max={max}
-        onClick={open}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: "none", padding: 0, margin: 0, fontSize: 16 }}
-      />
-    </div>
-  );
-}
+import { useState } from "react";
+import { CampoData } from "./CampoData";
 
 export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
   const isMobile = useIsMobile();
   const flexLevel = answers.flexLevel || "fixed";
   const FLEX_OPTS = [{ id: "fixed", label: "Datas fixas" }, { id: "some", label: "Posso variar alguns dias" }, { id: "flex", label: "Bastante flexibilidade" }];
   const [error, setError] = useState(null);
-  // A volta é preenchida com a data da ida (pro calendário da volta abrir no mês certo).
-  // Enquanto a pessoa não mexer nela, acompanha a ida.
-  const [endAuto, setEndAuto] = useState(false);
+  const [notice, setNotice] = useState(null); // aviso quando a volta é limpa porque a ida passou dela
 
   const TOO_FAR = "Só dá pra montar viagens dos próximos 6 meses — os calendários além disso ainda não foram divulgados.";
   // Valida de verdade: o atributo max do campo de data não impede de digitar.
@@ -86,7 +49,7 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, width: isMobile ? "100%" : 800 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data de Ida</p>
-              <DateField
+              <CampoData
                 label="Data de Ida"
                 value={answers.dateStart}
                 min={todayInSaoPaulo()}
@@ -96,25 +59,25 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                   if (newStart && (newStart > maxSearchDate() || newStart < todayInSaoPaulo())) {
                     setError(newStart > maxSearchDate() ? TOO_FAR : "Escolha datas de hoje em diante.");
                     setAnswers((a) => ({ ...a, dateStart: "", dateEnd: "" }));
-                    setEndAuto(false);
                     return;
                   }
                   setError(null);
-                  // Volta vazia, antes da nova ida ou ainda "automática": acompanha a ida,
-                  // pra o calendário da volta abrir no mês da ida.
-                  const follow = !answers.dateEnd || endAuto || answers.dateEnd < newStart;
-                  if (follow) setEndAuto(true);
-                  setAnswers((a) => ({ ...a, dateStart: newStart, dateEnd: follow ? newStart : a.dateEnd }));
+                  // A volta NUNCA é preenchida sozinha: continua como "Data de Volta" até a pessoa escolher.
+                  // Só é limpa se ficou antes da nova ida.
+                  const cleared = !!answers.dateEnd && answers.dateEnd < newStart;
+                  setNotice(cleared ? "A data de volta ficava antes da nova ida, então escolha a volta de novo." : null);
+                  setAnswers((a) => ({ ...a, dateStart: newStart, dateEnd: a.dateEnd && a.dateEnd >= newStart ? a.dateEnd : "" }));
                 }}
               />
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Data de Volta</p>
-              <DateField
+              <CampoData
                 label="Data de Volta"
                 value={answers.dateEnd}
                 min={answers.dateStart || todayInSaoPaulo()}
                 max={maxSearchDate()}
+                anchor={answers.dateStart}
                 isMobile={isMobile}
                 onChange={(newEnd) => {
                   if (newEnd && (newEnd > maxSearchDate() || newEnd < (answers.dateStart || todayInSaoPaulo()))) {
@@ -123,13 +86,11 @@ export function StepDatas({ answers, setAnswers, onNext, onBack, onHome, stepOff
                     return;
                   }
                   setError(null);
-                  setEndAuto(false);
+                  setNotice(null);
                   setAnswers((a) => ({ ...a, dateEnd: newEnd }));
                 }}
               />
-              {endAuto && answers.dateStart && answers.dateEnd === answers.dateStart && (
-                <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: GREEN, margin: 0 }}>Preenchemos a volta com a data da ida — toque no campo e escolha o dia em que você volta.</p>
-              )}
+              {notice && <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: GREEN, margin: 0 }}>{notice}</p>}
               {answers.dateStart && (
                 <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: MUTED, margin: 0 }}>
                   Escolha a volta a partir de {answers.dateStart.split("-").reverse().join("/")} (dia da ida).

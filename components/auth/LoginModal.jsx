@@ -2,8 +2,10 @@
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
+import { Spinner } from "../ui/Spinner";
 import { useIsMobile } from "../ui/useIsMobile";
 import { ResetPasswordModal } from "./ResetPasswordModal";
+import { useGoogleLoading } from "./useGoogleLoading";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useState } from "react";
 
@@ -54,15 +56,18 @@ export function LoginModal({ onClose, onCreateAccount }) {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoginError(null);
-    const supabase = supabaseBrowser();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
+  const google = useGoogleLoading();
+  const handleGoogleLogin = () =>
+    google.run(async () => {
+      setLoginError(null);
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) setLoginError(error.message);
+      return !!error; // sem erro: a página já está indo pro Google
     });
-    if (error) setLoginError(error.message);
-  };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -76,9 +81,9 @@ export function LoginModal({ onClose, onCreateAccount }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-          <div onClick={handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: "pointer" }}>
-            <Icon name="google" size={20} color={TEXT} />
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>Entrar com Google</p>
+          <div role="button" aria-busy={google.loading} onClick={google.loading ? undefined : handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: google.loading ? "default" : "pointer", opacity: google.loading ? 0.75 : 1 }}>
+            {google.loading ? <Spinner size={20} /> : <Icon name="google" size={20} color={TEXT} />}
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{google.loading ? "Conectando ao Google..." : "Entrar com Google"}</p>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center", width: "100%" }}>
             <div style={{ flex: 1, height: 1, background: BORDER }} />
