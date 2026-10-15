@@ -368,16 +368,6 @@ export function BuscarJogos({ onNavigate, onLogout }) {
           ))}
         </div>
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end", gap: isMobile ? 16 : 24, paddingBottom: isMobile ? 0 : 22 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200, minWidth: 0, position: "relative" }}>
-            <p style={labelStyle}>{mode === "cidade" ? "Data do jogo" : "A partir de"}</p>
-            <input type="date" value={date} min={todayInSaoPaulo()} max={maxSearchDate()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={{ ...fieldStyle, display: "block", minWidth: 0, maxWidth: "100%", WebkitAppearance: "none", appearance: "none", textAlign: "left", lineHeight: "46px" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, ...(isMobile ? {} : { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6 }) }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
-              {date !== todayInSaoPaulo() && (
-                <p onClick={() => setDate(todayInSaoPaulo())} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: GREEN, textDecoration: "underline", cursor: "pointer", margin: 0 }}>Usar hoje</p>
-              )}
-            </div>
-          </div>
           {mode === "pais" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: isMobile ? "none" : 1, minWidth: 0 }}>
               <p style={labelStyle}>País</p>
@@ -450,6 +440,16 @@ export function BuscarJogos({ onNavigate, onLogout }) {
               </div>
             )}
           </div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: isMobile ? "100%" : 200, minWidth: 0, position: "relative" }}>
+            <p style={labelStyle}>{mode === "cidade" ? "Data do jogo" : "A partir de"}</p>
+            <input type="date" value={date} min={todayInSaoPaulo()} max={maxSearchDate()} onChange={(e) => setDate(e.target.value && e.target.value < todayInSaoPaulo() ? todayInSaoPaulo() : e.target.value)} style={{ ...fieldStyle, display: "block", minWidth: 0, maxWidth: "100%", WebkitAppearance: "none", appearance: "none", textAlign: "left", lineHeight: "46px" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, ...(isMobile ? {} : { position: "absolute", top: "100%", left: 0, right: 0, marginTop: 6 }) }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>Até 6 meses à frente</p>
+              {date !== todayInSaoPaulo() && (
+                <p onClick={() => setDate(todayInSaoPaulo())} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: GREEN, textDecoration: "underline", cursor: "pointer", margin: 0 }}>Usar hoje</p>
+              )}
+            </div>
+          </div>
           {mode === "cidade" ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <p style={labelStyle}>Raio de busca</p>
