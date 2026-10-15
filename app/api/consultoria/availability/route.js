@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { busyIntervals } from "@/lib/googleCalendar";
 
 export const dynamic = "force-dynamic";
 
@@ -70,9 +71,18 @@ export async function GET(request) {
 
     const bookedTimes = new Set((booked || []).map((o) => o.scheduled_time));
 
+    // Compromissos já marcados na Google Agenda também fecham o horário (se a Agenda falhar, segue só com os pedidos).
+    let busy = [];
+    try { busy = await busyIntervals(date); } catch (e) { console.error("[availability] Agenda indisponível:", e.message); }
+    const isBusy = (time) => {
+      const start = new Date(`${date}T${time}:00-03:00`).getTime();
+      const end = start + SLOT_MINUTES * 60000;
+      return busy.some((b) => start < b.end && end > b.start);
+    };
+
     return Response.json({
       date,
-      slots: allSlots.map((time) => ({ time, available: !bookedTimes.has(time) })),
+      slots: allSlots.map((time) => ({ time, available: !bookedTimes.has(time) && !isBusy(time) })),
     });
   } catch (e) {
     console.error("Erro em /api/consultoria/availability:", e);

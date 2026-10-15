@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { mpFetch, pixInfo } from "@/lib/mpServer";
+import { mpFetch, pixInfo, addConsultoriaToCalendar } from "@/lib/mpServer";
 import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -126,6 +126,7 @@ export async function POST(request) {
       scheduled_time: scheduledTime,
     });
     if (dbError) console.error("Erro ao salvar pedido no Supabase:", dbError.message);
+    else if (payment.status === "approved") await addConsultoriaToCalendar(payment.id);
 
     if (method === "pix") return Response.json(pixInfo(payment));
     return Response.json({ status: payment.status, statusDetail: payment.status_detail || null });
