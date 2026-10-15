@@ -1,7 +1,10 @@
 import "./globals.css";
+import { SITE_URL } from "../lib/siteUrl";
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://tripsz.vercel.app"),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
   title: {
     default: "tripsz — o melhor roteiro de futebol para sua viagem",
     template: "%s · tripsz",

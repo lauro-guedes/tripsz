@@ -35,9 +35,10 @@ function fmtDate(d) {
 
 export async function generateMetadata({ params }) {
   const profile = await getProfile(params.slug);
-  if (!profile) return { title: "Perfil não encontrado — tripsz" };
+  if (!profile) return { title: "Perfil não encontrado — tripsz", robots: { index: false, follow: false } };
   return {
     title: `Passaporte de Estádios de ${profile.name} | tripsz`,
+    alternates: { canonical: `/u/${params.slug}` },
     description: `Nível ${profile.level} · ${profile.levelName} — ${profile.stadiums} estádios, ${profile.countries} países, ${profile.games} jogos assistidos.`,
     openGraph: { title: `Passaporte de Estádios de ${profile.name}`, description: `Nível ${profile.level} · ${profile.levelName} no tripsz` },
   };

@@ -1,5 +1,6 @@
 export const metadata = {
   title: "Política de Privacidade — tripsz",
+  alternates: { canonical: "/privacidade" },
 };
 
 const S = {

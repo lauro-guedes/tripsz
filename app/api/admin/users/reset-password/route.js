@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/siteUrl";
 import { supabaseAdmin } from "@/lib/supabase";
 import { requireAdmin } from "@/lib/serverAuth";
 
@@ -29,7 +30,7 @@ export async function POST(request) {
       return Response.json({ error: "Usuário não encontrado." }, { status: 404 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tripsz.vercel.app";
+    const siteUrl = SITE_URL;
     const { error: sendError } = await supabase.auth.resetPasswordForEmail(userData.user.email, {
       redirectTo: `${siteUrl}/redefinir-senha`,
     });

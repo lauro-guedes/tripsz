@@ -1,5 +1,6 @@
 export const metadata = {
   title: "Termos de Uso — tripsz",
+  alternates: { canonical: "/termos" },
 };
 
 const S = {

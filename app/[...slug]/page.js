@@ -10,6 +10,9 @@ import TripszApp from "../../components/TripszApp";
 // perfil público) ficar presa em cache e aparecer aqui por engano.
 export const dynamic = "force-dynamic";
 
+// Telas logadas (roteiro, conta, jogos): não devem aparecer no Google.
+export const metadata = { robots: { index: false, follow: false } };
+
 export default function Page() {
   return <TripszApp />;
 }
