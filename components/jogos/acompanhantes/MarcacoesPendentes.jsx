@@ -35,6 +35,11 @@ export function MarcacoesPendentes({ onAccepted, onCount, emptyText }) {
     setBusy(null);
     if (!r.ok) return setFlash({ type: "error", text: r.message });
     setItems((l) => l.filter((x) => x.id !== item.id));
+    try {
+      window.dispatchEvent(new Event("tripsz:notifs")); // o sino do menu confere de novo
+    } catch {
+      /* sem window */
+    }
     if (action === "ignore") return setFlash({ type: "info", text: "Aviso ignorado. Quem te marcou não é avisado." });
     setFlash({ type: "info", text: r.duplicate ? "Você já tinha esse jogo no seu Passaporte." : "Jogo adicionado ao seu Passaporte." });
     if (onAccepted) await onAccepted();

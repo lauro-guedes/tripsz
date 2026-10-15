@@ -3,7 +3,6 @@ import { authFetch } from "../../lib/authFetch";
 import { checkPassportAccess } from "../../lib/passportAccess";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
-import { PHOTO_STADIUM } from "../landing/LandingPage";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
 import { Badge } from "../ui/Badge";
@@ -252,10 +251,6 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
       <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
-        </div>
         <Badge>Configurações de Conta</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Minha Assinatura</p>
         <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>Gerencie seu plano, método de pagamento e histórico de faturas.</p>
@@ -352,7 +347,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
               </div>
             </>
           ) : (
-            <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} />
+            <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} hidePassCard />
           )}
         </div>
 

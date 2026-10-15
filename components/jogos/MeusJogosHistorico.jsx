@@ -32,7 +32,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState(null);
   const [games, setGames] = useState(null);
-  const [tab, setTab] = useState("todos");
   const [search, setSearch] = useState("");
   const [seasonFilter, setSeasonFilter] = useState("todas");
   const [access, setAccess] = useState(null);
@@ -160,8 +159,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
     });
 
   const filtered = all.filter((g) => {
-    if (tab === "tripsz" && g.source !== "api") return false;
-    if (tab === "manuais" && g.source !== "manual") return false;
     if (seasonFilter !== "todas" && seasonOfGame(g).key !== seasonFilter) return false;
     if (searchQ && !matchesSearch(g)) return false;
     return true;
@@ -206,21 +203,13 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
 
       <div style={{ background: BG_ALT, padding: isMobile ? `24px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
         <MarcacoesPendentes onAccepted={loadGames} />
-        {/* O botão de ação fica sozinho em cima; os filtros vêm ABAIXO, pra não parecerem ações de registrar jogo. */}
+        {/* O botão de ação fica sozinho em cima. */}
         <div style={{ display: "flex", justifyContent: isMobile ? "stretch" : "flex-end" }}>
           <div role="button" onClick={onRegisterNew} style={{ background: GREEN_BUTTON, display: "flex", gap: 8, alignItems: "center", justifyContent: "center", padding: "12px 20px", borderRadius: 8, cursor: "pointer", width: isMobile ? "100%" : undefined, boxSizing: "border-box" }}>
             <Icon name="pen" size={16} color={TEXT} />
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, textTransform: "uppercase", margin: 0 }}>Registrar Novo Jogo</p>
           </div>
         </div>
-        <div role="group" aria-label="Filtrar jogos por origem" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[["todos", "Todos"], ["tripsz", "Via Tripsz"], ["manuais", "Manuais"]].map(([id, label]) => (
-            <div key={id} role="button" aria-pressed={tab === id} onClick={() => setTab(id)} style={{ background: tab === id ? GREEN_BG : "#fff", border: `1px solid ${tab === id ? GREEN : BORDER}`, padding: "8px 16px", borderRadius: 999, cursor: "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: tab === id ? 700 : 500, fontSize: 14, color: tab === id ? GREEN : BODY, margin: 0 }}>{label}</p>
-            </div>
-          ))}
-        </div>
-
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16 }}>
           <div style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 8 }}>
             <Icon name="search" size={18} color={MUTED} />
@@ -234,7 +223,6 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0 }}>Histórico de Partidas</p>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Filtrado por: {tab === "todos" ? "Todos" : tab === "tripsz" ? "Via Tripsz" : "Manuais"}</p>
         </div>
 
         {games === null && <Loading />}

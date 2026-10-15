@@ -36,6 +36,7 @@ import { Checkout } from "./checkout/Checkout";
 import { AssinarStandalone } from "./conta/AssinarStandalone";
 import { MeuNivel } from "./conta/MeuNivel";
 import { MeuPerfil } from "./conta/MeuPerfil";
+import { Notificacoes } from "./conta/Notificacoes";
 import { MinhaAssinatura } from "./conta/MinhaAssinatura";
 import { MinhasConquistas } from "./conta/MinhasConquistas";
 import { RankingTorcedores } from "./conta/Ranking";
@@ -492,6 +493,7 @@ export default function App() {
           onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
+      {screen === "notificacoes" && <Notificacoes onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "ranking" && <RankingTorcedores onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}

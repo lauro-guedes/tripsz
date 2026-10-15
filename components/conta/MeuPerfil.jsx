@@ -3,8 +3,6 @@ import { authFetch } from "../../lib/authFetch";
 import { checkPassportAccess } from "../../lib/passportAccess";
 import { supabaseBrowser } from "../../lib/supabase";
 import { UsernameEditField } from "./UsernameEditField";
-import { MarcacoesPendentes } from "../jogos/acompanhantes/MarcacoesPendentes";
-import { fetchCompanionRequests } from "../../lib/companionsClient";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
@@ -69,11 +67,6 @@ export function MeuPerfil({ onNavigate, onLogout }) {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState(null);
   const [subAccess, setSubAccess] = useState(null);
-  const [tab, setTab] = useState("perfil"); // "perfil" | "notificacoes"
-  const [notifCount, setNotifCount] = useState(0);
-  useEffect(() => {
-    fetchCompanionRequests().then((r) => r.ok && setNotifCount((r.requests || []).length));
-  }, []);
 
   const loadProfile = async () => {
     const supabase = supabaseBrowser();
@@ -335,25 +328,7 @@ export function MeuPerfil({ onNavigate, onLogout }) {
         </div>
       </div>
 
-      <div style={{ background: BG_ALT, display: "flex", gap: 8, padding: isMobile ? `24px ${px} 16px` : `32px ${px} 20px` }}>
-        {[["perfil", "Perfil"], ["notificacoes", "Notificações"]].map(([id, label]) => (
-          <div key={id} role="button" onClick={() => setTab(id)} style={{ background: tab === id ? GREEN_BG : "#fff", border: `1px solid ${tab === id ? GREEN : BORDER}`, padding: "8px 16px", borderRadius: 999, cursor: "pointer", display: "flex", gap: 8, alignItems: "center" }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: tab === id ? GREEN : BODY, margin: 0 }}>{label}</p>
-            {id === "notificacoes" && notifCount > 0 && (
-              <span style={{ background: "#ef4444", color: "#fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 5px", boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11 }}>{notifCount}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      {tab === "notificacoes" ? (
-        <div style={{ background: BG_ALT, padding: isMobile ? `0 ${px} 32px` : `0 ${px} 48px` }}>
-          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 16 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 24, color: TEXT, margin: 0 }}>Notificações</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Amigos que te marcaram em um jogo. O jogo só entra no seu Passaporte se você aceitar.</p>
-            <MarcacoesPendentes onCount={setNotifCount} emptyText="Você não tem notificações no momento." />
-          </div>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <Loading text="Carregando seu perfil..." />
       ) : (
         <div style={{ background: BG_ALT, display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 48, padding: isMobile ? `0 ${px} 32px` : `0 ${px} 48px` }}>

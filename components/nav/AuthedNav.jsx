@@ -1,4 +1,5 @@
 "use client";
+import { fetchCompanionRequests } from "../../lib/companionsClient";
 import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
 import { BORDER, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, GREEN_BG, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
@@ -43,6 +44,19 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
   const [openGroup, setOpenGroup] = useState(null); // label do grupo com a lista aberta
   const closeTimer = useRef(null);
   const isMobile = useIsMobile();
+
+  // Quantos avisos de "te marcaram em um jogo" esperam resposta (bolinha vermelha na foto).
+  const [notifCount, setNotifCount] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const load = () => fetchCompanionRequests().then((r) => alive && r && r.ok && setNotifCount((r.requests || []).length));
+    load();
+    window.addEventListener("tripsz:notifs", load);
+    return () => {
+      alive = false;
+      window.removeEventListener("tripsz:notifs", load);
+    };
+  }, []);
 
   const groupActive = (it) => !!it.children && it.children.some(([, k]) => k === active);
   const itemActive = (it) => (it.children ? groupActive(it) : active === it.key);
@@ -123,7 +137,12 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
         )}
         <div style={{ position: "relative" }}>
           <div onClick={() => { setOpenGroup(null); setMenuOpen((v) => !v); }} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
-            <AvatarCircle url={userAvatar} name={userName} size={isMobile ? 28 : 36} fontSize={isMobile ? 12 : 14} />
+            <div style={{ position: "relative", display: "flex" }}>
+              <AvatarCircle url={userAvatar} name={userName} size={isMobile ? 28 : 36} fontSize={isMobile ? 12 : 14} />
+              {notifCount > 0 && (
+                <span aria-label={`${notifCount} notificações`} style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 16, height: 16, padding: "0 3px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, lineHeight: 1 }}>{notifCount > 9 ? "9+" : notifCount}</span>
+              )}
+            </div>
             {!isMobile && (
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{userName || "Minha conta"}</p>
@@ -135,9 +154,12 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
           </div>
           {menuOpen && (
             <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 200, overflow: "hidden", zIndex: 20 }}>
-              {[["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
-                <div key={key} onClick={() => go(key)} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}` }}>
+              {[["Notificações", "notificacoes"], ["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
+                <div key={key} onClick={() => go(key)} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
+                  {key === "notificacoes" && notifCount > 0 && (
+                    <span style={{ background: "#ef4444", color: "#fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 5px", boxSizing: "border-box", display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11 }}>{notifCount}</span>
+                  )}
                 </div>
               ))}
               <div onClick={() => { setMenuOpen(false); onLogout(); }} style={{ padding: "12px 16px", cursor: "pointer" }}>

@@ -8,7 +8,7 @@ import { useIsMobile } from "../ui/useIsMobile";
 import { Award, BarChart2, Clipboard, Share2, Star, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
-export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew }) {
+export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew, hidePassCard = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -37,6 +37,7 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
         </div>
+        {!hidePassCard && (
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "100%" : 420, maxWidth: "100%", ...(isMobile ? { borderLeft: "none", borderRight: "none", borderRadius: 0 } : {}), flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>PASSAPORTE DE ESTÁDIOS</p>
@@ -62,6 +63,7 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>ATIVAÇÃO: —</p>
           </div>
         </div>
+        )}
       </div>
 
       <div style={{ padding: isMobile ? `24px ${px} 48px` : `24px ${px} 80px`, display: "flex", flexDirection: "column", gap: 24 }}>

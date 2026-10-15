@@ -28,6 +28,7 @@ export const SCREEN_TO_PATH = {
   nivel: "/conta/nivel",
   conquistas: "/conta/conquistas",
   perfil: "/conta/perfil",
+  notificacoes: "/conta/notificacoes",
   assinatura: "/conta/assinatura",
   ranking: "/conta/ranking",
 };
