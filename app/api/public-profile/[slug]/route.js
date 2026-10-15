@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { TOURNAMENTS, hasMainTournament } from "@/lib/competitionBadges";
+import { TOURNAMENTS, hasMainTournament, hasWomenGame } from "@/lib/competitionBadges";
 import { countryKey, continentOf, sameCountry } from "@/lib/countries";
 
 // Essa rota SEMPRE precisa rodar de verdade (consulta o banco a cada
@@ -188,6 +188,7 @@ export async function GET(request, { params }) {
           { label: "Libertadores", ...b(hasCompetitionFn(games, /libertadores/i)) },
           { label: "Mundial de Clubes", ...b(hasCompetitionFn(games, /club world cup|mundial de clubes/i)) },
           ...TOURNAMENTS.filter((t) => t.id !== "worldcup").map((t) => ({ label: t.label, ...b(hasMainTournament(games, t.id)) })),
+          { label: "Futebol Feminino", ...b(hasWomenGame(games)) },
           { label: "Clássico", ...b(hasDerby) },
         ],
       },

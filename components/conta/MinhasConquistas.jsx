@@ -1,6 +1,6 @@
 "use client";
 import { authFetch } from "../../lib/authFetch";
-import { TOURNAMENTS, hasMainTournament } from "../../lib/competitionBadges";
+import { TOURNAMENTS, hasMainTournament, hasWomenGame } from "../../lib/competitionBadges";
 import { continentOf, countryKey, sameCountry } from "../../lib/countries";
 import { dateOnly } from "../../lib/dateOnly";
 import { computeTier } from "../../lib/fanLevels";
@@ -168,6 +168,7 @@ export function computeBadgeCategories(ctx) {
         { id: "libertadores", label: "Libertadores", ...b(hasCompetition(/libertadores/i)) },
         { id: "mundialclubes", label: "Mundial de Clubes", ...b(hasCompetition(/club world cup|mundial de clubes/i)) },
         ...TOURNAMENTS.filter((t) => t.id !== "worldcup").map((t) => ({ id: t.id, label: t.label, ...b(hasMainTournament(games, t.id)) })),
+        { id: "futebolfeminino", label: "Futebol Feminino", ...b(hasWomenGame(games)) },
         { id: "classico", label: "Clássico", ...b(hasDerby) },
       ],
     },

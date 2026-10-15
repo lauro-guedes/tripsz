@@ -71,7 +71,22 @@ export async function GET(request) {
     }
     const best = teams.find((t) => t.team.name.toLowerCase() === searchQuery.toLowerCase()) || teams[0];
 
-    const allFixtures = await footballFetchRaw("/fixtures", { team: best.team.id, season });
+    let allFixtures = await footballFetchRaw("/fixtures", { team: best.team.id, season });
+    // Futebol feminino: o time feminino do mesmo clube ("Arsenal W"/"Arsenal Women") entra na mesma lista.
+    if (mode !== "selecao" && !/\s(W|Women)$/i.test(best.team.name)) {
+      try {
+        const want = new Set([`${best.team.name} w`, `${best.team.name} women`].map((n) => n.toLowerCase()));
+        const womenIds = (teams || []).filter((t) => want.has(String(t.team.name || "").toLowerCase())).map((t) => t.team.id).slice(0, 2);
+        for (const wid of womenIds) {
+          const wf = await footballFetchRaw("/fixtures", { team: wid, season });
+          allFixtures = allFixtures.concat(wf);
+        }
+      } catch (e) {
+        console.error("Erro ao buscar jogos do time feminino:", e.message);
+      }
+    }
+    const seenFx = new Set();
+    allFixtures = allFixtures.filter((f) => !seenFx.has(f.fixture.id) && seenFx.add(f.fixture.id));
     // Só jogos que já começaram: dá pra registrar que você foi, não um jogo que ainda vai acontecer.
     const nowMs = Date.now();
     const fixtures = allFixtures.filter((f) => new Date(f.fixture.date).getTime() <= nowMs);
