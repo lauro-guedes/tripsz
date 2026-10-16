@@ -28,8 +28,8 @@ export function ConvidarModal({ game, onClose, onCreated, onPickFriend, onTagged
   const { dragY, dragging, dragProps } = useSheetDrag(onClose);
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "flex-start", justifyContent: "center", padding: isMobile ? 0 : "40px 24px", overflowY: "auto", overscrollBehavior: "contain" }}>
-      <div role="dialog" aria-modal="true" aria-label="Convidar alguém" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 600, borderRadius: isMobile ? "20px 20px 0 0" : 12, boxSizing: "border-box", display: "flex", flexDirection: "column", maxHeight: isMobile ? "92vh" : undefined, overflowY: isMobile ? "auto" : undefined, overscrollBehavior: "contain", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, boxSizing: "border-box", overscrollBehavior: "contain" }}>
+      <div role="dialog" aria-modal="true" aria-label="Convidar alguém" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 600, borderRadius: isMobile ? "20px 20px 0 0" : 12, boxSizing: "border-box", display: "flex", flexDirection: "column", maxHeight: isMobile ? "92dvh" : "calc(100dvh - 48px)", overflowY: "auto", overscrollBehavior: "contain", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
         {isMobile && <SheetHandle onClose={onClose} dragProps={dragProps} />}
         <div style={{ padding: isMobile ? "8px 20px 20px" : 28, display: "flex", flexDirection: "column", gap: 20 }}>
           <div {...(isMobile ? dragProps(false) : {})} style={{ display: "flex", gap: 12, alignItems: "center", touchAction: isMobile ? "none" : undefined }}>

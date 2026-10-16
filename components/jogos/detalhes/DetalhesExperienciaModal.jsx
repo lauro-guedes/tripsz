@@ -176,14 +176,14 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   const note = game.api_fixture_id ? "Dados da partida" : "Jogo registrado manualmente";
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.4)", overscrollBehavior: "contain", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.4)", overscrollBehavior: "contain", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, boxSizing: "border-box" }}>
       <style>{"@keyframes tripszShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}"}</style>
       <div
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="detalhes-titulo"
-        style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 880, maxHeight: isMobile ? "calc(100vh - 56px)" : "calc(100vh - 96px)", borderRadius: isMobile ? "20px 20px 0 0" : 20, boxShadow: "0 20px 64px rgba(15,23,42,0.15)", display: "flex", flexDirection: "column", overflow: "hidden", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}
+        style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 880, height: isMobile ? "calc(100dvh - 56px)" : "min(780px, calc(100dvh - 48px))", maxHeight: isMobile ? "calc(100vh - 56px)" : "calc(100vh - 48px)", borderRadius: isMobile ? "20px 20px 0 0" : 20, boxShadow: "0 20px 64px rgba(15,23,42,0.15)", display: "flex", flexDirection: "column", overflow: "hidden", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}
       >
         {isMobile && (
           <div onClick={onClose} onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} role="button" aria-label="Minimizar" style={{ display: "flex", justifyContent: "center", padding: "12px 0 6px", flexShrink: 0, cursor: "pointer", touchAction: "none" }}>
@@ -191,7 +191,9 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
           </div>
         )}
 
-        {/* cabeçalho fixo */}
+        {/* tudo rola junto; as abas ficam coladas no topo */}
+        <div ref={scrollRef} onScroll={measure} role="tabpanel" style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", scrollbarWidth: "thin" }}>
+        {/* cabeçalho */}
         <div onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd} style={{ padding: isMobile ? 20 : pad, display: "flex", flexDirection: "column", gap: isMobile ? 16 : 20, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <p id="detalhes-titulo" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 18, lineHeight: 1.3, color: TEXT, margin: 0, flex: 1, minWidth: 0 }}>Detalhes da experiência</p>
@@ -240,7 +242,7 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
         </div>
 
         {/* abas */}
-        <div style={{ position: "relative", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 2, background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
           <div role="tablist" style={{ display: "flex", overflow: "hidden" }}>
             {TABS.map((t) => {
               const on = tab === t.id;
@@ -259,9 +261,10 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
           </div>
         </div>
 
-        {/* conteúdo rolável */}
-        <div ref={scrollRef} onScroll={measure} role="tabpanel" style={{ flex: 1, minHeight: isMobile ? 360 : 420, overflowY: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch", padding: pad, scrollbarWidth: "thin" }}>
+        {/* conteúdo */}
+        <div style={{ padding: pad }}>
           {content}
+        </div>
         </div>
 
         {/* rodapé */}

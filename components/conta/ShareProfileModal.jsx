@@ -83,7 +83,7 @@ export function ShareProfileModal({ link, name, onClose }) {
       onClick={onClose}
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
     >
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 420, padding: 24, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0px 20px 40px rgba(15,23,42,0.25)" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 420, maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", padding: 24, display: "flex", flexDirection: "column", gap: 16, boxShadow: "0px 20px 40px rgba(15,23,42,0.25)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>
             <p id="share-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Compartilhar perfil</p>

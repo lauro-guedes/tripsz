@@ -80,7 +80,7 @@ export function AtualizarCartaoModal({ userId, onClose, onSaved }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20, maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20, maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <div style={{ background: "rgba(0,200,83,0.07)", borderRadius: 999, padding: 12 }}>
             <CreditCard size={28} color={GREEN} />
@@ -382,7 +382,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
 
       {showCancelModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 20, width: "100%", maxWidth: 342, display: "flex", flexDirection: "column", gap: 20, maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box" }}>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <div style={{ background: "rgba(239,68,68,0.06)", borderRadius: 999, padding: 12 }}>
                 <AlertCircle size={28} color="#ef4444" />

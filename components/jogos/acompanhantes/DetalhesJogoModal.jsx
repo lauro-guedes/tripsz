@@ -26,7 +26,7 @@ export function DetalhesJogoModal({ game, info, onClose, onRefresh }) {
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, overscrollBehavior: "contain", background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24 }}>
-      <div role="dialog" aria-modal="true" aria-label="Detalhes do jogo" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 560, borderRadius: isMobile ? "20px 20px 0 0" : 12, padding: isMobile ? 20 : 24, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, maxHeight: isMobile ? "92vh" : "calc(100vh - 48px)", overflowY: "auto", overscrollBehavior: "contain", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
+      <div role="dialog" aria-modal="true" aria-label="Detalhes do jogo" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 560, borderRadius: isMobile ? "20px 20px 0 0" : 12, padding: isMobile ? 20 : 24, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 16, maxHeight: isMobile ? "92dvh" : "calc(100dvh - 48px)", overflowY: "auto", overscrollBehavior: "contain", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
         {isMobile && (
           <div style={{ margin: "-20px -20px -8px" }}>
             <SheetHandle onClose={onClose} dragProps={dragProps} />

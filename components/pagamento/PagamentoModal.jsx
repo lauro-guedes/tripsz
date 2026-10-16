@@ -3,6 +3,7 @@ import { BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, MUTED, TEX
 import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
 import { Check, Copy, CreditCard, QrCode, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useIsMobile } from "../ui/useIsMobile";
 
 let mpReady = false;
 function ensureMp() {
@@ -25,6 +26,7 @@ const brl = (n) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL
  *  - onApproved() chamado quando o pagamento é confirmado
  */
 export function PagamentoModal({ amount, title, subtitle, allowPix, onCard, onPix, checkPix, onApproved, onClose, doneText }) {
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState("card");
   const [pix, setPix] = useState(null);
   const [pixLoading, setPixLoading] = useState(false);
@@ -105,8 +107,8 @@ export function PagamentoModal({ amount, title, subtitle, allowPix, onCard, onPi
   const tabStyle = (active) => ({ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 12px", borderRadius: 8, cursor: "pointer", border: `1px solid ${active ? GREEN : BORDER}`, background: active ? GREEN_BG : "#fff" });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: 520, maxHeight: "92vh", overflowY: "auto", borderRadius: "20px 20px 0 0", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, boxSizing: "border-box", overscrollBehavior: "contain" }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: 520, maxHeight: isMobile ? "92dvh" : "calc(100dvh - 48px)", overflowY: "auto", overscrollBehavior: "contain", borderRadius: isMobile ? "20px 20px 0 0" : 16, boxShadow: "0 20px 64px rgba(15,23,42,0.25)", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>{title}</p>
