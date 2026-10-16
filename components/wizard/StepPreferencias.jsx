@@ -9,6 +9,8 @@ export function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, 
   const isMobile = useIsMobile();
   const priority = answers.priority || "classics";
   const pace = answers.pace || "spaced";
+  const modality = answers.modality || "men";
+  const MODALITIES = [["men", "Masculino"], ["women", "Feminino"], ["both", "Ambos"]];
   const PRIORITIES = [["maxgames", "Máximo de jogos"], ["stadiums", "Mais estádios"], ["classics", "Clássicos prioritários"], ["international", "Competições internacionais"]];
   const PACES = [["compact", "Mais compacto"], ["balanced", "Equilibrado"], ["spaced", "Mais espaçado"], ["relaxed", "Mais relaxado"]];
 
@@ -21,6 +23,21 @@ export function StepPreferencias({ answers, setAnswers, onNext, onBack, onHome, 
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Último passo - nos conte suas prioridades para cruzar partidas possíveis nos países e datas selecionados</p>
         </div>
         {isMobile && <MobileProgress step={6 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
+        <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
+          <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Modalidade</p>
+          <div role="radiogroup" aria-label="Modalidade" style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 12, justifyContent: isMobile ? "flex-start" : "center", width: isMobile ? "100%" : 800 }}>
+            {MODALITIES.map(([id, label]) => {
+              const active = modality === id;
+              return (
+                <div key={id} role="radio" aria-checked={active} onClick={() => setAnswers((a) => ({ ...a, modality: id }))} style={{ background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, display: "flex", gap: 8, alignItems: "center", justifyContent: isMobile ? "space-between" : "center", padding: 16, borderRadius: 8, cursor: "pointer", width: isMobile ? "100%" : 160, boxSizing: "border-box" }}>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: active ? GREEN : TEXT, margin: 0 }}>{label}</p>
+                  {active && <Check size={12} color={GREEN} />}
+                </div>
+              );
+            })}
+          </div>
+          {modality === "both" && <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0, maxWidth: 560, textAlign: isMobile ? "left" : "center" }}>Para não misturar demais, o roteiro tende a ficar em uma modalidade e só troca quando o jogo da outra compensa.</p>}
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, alignItems: isMobile ? "flex-start" : "center", width: "100%" }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Prioridade do roteiro</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap", gap: isMobile ? 8 : 12, justifyContent: isMobile ? "flex-start" : "center", width: isMobile ? "100%" : 800 }}>

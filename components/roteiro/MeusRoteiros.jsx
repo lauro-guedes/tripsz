@@ -71,6 +71,7 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
     budget: row.budget,
     priority: row.priority,
     pace: row.pace,
+    modality: (row.plan && row.plan.modality) || "men",
     favoriteTeams: row.favorite_teams || [],
   });
 

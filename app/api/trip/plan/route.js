@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { ensureCalendar, getCandidates, getNearestFor, parseCandidateParams, addDays } from "@/lib/fixturesCalendar";
-import { LEAGUE_META, leagueIdsForCountries } from "@/lib/calendarCore";
+import { LEAGUE_META, MODALITIES, leagueIdsForCountries } from "@/lib/calendarCore";
 import { todayInSaoPaulo } from "@/lib/gamesSearchCore";
 import { planTrip, favoriteSpecs, specMatchesTeam } from "@/lib/tripPlanner";
 
@@ -39,29 +39,30 @@ export async function POST(request) {
   if (params.error) return Response.json({ error: "INVALID_PARAMS", message: params.error }, { status: 400 });
 
   const favoriteTeams = Array.isArray(body.favoriteTeams) ? body.favoriteTeams.filter((t) => typeof t === "string").slice(0, 30) : [];
-  const answers = { countries: params.labels, dateStart, dateEnd, flexLevel: params.flex, favoriteTeams, priority: body.priority, pace: body.pace };
+  const modality = MODALITIES.includes(body.modality) ? body.modality : "men";
+  const answers = { countries: params.labels, dateStart, dateEnd, flexLevel: params.flex, favoriteTeams, priority: body.priority, pace: body.pace, modality };
 
   try {
     const supabase = supabaseAdmin();
-    const leagueIds = leagueIdsForCountries(params.labels);
+    const leagueIds = leagueIdsForCountries(params.labels, modality);
     const sync = await ensureCalendar(supabase, leagueIds, { requiredTo: params.to });
-    const candidates = await getCandidates(supabase, { labels: params.labels, from: params.from, to: params.to });
+    const candidates = await getCandidates(supabase, { labels: params.labels, from: params.from, to: params.to, modality });
 
     // Jogos reais mais próximos FORA das datas — só buscamos quando a escolha da pessoa ficou sem jogo.
     const outside = {};
     const continentalIds = leagueIds.filter((id) => LEAGUE_META[id]?.type === "continental");
     if (candidates.games.length === 0) {
-      outside.window = await getNearestFor(supabase, { labels: params.labels, from: params.from, to: params.to });
+      outside.window = await getNearestFor(supabase, { labels: params.labels, from: params.from, to: params.to, modality });
     }
     if (answers.priority === "international" && !candidates.games.some((g) => g.competition.type === "continental")) {
-      outside.international = await getNearestFor(supabase, { labels: params.labels, leagueIds: continentalIds, from: params.from, to: params.to });
+      outside.international = await getNearestFor(supabase, { labels: params.labels, leagueIds: continentalIds, from: params.from, to: params.to, modality });
     }
     // Favoritos sem jogo no período: busca o mais próximo — pelo ID (lista fixa) ou pelo nome (time vindo da busca).
     outside.favorites = {};
     for (const spec of favoriteSpecs(favoriteTeams)) {
       const has = candidates.games.some((g) => specMatchesTeam(spec, g.home) || specMatchesTeam(spec, g.away));
       if (!has) {
-        outside.favorites[spec.name] = await getNearestFor(supabase, { labels: params.labels, ...(spec.id ? { teamIds: [spec.id] } : { teamNames: [spec.name] }), from: params.from, to: params.to });
+        outside.favorites[spec.name] = await getNearestFor(supabase, { labels: params.labels, ...(spec.id ? { teamIds: [spec.id] } : { teamNames: [spec.name] }), from: params.from, to: params.to, modality: "both" });
       }
     }
     // País pedido sem nenhum jogo no período: mostra os jogos mais próximos DELE (fora das datas).
@@ -69,7 +70,7 @@ export async function POST(request) {
     if (params.labels.length >= 2) {
       for (const label of params.labels) {
         if (!candidates.games.some((g) => g.country === label)) {
-          outside.countries[label] = await getNearestFor(supabase, { labels: [label], from: params.from, to: params.to });
+          outside.countries[label] = await getNearestFor(supabase, { labels: [label], from: params.from, to: params.to, modality });
         }
       }
     }
