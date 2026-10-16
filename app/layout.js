@@ -36,6 +36,7 @@ export const metadata = {
   // A partir daqui é o que faz o site virar um PWA de verdade — permite
   // "Adicionar à Tela de Início" no iPhone/Android com aparência de app
   // nativo (sem barra de endereço, ícone próprio, cor de tema).
+  verification: { google: "z65YoRHLi9RhU3l6CeuJAggm1x26-e18J2l60BteUWQ" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
