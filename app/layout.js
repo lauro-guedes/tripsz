@@ -6,22 +6,25 @@ export const metadata = {
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   title: {
-    default: "tripsz — o melhor roteiro de futebol para sua viagem",
+    default: "tripsz — roteiros de futebol, busca de jogos e Passaporte de Estádios",
     template: "%s · tripsz",
   },
   description:
-    "Escolha países, datas e times: a tripsz cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem. Grátis.",
+    "Monte roteiros de viagem para jogos de futebol, encontre partidas por clube, liga, cidade ou país, registre os jogos que você viu e conquiste estádios no seu Passaporte de Estádios. Grátis.",
   keywords: [
     "roteiro de futebol",
     "viagem para jogos de futebol",
     "groundhopping",
     "turismo esportivo",
+    "passaporte de estádios",
+    "buscar jogos de futebol",
+    "registrar jogos assistidos",
     "ingressos de futebol",
   ],
   openGraph: {
-    title: "tripsz — o melhor roteiro de futebol para sua viagem",
+    title: "tripsz — roteiros de futebol, busca de jogos e Passaporte de Estádios",
     description:
-      "Escolha países, datas e times: a tripsz cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem.",
+      "Monte roteiros de viagem para jogos de futebol, encontre partidas por clube, liga, cidade ou país, registre os jogos que você viu e conquiste estádios no seu Passaporte de Estádios.",
     url: "/",
     siteName: "tripsz",
     locale: "pt_BR",
@@ -29,9 +32,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "tripsz — o melhor roteiro de futebol para sua viagem",
+    title: "tripsz — roteiros de futebol, busca de jogos e Passaporte de Estádios",
     description:
-      "Escolha países, datas e times: a tripsz cruza as partidas disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem.",
+      "Monte roteiros de viagem para jogos de futebol, encontre partidas por clube, liga, cidade ou país, registre os jogos que você viu e conquiste estádios no seu Passaporte de Estádios.",
   },
   // A partir daqui é o que faz o site virar um PWA de verdade — permite
   // "Adicionar à Tela de Início" no iPhone/Android com aparência de app
