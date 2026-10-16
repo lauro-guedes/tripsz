@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { allStadiums, stadiumBySlug } from "../../../lib/stadiumPages";
-import { wikiVenueInfo } from "../../../lib/venueWiki";
+import { cachedVenueInfo } from "../../../lib/venueWiki";
+import { StadiumPhoto } from "./StadiumPhoto";
 import { teamLabel } from "../../../lib/textUtils";
 import { SITE_URL } from "../../../lib/siteUrl";
 import { Shell } from "../Shell";
@@ -14,6 +15,13 @@ export async function generateStaticParams() {
 }
 
 function fmt(iso) {
+  try {
+    return fmtRaw(iso);
+  } catch {
+    return String(iso || "");
+  }
+}
+function fmtRaw(iso) {
   return new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
@@ -29,7 +37,8 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const s = await stadiumBySlug(params.slug);
   if (!s) notFound();
-  const info = await wikiVenueInfo(s.name, s.city).catch(() => null);
+  // Só lê o que já está guardado: a página nunca espera pela Wikipedia (a foto nova chega pelo navegador).
+  const info = await cachedVenueInfo(s.name, s.city).catch(() => null);
   const photo = info?.url || null;
   const capacity = s.capacity || info?.capacity || null;
   const where = [s.city, s.country].filter(Boolean).join(", ");
@@ -53,6 +62,7 @@ export default async function Page({ params }) {
         {s.homeTeam ? `Casa do ${teamLabel(s.homeTeam)}. ` : ""}
         {capacity ? `Capacidade para ${capacity.toLocaleString("pt-BR")} pessoas.` : ""}
       </p>
+      {!photo && <StadiumPhoto name={s.name} city={s.city} alt={`${s.name}${where ? `, ${where}` : ""}`} border={BORDER} muted={MUTED} />}
       {photo && (
         <figure style={{ margin: "0 0 24px" }}>
           <img src={photo} alt={`${s.name}${where ? `, ${where}` : ""}`} style={{ width: "100%", maxHeight: 420, objectFit: "cover", borderRadius: 12, border: `1px solid ${BORDER}` }} />
