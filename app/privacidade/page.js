@@ -40,6 +40,7 @@ export default function PrivacyPolicyPage() {
         <li style={S.li}>Autenticar seu acesso à conta e manter sua sessão ativa;</li>
         <li style={S.li}>Processar o pagamento e agendamento da consultoria humana, quando contratada;</li>
         <li style={S.li}>Entrar em contato pelo e-mail ou WhatsApp informado, para assuntos relacionados à sua conta ou consultoria contratada;</li>
+        <li style={S.li}>Sugerir o seu país no perfil, pelo país da conexão no momento do acesso (guardamos apenas o país, não o endereço IP; você pode alterar a qualquer momento);</li>
         <li style={S.li}>Cumprir obrigações legais e fiscais relacionadas aos pagamentos processados.</li>
       </ul>
 

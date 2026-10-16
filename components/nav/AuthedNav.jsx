@@ -1,4 +1,5 @@
 "use client";
+import { authFetch } from "../../lib/authFetch";
 import { fetchCompanionRequests } from "../../lib/companionsClient";
 import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
@@ -56,6 +57,17 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
       alive = false;
       window.removeEventListener("tripsz:notifs", load);
     };
+  }, []);
+
+  // País da pessoa: se o perfil ainda não tem, o servidor preenche pelo país da conexão (uma tentativa por sessão do navegador).
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("tripsz:auto-country")) return;
+      sessionStorage.setItem("tripsz:auto-country", "1");
+    } catch {
+      /* sem sessionStorage: tenta mesmo assim */
+    }
+    authFetch("/api/profile/auto-country", { method: "POST" }).catch(() => {});
   }, []);
 
   const groupActive = (it) => !!it.children && it.children.some(([, k]) => k === active);

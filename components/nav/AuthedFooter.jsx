@@ -78,7 +78,6 @@ export function AuthedFooter() {
         <div style={{ display: "flex", gap: isMobile ? 16 : 32, alignItems: "flex-start", flexWrap: "wrap" }}>
           <a href="/termos" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Termos</a>
           <a href="/privacidade" style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, textDecoration: "none" }}>Privacidade</a>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Contato</p>
         </div>
       </div>
     </div>
