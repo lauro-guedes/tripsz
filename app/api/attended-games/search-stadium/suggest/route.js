@@ -1,3 +1,4 @@
+import { tooManyRequests } from "@/lib/rateLimit";
 import { searchKey } from "@/lib/searchKey";
 import { searchVenues } from "@/lib/footballApi";
 
@@ -31,6 +32,8 @@ const STADIUM_NICKNAMES = [
  * isso depois de parar de digitar por um tempinho (debounce no front).
  */
 export async function GET(request) {
+  const limited = tooManyRequests(request, "stadium-suggest", 120);
+  if (limited) return limited;
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
 

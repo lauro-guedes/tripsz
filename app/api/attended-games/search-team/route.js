@@ -1,3 +1,4 @@
+import { tooManyRequests } from "@/lib/rateLimit";
 import { searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 import { ensureLogoCached } from "@/lib/teamLogos";
@@ -50,6 +51,8 @@ async function cacheGameLogos(games) {
  * API-Football).
  */
 export async function GET(request) {
+  const limited = tooManyRequests(request, "team", 30);
+  if (limited) return limited;
   const { searchParams } = new URL(request.url);
   const rawTeam = searchParams.get("team")?.trim();
   const season = parseInt(searchParams.get("season"), 10);

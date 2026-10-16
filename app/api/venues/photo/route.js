@@ -1,3 +1,4 @@
+import { tooManyRequests } from "@/lib/rateLimit";
 import { wikiVenueInfo } from "@/lib/venueWiki";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,8 @@ export const dynamic = "force-dynamic";
  * Sem resultado confiável → { url: null }.
  */
 export async function GET(request) {
+  const limited = tooManyRequests(request, "venue-photo", 60);
+  if (limited) return limited;
   const { searchParams } = new URL(request.url);
   const debug = searchParams.get("debug") === "1";
   try {

@@ -1,3 +1,4 @@
+import { tooManyRequests } from "@/lib/rateLimit";
 import { searchTeams } from "@/lib/footballApi";
 import { toApiCountryName } from "@/lib/countries";
 
@@ -15,6 +16,8 @@ export const dynamic = "force-dynamic";
  * nomes de país em português pro inglês que a API espera.
  */
 export async function GET(request) {
+  const limited = tooManyRequests(request, "team-suggest", 120);
+  if (limited) return limited;
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
   const mode = searchParams.get("mode");

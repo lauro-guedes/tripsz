@@ -1,3 +1,4 @@
+import { tooManyRequests } from "@/lib/rateLimit";
 import { compactKey, searchKey } from "@/lib/searchKey";
 import { searchVenues, searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
@@ -229,6 +230,8 @@ function venueNameMatches(f, queryNorm, queryCompact) {
  * já traz — esse dado é sempre correto, vem de dentro do próprio jogo.
  */
 export async function GET(request) {
+  const limited = tooManyRequests(request, "stadium", 30);
+  if (limited) return limited;
   const { searchParams } = new URL(request.url);
   const rawStadium = searchParams.get("stadium")?.trim();
   const season = parseInt(searchParams.get("season"), 10);
@@ -337,15 +340,6 @@ export async function GET(request) {
 
     for (const teamId of matchedGames ? [] : [...new Set(teamIdCandidates)]) {
       const fixtures = await footballFetchRaw("/fixtures", { team: teamId, season });
-      if (searchParams.get("debug") === "1") {
-        // Diagnóstico: como a API registra o estádio em cada jogo do time (nome e ID), por competição.
-        return Response.json({
-          teamId,
-          queryNorm,
-          total: fixtures.length,
-          games: fixtures.map((f) => ({ date: f.fixture.date?.slice(0, 10), league: f.league.name, home: f.teams.home.name, away: f.teams.away.name, venueId: f.fixture.venue?.id ?? null, venueName: f.fixture.venue?.name ?? null, city: f.fixture.venue?.city ?? null })),
-        });
-      }
 
       const nameMatches = (f) => venueNameMatches(f, queryNorm, queryCompact);
       let matches = fixtures.filter(nameMatches);
