@@ -3,6 +3,7 @@ import { searchTeams } from "@/lib/footballApi";
 import { isValidSeason, MIN_SEASON, maxSeason, friendlySeasonError } from "@/lib/seasons";
 import { ensureLogoCached } from "@/lib/teamLogos";
 import { toApiCountryName } from "@/lib/countries";
+import { splitWomenName, toApiWomenName } from "@/lib/womenFootball";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,10 @@ export async function GET(request) {
   }
 
   try {
-    const searchQuery = mode === "selecao" ? toApiCountryName(rawTeam) : rawTeam;
+    // A pessoa pode escrever "Arsenal Feminino" ou "Arsenal - Feminino" (como o nome aparece na tela): a API só entende "Arsenal W".
+    const { base: teamBase, women: wantsWomen } = splitWomenName(rawTeam);
+    const baseQuery = mode === "selecao" ? toApiCountryName(teamBase) : teamBase;
+    const searchQuery = wantsWomen ? toApiWomenName(baseQuery) : baseQuery;
     const rawTeams = await searchTeams(searchQuery);
     const teams = mode === "selecao" ? (rawTeams || []).filter((t) => t.team.national === true) : rawTeams;
     if (!teams || teams.length === 0) {

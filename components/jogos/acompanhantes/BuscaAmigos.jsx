@@ -1,7 +1,8 @@
 "use client";
-import { Plus, Search, UserSearch } from "lucide-react";
+import { Plus, UserSearch } from "lucide-react";
 import { BORDER, MUTED, TEXT } from "../../../lib/tokens";
 import { Card, SecondaryBtn, text } from "../../convite/ConviteUi";
+import { CampoArroba } from "./CampoArroba";
 import { Chip, FriendRow, mono } from "./ui";
 
 /** O cartão da direita: quem está marcado, a busca por @, as sugestões e "Convidar alguém novo". */
@@ -24,11 +25,8 @@ export function BuscaAmigos({ s }) {
         </div>
       )}
       <div>
-        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, minHeight: 48, padding: "0 14px", display: "flex", alignItems: "center", gap: 10, boxSizing: "border-box" }}>
-          <Search size={18} color={MUTED} />
-          <input value={s.query} onChange={(e) => s.setQuery(e.target.value)} placeholder="Buscar amigo no tripsz" aria-label="Buscar amigo no tripsz" autoCapitalize="none" autoCorrect="off" spellCheck={false} style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontSize: 14, color: TEXT, padding: "12px 0" }} />
-        </div>
-        <p style={text(11, MUTED, { marginTop: 6 })}>Busque pelo @ exato do seu amigo (ex.: @ana.santos), com pelo menos 3 letras.</p>
+        <CampoArroba value={s.query} onChange={s.setQuery} ariaLabel="Buscar amigo no tripsz" />
+        <p style={text(11, MUTED, { marginTop: 6 })}>Digite o usuário exato do seu amigo (o @ já está aí), com pelo menos 3 letras. Ex.: ana.santos</p>
       </div>
       <div>
         {q.length >= 3 ? (
@@ -44,7 +42,7 @@ export function BuscaAmigos({ s }) {
             {s.result.state === "none" && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "20px 0", textAlign: "center" }}>
                 <UserSearch size={32} color={MUTED} />
-                <p style={text(15, TEXT, { fontWeight: 700 })}>Nenhum amigo encontrado para “{q}”</p>
+                <p style={text(15, TEXT, { fontWeight: 700 })}>Nenhum amigo encontrado para “@{q}”</p>
                 <p style={text(12)}>Essa pessoa ainda não está no tripsz? Envie um convite para guardar essa lembrança com você.</p>
               </div>
             )}

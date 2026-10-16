@@ -1,9 +1,10 @@
 "use client";
-import { Search, UserSearch } from "lucide-react";
+import { UserSearch } from "lucide-react";
 import { useState } from "react";
 import { tagCompanions } from "../../../lib/companionsClient";
-import { BORDER, MUTED, TEXT } from "../../../lib/tokens";
+import { MUTED, TEXT } from "../../../lib/tokens";
 import { LinkBtn, Message, PrimaryBtn, text } from "../../convite/ConviteUi";
+import { CampoArroba } from "./CampoArroba";
 import { FriendRow, mono } from "./ui";
 import { useFriendSearch } from "./useFriendSearch";
 
@@ -37,11 +38,8 @@ export function ConvidarExistente({ game, onClose, onPickFriend, onTagged, selec
   return (
     <>
       <div>
-        <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, minHeight: 48, padding: "0 14px", display: "flex", alignItems: "center", gap: 10, boxSizing: "border-box" }}>
-          <Search size={18} color={MUTED} />
-          <input value={f.query} onChange={(e) => f.setQuery(e.target.value)} placeholder="Buscar amigo pelo @" aria-label="Buscar amigo pelo @" autoCapitalize="none" autoCorrect="off" spellCheck={false} style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontSize: 14, color: TEXT, padding: "12px 0" }} />
-        </div>
-        <p style={text(11, MUTED, { marginTop: 6 })}>Busque pelo @ exato do seu amigo (ex.: @ana.santos), com pelo menos 3 letras.</p>
+        <CampoArroba value={f.query} onChange={f.setQuery} ariaLabel="Buscar amigo pelo @" />
+        <p style={text(11, MUTED, { marginTop: 6 })}>Digite o usuário exato do seu amigo (o @ já está aí), com pelo menos 3 letras. Ex.: ana.santos</p>
       </div>
       <div>
         {q.length >= 3 ? (
@@ -57,7 +55,7 @@ export function ConvidarExistente({ game, onClose, onPickFriend, onTagged, selec
             {f.result.state === "none" && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 0", textAlign: "center" }}>
                 <UserSearch size={32} color={MUTED} />
-                <p style={text(15, TEXT, { fontWeight: 700 })}>Nenhum usuário encontrado para “{q}”</p>
+                <p style={text(15, TEXT, { fontWeight: 700 })}>Nenhum usuário encontrado para “@{q}”</p>
                 <p style={text(12)}>Essa pessoa ainda não está no tripsz? Convide por link, WhatsApp ou e-mail.</p>
                 <LinkBtn onClick={goNew}>Convidar quem ainda não está</LinkBtn>
               </div>

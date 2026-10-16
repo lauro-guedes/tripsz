@@ -1,6 +1,6 @@
 "use client";
 import { authFetch } from "../../lib/authFetch";
-import { TOURNAMENTS, hasMainTournament, hasWomenGame } from "../../lib/competitionBadges";
+import { TOURNAMENTS, hasMainTournament, hasWomenGame, isWomenGame } from "../../lib/competitionBadges";
 import { continentOf, countryKey, sameCountry } from "../../lib/countries";
 import { dateOnly } from "../../lib/dateOnly";
 import { computeTier } from "../../lib/fanLevels";
@@ -49,8 +49,9 @@ export function computeBadgeCategories(ctx) {
   const { allGames: games, stadiumsSet, countriesSet, favoriteTeamsSet, manualCount, apiCount, userCreatedAt, hasPublicProfile } = ctx;
   const totalGames = games.length;
 
+  // Jogo FEMININO não desbloqueia selo de competição masculina ("Brasileiro Women" não é o Brasileirão).
   const hasCompetition = (regex, countryFilter) =>
-    games.some((g) => regex.test(g.competition || "") && (!countryFilter || sameCountry(g.country, countryFilter)));
+    games.some((g) => !isWomenGame(g) && regex.test(g.competition || "") && (!countryFilter || sameCountry(g.country, countryFilter)));
 
   const validDates = games.map((g) => new Date(g.date)).filter((d) => !isNaN(d));
   const firstGameDate = validDates.length ? new Date(Math.min(...validDates)) : null;

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { TOURNAMENTS, hasMainTournament, hasWomenGame } from "@/lib/competitionBadges";
+import { TOURNAMENTS, hasMainTournament, hasWomenGame, isWomenGame } from "@/lib/competitionBadges";
 import { countryKey, continentOf, sameCountry } from "@/lib/countries";
 
 // Essa rota SEMPRE precisa rodar de verdade (consulta o banco a cada
@@ -21,8 +21,9 @@ function computeTier(xp) {
   return XP_TIERS.find((t) => xp >= t.min && xp <= t.max) || XP_TIERS[0];
 }
 
+// Jogo FEMININO não desbloqueia selo de competição masculina (igual a "Minhas Conquistas").
 function hasCompetitionFn(games, regex, country) {
-  return games.some((g) => regex.test(g.competition || "") && (!country || sameCountry(g.country, country)));
+  return games.some((g) => !isWomenGame(g) && regex.test(g.competition || "") && (!country || sameCountry(g.country, country)));
 }
 
 const NATIONAL_TEAM_NAMES = new Set([

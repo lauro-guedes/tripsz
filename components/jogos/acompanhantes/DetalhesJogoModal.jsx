@@ -66,7 +66,7 @@ export function DetalhesJogoModal({ game, info, onClose, onRefresh }) {
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
               <p style={text(14, TEXT, { fontWeight: 700 })}>{p.firstName}</p>
               <p style={text(12)}>@{p.username}</p>
-              <p style={text(11)}>{p.state === "accepted" ? "Marcado por você · Jogo no Passaporte" : "Marcado por você · Aguardando aceite"}</p>
+              <p style={text(11)}>{p.by === "tagger" ? "Te marcou · Jogo no Passaporte" : p.by === "inviter" ? "Te convidou · Jogo no Passaporte" : p.state === "accepted" ? "Marcado por você · Jogo no Passaporte" : "Marcado por você · Aguardando aceite"}</p>
             </div>
             {p.state === "accepted" ? <Check size={18} color={GREEN} aria-label="No Passaporte" /> : <Clock size={18} color="#a16207" aria-label="Aguardando aceite" />}
           </div>
