@@ -889,7 +889,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
                 <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                   {venue.isClub && <TeamBadge name={venue.name} url={venue.logo} size={40} />}
                   <div>
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.name}</p>
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{venue.isClub ? teamLabel(venue.name) : venue.name}</p>
                     <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: "4px 0 0" }}>{venue.city}, {venue.country}{venue.capacity ? ` • Capacidade: ${venue.capacity.toLocaleString("pt-BR")}` : ""}</p>
                   </div>
                 </div>

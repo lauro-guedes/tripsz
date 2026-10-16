@@ -83,7 +83,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
   // Autocomplete do clube.
   useEffect(() => {
     const q = teamQuery.trim();
-    if (mode !== "clube" || (team && q === team.name) || q.length < 3) {
+    if (mode !== "clube" || (team && q === teamLabel(team.name)) || q.length < 3) {
       setTeamSuggestions([]);
       return;
     }
@@ -145,7 +145,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
     if (mode === "clube" && !chosenTeam && teamSuggestions.length > 0) {
       chosenTeam = teamSuggestions[0];
       setTeam(chosenTeam);
-      setTeamQuery(chosenTeam.name);
+      setTeamQuery(teamLabel(chosenTeam.name));
     }
     if (mode === "pais" && !country) return setError("Escolha um país.");
     if (mode === "liga" && !leagueId) return setError("Escolha uma liga.");
@@ -393,7 +393,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
                 value={teamQuery}
                 onChange={(e) => {
                   setTeamQuery(e.target.value);
-                  if (team && e.target.value !== team.name) setTeam(null);
+                  if (team && e.target.value !== teamLabel(team.name)) setTeam(null);
                   setShowTeamSuggestions(true);
                 }}
                 onFocus={() => setShowTeamSuggestions(true)}
@@ -405,9 +405,9 @@ export function BuscarJogos({ onNavigate, onLogout }) {
               {showTeamSuggestions && teamSuggestions.length > 0 && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.12)", zIndex: 30, overflow: "hidden" }}>
                   {teamSuggestions.map((t) => (
-                    <div key={`${t.name}-${t.country}`} onMouseDown={() => { setTeam(t); setTeamQuery(t.name); setTeamSuggestions([]); setShowTeamSuggestions(false); }} style={{ padding: "12px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 10, alignItems: "center" }}>
+                    <div key={`${t.name}-${t.country}`} onMouseDown={() => { setTeam(t); setTeamQuery(teamLabel(t.name)); setTeamSuggestions([]); setShowTeamSuggestions(false); }} style={{ padding: "12px 14px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", gap: 10, alignItems: "center" }}>
                       <TeamBadge name={t.name} url={t.logo} size={22} />
-                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{t.name}{t.country ? ` • ${t.country}` : ""}</p>
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, margin: 0 }}>{teamLabel(t.name)}{t.country ? ` • ${t.country}` : ""}</p>
                     </div>
                   ))}
                 </div>

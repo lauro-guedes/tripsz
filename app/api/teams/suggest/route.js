@@ -1,6 +1,7 @@
 import { tooManyRequests } from "@/lib/rateLimit";
 import { searchTeams } from "@/lib/footballApi";
 import { toApiCountryName } from "@/lib/countries";
+import { splitWomenName, isWomenTeamName } from "@/lib/womenFootball";
 
 export const dynamic = "force-dynamic";
 
@@ -27,15 +28,29 @@ export async function GET(request) {
   }
 
   try {
-    const teams = await searchTeams(mode === "selecao" ? toApiCountryName(q) : q);
+    // "Arsenal Feminino" / "Arsenal - Feminino": procura o clube e fica só com o time feminino dele.
+    const { base, women: wantsWomen } = mode === "selecao" ? { base: q, women: false } : splitWomenName(q);
+    const teams = await searchTeams(mode === "selecao" ? toApiCountryName(q) : base);
 
     let filtered = teams || [];
     if (mode === "selecao") {
       filtered = filtered.filter((t) => t.team.national === true);
     } else {
-      // Filtra times de base/reserva/feminino, que só atrapalham a busca
-      // de um torcedor comum procurando o time principal.
-      filtered = filtered.filter((t) => !/U1\d|U2\d| W$| II$| Women| Reserves?/i.test(t.team.name));
+      // Time de base/reserva atrapalha; o time FEMININO aparece como opção própria ("Arsenal - Feminino"),
+      // separado do masculino, pra os resultados nunca virem misturados.
+      filtered = filtered.filter((t) => !/U1\d|U2\d| II$| Reserves?/i.test(t.team.name));
+      if (wantsWomen) filtered = filtered.filter((t) => isWomenTeamName(t.team.name));
+      // cada time feminino logo depois do masculino do mesmo clube
+      const order = [];
+      for (const t of filtered) {
+        const key = splitWomenName(t.team.name).base.toLowerCase();
+        if (!order.includes(key)) order.push(key);
+      }
+      filtered = [...filtered].sort((x, y) => {
+        const kx = order.indexOf(splitWomenName(x.team.name).base.toLowerCase());
+        const ky = order.indexOf(splitWomenName(y.team.name).base.toLowerCase());
+        return kx - ky || Number(isWomenTeamName(x.team.name)) - Number(isWomenTeamName(y.team.name));
+      });
     }
 
     const suggestions = filtered.slice(0, 8).map((t) => ({ name: t.team.name, country: t.team.country, logo: t.team.logo }));
