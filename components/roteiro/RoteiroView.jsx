@@ -11,6 +11,8 @@ import { Icon } from "../ui/Icon";
 import { useIsMobile } from "../ui/useIsMobile";
 import { PlanFeedback } from "./PlanFeedback";
 import { useEffect, useState } from "react";
+import { CUSTOM_ROUTE_ENABLED } from "../../lib/featureFlags"; // [MONTE-VOCE]
+import { MontarVoce } from "./MontarVoce"; // [MONTE-VOCE]
 
 // Formata uma data como "18 MAR 2025" — igual ao Figma, sem o "de" que o
 // toLocaleDateString("pt-BR") normalmente adiciona.
@@ -238,6 +240,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
 
   const chosenOpt = options.find((o) => o.key === chosenOption) || null;
   const visibleKey = options.some((o) => o.key === viewKey) ? viewKey : options[0]?.key;
+  const activeKey = CUSTOM_ROUTE_ENABLED && viewKey === "D" ? "D" : visibleKey; // [MONTE-VOCE]
   const hasContent = !planLoading && !planError && trip.games.length > 0 && options.length > 0;
   const duration = durationRange(options);
   const durationShort = duration.replace(" a ", "–");
@@ -386,15 +389,16 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
                 </div>
                 {(
                   <div style={{ display: "flex", gap: 8 }}>
-                    {options.map((o) => (
-                      <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: visibleKey === o.key ? GREEN : "#fff", border: `1px solid ${visibleKey === o.key ? GREEN : BORDER}` }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: visibleKey === o.key ? "#fff" : TEXT, margin: 0 }}>{o.badge || `Opção ${o.key}`}{chosenOption === o.key ? " ✓" : ""}</p>
+                    {[...options, ...(CUSTOM_ROUTE_ENABLED && hasContent ? [{ key: "D", badge: "Monte você mesmo" }] : [])].map((o) => ( /* [MONTE-VOCE] aba D */
+                      <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: activeKey === o.key ? GREEN : "#fff", border: `1px solid ${activeKey === o.key ? GREEN : BORDER}` }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: activeKey === o.key ? "#fff" : TEXT, margin: 0 }}>{o.badge || `Opção ${o.key}`}{chosenOption === o.key ? " ✓" : ""}</p>
                       </div>
                     ))}
                   </div>
                 )}
+                {CUSTOM_ROUTE_ENABLED && viewKey === "D" && <MontarVoce trip={trip} options={options} isMobile={isMobile} /> /* [MONTE-VOCE] */}
                 {options
-                  .filter((o) => o.key === visibleKey)
+                  .filter((o) => !(CUSTOM_ROUTE_ENABLED && viewKey === "D") && o.key === visibleKey)
                   .map((o) => (
                     <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} gamesById={gamesById} />
                   ))}
