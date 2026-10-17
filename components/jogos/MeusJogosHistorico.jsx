@@ -7,11 +7,12 @@ import { checkPassportAccess } from "../../lib/passportAccess";
 import { compareSeasonsDesc } from "../../lib/seasons";
 import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
-import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
+import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { stadiumVisits } from "../../lib/gameDetailsCore";
 import { prefetchVenuePhotos } from "../../lib/venuePhoto";
 import { xpBreakdown } from "../../lib/xpRules";
 import TeamBadge from "../TeamBadge";
+import { GAME_CARD_STYLE, GameDateLine, GameLeagueLine, GameRemoveLink, GameTag, gameParts } from "./GameCardParts";
 import { PassportPaywall } from "../conta/PassportPaywall";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
@@ -23,7 +24,7 @@ import { DetalhesJogoModal } from "./acompanhantes/DetalhesJogoModal";
 import { MarcacoesPendentes } from "./acompanhantes/MarcacoesPendentes";
 import { PessoasLinha } from "./acompanhantes/PessoasLinha";
 import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
-import { MapPin } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onCompanions }) {
@@ -241,48 +242,35 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {grouped[season].map((g) => {
                   return (
-                    <div key={g.id} onClick={() => { if (editingId !== g.id) setDetailsId(g.id); }} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, cursor: editingId === g.id ? "default" : "pointer" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                        <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center", flexWrap: "wrap" }}>
-                          <p style={{ fontFamily: FONT_MONO, fontSize: 13, color: MUTED, margin: 0 }}>{dateOnly(g.match_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                            <TeamBadge name={g.home_team} url={g.home_logo} size={22} resolve />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {teamLabel(g.away_team)}</p>
-                            <TeamBadge name={g.away_team} url={g.away_logo} size={22} resolve />
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          {g.source === "csv" && (
-                            <div style={{ background: BG_ALT, border: `1px solid ${BORDER}`, padding: "4px 10px", borderRadius: 4 }}>
-                              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: BODY, margin: 0 }}>Importado ✓</p>
-                            </div>
-                          )}
-                          {xpInfo.byId.get(g.id) && (
-                            <div title="XP que este jogo gerou" style={{ background: GREEN_BG, border: `1px solid ${GREEN}`, padding: "4px 10px", borderRadius: 4 }}>
-                              <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>+{xpInfo.byId.get(g.id).total} XP</p>
-                            </div>
-                          )}
-                        </div>
+                    <div key={g.id} onClick={() => { if (editingId !== g.id) setDetailsId(g.id); }} style={{ ...GAME_CARD_STYLE, gap: 12, cursor: editingId === g.id ? "default" : "pointer" }}>
+                      <GameDateLine parts={gameParts({ matchDate: g.match_date })} time={false} right={xpInfo.byId.get(g.id) ? <GameTag tone="green" title="XP que este jogo gerou">+{xpInfo.byId.get(g.id).total} XP</GameTag> : null} />
+                      <GameLeagueLine>{g.competition}</GameLeagueLine>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} {g.home_score != null && g.away_score != null ? `${g.home_score}×${g.away_score}` : "×"} {teamLabel(g.away_team)}</p>
+                        <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <MapPin size={16} color={BODY} />
-                          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
-                        </div>
-                        <div role="button" style={{ display: "flex", gap: 4, alignItems: "center", cursor: "pointer" }}>
-                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN, margin: 0 }}>Ver detalhes da experiência</p>
-                          <Icon name="chevronRight" size={14} color={GREEN} />
-                        </div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <MapPin size={16} color={BODY} style={{ flexShrink: 0 }} />
+                        <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
+                      </div>
+                      {/* ação principal: botão verde contornado (os outros são links menores, de outro jeito) */}
+                      <div role="button" style={{ border: `1.5px solid ${GREEN}`, borderRadius: 8, padding: "10px 16px", display: "flex", gap: 6, alignItems: "center", justifyContent: "center", cursor: "pointer", background: GREEN_BG }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN_DARK, margin: 0 }}>Ver detalhes da experiência</p>
+                        <Icon name="chevronRight" size={14} color={GREEN_DARK} />
                       </div>
                       {people[g.id] && <PessoasLinha info={people[g.id]} onOpen={() => setCompanionsId(g.id)} />}
-                      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
                         {onCompanions && (
-                          <p role="button" onClick={() => onCompanions(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: GREEN, margin: 0, cursor: "pointer" }}>
-                            {people[g.id] && ((people[g.id].people || []).length + (people[g.id].invites || []).length) > 0 ? "+ Adicionar mais companhia" : "+ Adicionar companhia"}
-                          </p>
+                          <div role="button" onClick={() => onCompanions(g)} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center", cursor: "pointer", background: "#fff" }}>
+                            <Plus size={12} color={BODY} />
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: BODY, margin: 0 }}>
+                              {people[g.id] && ((people[g.id].people || []).length + (people[g.id].invites || []).length) > 0 ? "Adicionar mais companhia" : "Adicionar companhia"}
+                            </p>
+                          </div>
                         )}
-                        <p onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
-                        <p onClick={() => handleDelete(g.id)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#ef4444", margin: 0, cursor: "pointer" }}>Remover este jogo</p>
+                        <p role="button" onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
+                        <GameRemoveLink onClick={() => handleDelete(g.id)}>Remover este jogo</GameRemoveLink>
                       </div>
                       {editingId === g.id && (
                         <div onClick={(e) => e.stopPropagation()} style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, cursor: "default" }}>

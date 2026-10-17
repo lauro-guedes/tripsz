@@ -4,6 +4,7 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
+import { GAME_CARD_STYLE, GameDateLine, GameLeagueLine, GameRemoveLink, GameTag } from "./GameCardParts";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
@@ -287,50 +288,37 @@ export function BuscarJogos({ onNavigate, onLogout }) {
   const shownGames = cityFilter ? browseGames.filter((g) => g.city === cityFilter) : browseGames;
 
   const renderGame = (g) => {
-      const p = kickoffParts(g.kickoff);
+      const parts = kickoffParts(g.kickoff);
       const saved = savedIds.has(g.id);
       const noTime = g.status === "PST" || g.status === "TBD";
       const league = g.leagueCountry && g.leagueCountry !== "World" ? `${g.league} • ${g.leagueCountry}` : g.league;
+      // distância (só na busca por cidade): etiqueta ao lado da data, como "JÁ PASSOU" no calendário
+      const distance = mode === "cidade" ? <GameTag>{g.distanceKm == null ? "DISTÂNCIA INDISPONÍVEL" : `${g.distanceKm} KM DE ${String(cityShort).toUpperCase()}`}</GameTag> : null;
       return (
-        <div key={g.id} style={{ background: "#fff", border: `${saved ? 1.5 : 1}px solid ${saved ? GREEN : BORDER}`, borderRadius: 12, padding: isMobile ? 16 : "20px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", gap: isMobile ? 12 : 32 }}>
-          <div style={{ width: isMobile ? "auto" : 96, flexShrink: 0, display: "flex", flexDirection: isMobile ? "row" : "column", alignItems: isMobile ? "baseline" : "flex-start", gap: isMobile ? 10 : 2 }}>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: MUTED, margin: 0 }}>{p.dayMonthYear}</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, margin: 0 }}>{noTime ? "A definir" : p.time}</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>{p.weekdayLong}</p>
+        <div key={g.id} style={{ ...GAME_CARD_STYLE, border: `${saved ? 1.5 : 1}px solid ${saved ? GREEN : BORDER}` }}>
+          <GameDateLine parts={parts} time={!noTime} right={distance || (noTime ? <GameTag>HORÁRIO A DEFINIR</GameTag> : null)} />
+          <GameLeagueLine>{league}</GameLeagueLine>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
+            <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
           </div>
-          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>{league}</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <TeamBadge name={g.home} url={g.homeLogo} size={26} resolve />
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
-              <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
-            </div>
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <MapPin size={14} color={MUTED} style={{ flexShrink: 0 }} />
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ") || "Estádio a confirmar"}</p>
-            </div>
-            {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {g.venue ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue}</p> : null}
+            {g.city ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.city}</p> : null}
+            {!g.venue && !g.city ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Estádio a confirmar</p> : null}
           </div>
-          {mode === "cidade" && <div style={{ width: isMobile ? "auto" : 90, flexShrink: 0, textAlign: isMobile ? "left" : "center" }}>
-            {g.distanceKm == null ? (
-              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>distância indisponível</p>
-            ) : (
-              <>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{g.distanceKm} km</p>
-                <p style={{ fontFamily: FONT_DISPLAY, fontSize: 10, color: MUTED, margin: 0 }}>de {cityShort}</p>
-              </>
-            )}
-          </div>}
+          {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
           {saved ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "stretch", flexShrink: 0 }}>
-              <div style={{ background: "#eafbf1", borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ background: "#eafbf1", borderRadius: 8, padding: "10px 16px", display: "flex", gap: 8, alignItems: "center" }}>
                 <Check size={16} color="#008a3a" />
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#008a3a", margin: 0, whiteSpace: "nowrap" }}>No meu calendário</p>
               </div>
-              <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: MUTED, textAlign: "center", textDecoration: "underline", cursor: addingId === g.id ? "default" : "pointer", margin: 0, opacity: addingId === g.id ? 0.6 : 1 }}>{addingId === g.id ? "Removendo..." : "Remover"}</p>
+              <GameRemoveLink onClick={() => handleRemove(g)} disabled={addingId === g.id}>{addingId === g.id ? "Removendo..." : "Remover do calendário"}</GameRemoveLink>
             </div>
           ) : (
-            <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", flexShrink: 0 }}>
+            <div onClick={() => handleAdd(g)} style={{ background: GREEN, opacity: addingId === g.id ? 0.6 : 1, borderRadius: 8, padding: "12px 18px", display: "flex", gap: 8, alignItems: "center", justifyContent: "center", cursor: addingId ? "default" : "pointer", width: isMobile ? "100%" : "fit-content", boxSizing: "border-box" }}>
               <Plus size={16} color="#fff" />
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>{addingId === g.id ? "Adicionando..." : "Adicionar ao calendário"}</p>
             </div>

@@ -4,6 +4,7 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
+import { GAME_CARD_STYLE, GameDateLine, GameLeagueLine, GameRemoveLink, GameTag } from "./GameCardParts";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
@@ -173,22 +174,9 @@ export function MeuCalendario({ onNavigate, onLogout }) {
               const recent = nowMs - new Date(g.created_at).getTime() < 24 * 3600 * 1000;
               const league = g.league_country && g.league_country !== "World" ? `${g.league_name} • ${g.league_country}` : g.league_name;
               return (
-                <div key={g.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, padding: 18, display: "flex", flexDirection: "column", gap: 10, opacity: past ? 0.7 : 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: "#008a3a", textTransform: "uppercase", margin: 0 }}>
-                      {g.parts.weekdayAbbr}, {String(g.parts.day).padStart(2, "0")} {g.parts.monthAbbr} • {g.parts.time}
-                    </p>
-                    {past ? (
-                      <div style={{ background: BG_ALT, padding: "4px 8px", borderRadius: 4 }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, color: MUTED, margin: 0 }}>JÁ PASSOU</p>
-                      </div>
-                    ) : recent ? (
-                      <div style={{ background: "#eafbf1", padding: "4px 8px", borderRadius: 4 }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, color: "#008a3a", margin: 0 }}>RECÉM-ADICIONADO</p>
-                      </div>
-                    ) : null}
-                  </div>
-                  <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{league}</p>
+                <div key={g.id} style={{ ...GAME_CARD_STYLE, opacity: past ? 0.7 : 1 }}>
+                  <GameDateLine parts={g.parts} right={past ? <GameTag>JÁ PASSOU</GameTag> : recent ? <GameTag tone="green">RECÉM-ADICIONADO</GameTag> : null} />
+                  <GameLeagueLine>{league}</GameLeagueLine>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} × {teamLabel(g.away_team)}</p>
@@ -198,9 +186,9 @@ export function MeuCalendario({ onNavigate, onLogout }) {
                     {g.venue_name && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_name}</p>}
                     {g.venue_city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_city}</p>}
                   </div>
-                  <p onClick={() => handleRemove(g)} style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "#dc2626", textDecoration: "underline", margin: 0, cursor: removingId ? "default" : "pointer", width: "fit-content" }}>
+                  <GameRemoveLink onClick={() => handleRemove(g)} disabled={!!removingId}>
                     {removingId === g.id ? "Removendo..." : "Remover do calendário"}
-                  </p>
+                  </GameRemoveLink>
                 </div>
               );
             })}
