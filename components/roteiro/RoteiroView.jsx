@@ -27,7 +27,6 @@ export const OPTION_TONES = {
   green: { bg: GREEN },
   navy: { bg: "#1E3A5F" },
   slate: { bg: "#334155" },
-  purple: { bg: "#7c3aed" },
 };
 
 export const NAVY_PILL = { background: "#1E3A5F", borderRadius: 4, padding: "3px 8px", display: "inline-flex" };
@@ -35,6 +34,21 @@ export const NAVY_PILL = { background: "#1E3A5F", borderRadius: 4, padding: "3px
 export function LeaguePill({ children }) {
   return (
     <span style={{ ...NAVY_PILL, fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", whiteSpace: "nowrap" }}>{children}</span>
+  );
+}
+
+/** Clubes favoritos só com os escudos (o nome aparece ao passar o mouse / segurar). */
+function FavLogos({ names }) {
+  const max = 6;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 28 }}>
+      {names.slice(0, max).map((n) => (
+        <span key={n} title={teamLabel(n)} style={{ display: "inline-flex" }}>
+          <TeamBadge name={n} size={28} resolve />
+        </span>
+      ))}
+      {names.length > max && <span style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED }}>+{names.length - max}</span>}
+    </div>
   );
 }
 
@@ -220,7 +234,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState(null);
-  const [viewKey, setViewKey] = useState("B"); // B = o roteiro que sugerimos (recomendado)
+  const [viewKey, setViewKey] = useState("A"); // abre na A (monte do seu jeito)
   const [needChoice, setNeedChoice] = useState(false);
   const [showRestrictions, setShowRestrictions] = useState(false); // aviso começa minimizado
 
@@ -256,7 +270,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
         answers.dateStart ? ["Ida", fmtDate(answers.dateStart)] : null,
         answers.dateEnd ? ["Volta", fmtDate(answers.dateEnd)] : null,
         budgetText ? ["Orçamento", /^R\$/i.test(String(budgetText).trim()) ? String(budgetText).trim() : `R$ ${String(budgetText).trim()}`] : null,
-        ["Clubes favoritos", favs.length > 0 ? favs.map(teamLabel).join(", ") : "Sem clubes favoritos"],
+        favs.length > 0 ? ["Clubes favoritos", <FavLogos key="favs" names={favs} />] : null,
       ].filter(Boolean)
     : [];
   const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
@@ -280,7 +294,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
       <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Roteiro completo</p>
       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 26, lineHeight: 1.15, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
       <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>
-        Você já tem acesso ao roteiro completo. Monte do seu jeito (opção A) ou fique com o que sugerimos (opção B).
+        Monte do seu jeito (A) ou use o roteiro que sugerimos (B).
       </p>
       <div style={{ height: 1, background: BORDER }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -341,7 +355,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
           {tripInfo.map(([label, value]) => (
             <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
               <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: isMobile ? 13 : 14, color: TEXT, margin: 0 }}>{value}</p>
+              {typeof value === "string" ? <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: isMobile ? 13 : 14, color: TEXT, margin: 0 }}>{value}</p> : value}
             </div>
           ))}
         </div>
@@ -384,7 +398,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
               <div id="opcoes-roteiro" style={{ display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 24 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Escolha sua opção de roteiro</p>
-                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Cada opção traz as partidas e os deslocamentos. Compare a duração antes de escolher.</p>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.45, color: MUTED, margin: 0 }}>Monte o seu ou use o nosso. Compare a duração antes de escolher.</p>
                 </div>
                 {(
                   <div style={{ display: "flex", gap: 8 }}>

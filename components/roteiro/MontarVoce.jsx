@@ -5,6 +5,7 @@
  * ver handleChooseOption em TripszApp.jsx) e a opção vira a base da consultoria, como a B.
  */
 import { useEffect, useMemo, useState } from "react";
+import { WIZARD_COUNTRIES } from "../../lib/calendarCore";
 import { haversineKm } from "../../lib/citiesCore";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GOLD_BORDER, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
@@ -12,6 +13,7 @@ import { buildDayPlan, formatDateLabel } from "../../lib/tripOptions";
 import { requiredGap } from "../../lib/tripPlanner";
 import TeamBadge from "../TeamBadge";
 
+const ACCENT = "#1E3A5F"; // azul-marinho: a identidade da opção A
 const DAY_MS = 86400000;
 const dayNum = (d) => {
   const [y, m, dd] = d.split("-").map(Number);
@@ -50,12 +52,27 @@ function LeaguePill({ children }) {
   return <span style={{ background: "#1E3A5F", borderRadius: 4, padding: "3px 8px", display: "inline-flex", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", whiteSpace: "nowrap" }}>{children}</span>;
 }
 
-function Chip({ children, active, onClick }) {
+/** Bandeira do país (imagem, porque o emoji de bandeira não aparece no Windows). Some sozinha se não carregar. */
+function Flag({ label }) {
+  const iso = WIZARD_COUNTRIES[label] && WIZARD_COUNTRIES[label].iso;
+  if (!iso) return null;
+  const code = iso === "GB" ? "gb-eng" : iso.toLowerCase();
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`https://flagcdn.com/w40/${code}.png`} alt="" width={20} height={14} onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ borderRadius: 2, objectFit: "cover", flexShrink: 0 }} />;
+}
+
+function Chip({ children, active, onClick, flag, count, small }) {
   return (
-    <div onClick={onClick} style={{ padding: "6px 12px", borderRadius: 999, cursor: "pointer", background: active ? GREEN : "#fff", border: `1px solid ${active ? GREEN : BORDER}` }}>
-      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: active ? "#fff" : TEXT, margin: 0, whiteSpace: "nowrap" }}>{children}</p>
+    <div role="button" aria-pressed={!!active} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: small ? "5px 10px" : "7px 12px", borderRadius: 10, cursor: "pointer", background: active ? ACCENT : "#fff", border: `1px solid ${active ? ACCENT : BORDER}` }}>
+      {flag ? <Flag label={flag} /> : null}
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: small ? 11 : 12, color: active ? "#fff" : TEXT, margin: 0, whiteSpace: "nowrap" }}>{children}</p>
+      {count != null && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: active ? "rgba(255,255,255,0.75)" : MUTED, margin: 0 }}>{count}</p>}
     </div>
   );
+}
+
+function FilterLabel({ children }) {
+  return <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: MUTED, textTransform: "uppercase", margin: 0 }}>{children}</p>;
 }
 
 export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAll, isMobile }) {
@@ -76,11 +93,22 @@ export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAl
   const countries = useMemo(() => [...new Set(all.map((g) => g.country).filter(Boolean))], [all]);
   const [picked, setPicked] = useState(() => new Set((saved && saved.custom && saved.gameIds) || []));
   const [country, setCountry] = useState("");
+  const [leagueSel, setLeagueSel] = useState(() => new Set());
   const [onlyFav, setOnlyFav] = useState(false);
 
   const pickedGames = all.filter((g) => picked.has(g.id));
   const blocked = (g) => (picked.has(g.id) ? null : conflictReason(g, pickedGames));
-  const shown = all.filter((g) => (!country || g.country === country) && (!onlyFav || g.favorite || g.rivalry || picked.has(g.id)));
+  const inCountry = all.filter((g) => !country || g.country === country);
+  // ligas do país escolhido (ou do único país), da que tem mais jogos pra que tem menos
+  const leagueList = useMemo(() => {
+    const count = new Map();
+    for (const g of inCountry) if (g.competition?.name) count.set(g.competition.name, (count.get(g.competition.name) || 0) + 1);
+    return [...count.entries()].sort((x, y) => y[1] - x[1]);
+  }, [inCountry]);
+  const showLeagues = (country || countries.length === 1) && leagueList.length > 1;
+  const pickCountry = (c) => { setCountry(country === c ? "" : c); setLeagueSel(new Set()); };
+  const toggleLeague = (name) => setLeagueSel((prev) => { const n = new Set(prev); if (n.has(name)) n.delete(name); else n.add(name); return n; });
+  const shown = inCountry.filter((g) => (leagueSel.size === 0 || leagueSel.has(g.competition?.name) || picked.has(g.id)) && (!onlyFav || g.favorite || g.rivalry || picked.has(g.id)));
   const hasFav = all.some((g) => g.favorite || g.rivalry);
 
   const toggle = (g) => {
@@ -114,10 +142,10 @@ export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAl
   const pad = isMobile ? 16 : 24;
   return (
     <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
-      <div style={{ background: "#7c3aed", padding: isMobile ? "14px 16px" : "16px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 8 : 16 }}>
+      <div style={{ background: ACCENT, padding: isMobile ? "14px 16px" : "16px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 8 : 16 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#7c3aed", margin: 0 }}>A</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: ACCENT, margin: 0 }}>A</p>
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 16, color: "#fff", margin: 0 }}>Opção A — Monte do seu jeito</p>
@@ -130,23 +158,40 @@ export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAl
       </div>
 
       <div style={{ padding: pad, display: "flex", flexDirection: "column", gap: 16 }}>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>
-          Veja todos os jogos possíveis e marque os que quiser. Jogos que não cabem com os já marcados (por causa do deslocamento) ficam bloqueados, com o motivo.
-          {loadingAll ? " Carregando todos os jogos possíveis…" : ""}
+        <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: MUTED, margin: 0 }}>
+          Toque nos jogos que quer ver. Os que não cabem com os já marcados ficam bloqueados.{loadingAll ? " Carregando todos os jogos…" : ""}
         </p>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 12, padding: isMobile ? 12 : 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {countries.length > 1 && (
-            <>
-              <Chip active={!country} onClick={() => setCountry("")}>Todos os países</Chip>
-              {countries.map((c) => (
-                <Chip key={c} active={country === c} onClick={() => setCountry(country === c ? "" : c)}>{c}</Chip>
-              ))}
-            </>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <FilterLabel>País</FilterLabel>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Chip active={!country} onClick={() => { setCountry(""); setLeagueSel(new Set()); }}>Todos</Chip>
+                {countries.map((c) => (
+                  <Chip key={c} flag={c} active={country === c} count={all.filter((g) => g.country === c).length} onClick={() => pickCountry(c)}>{c}</Chip>
+                ))}
+              </div>
+            </div>
           )}
-          {hasFav && <Chip active={onlyFav} onClick={() => setOnlyFav(!onlyFav)}>Só favoritos e clássicos</Chip>}
-          {suggested && <Chip onClick={useSuggested}>Partir do roteiro sugerido</Chip>}
-          {picked.size > 0 && <Chip onClick={() => setPicked(new Set())}>Limpar</Chip>}
+          {showLeagues && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <FilterLabel>Liga{leagueSel.size > 0 ? ` · ${leagueSel.size} ${leagueSel.size === 1 ? "selecionada" : "selecionadas"}` : ""}</FilterLabel>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {leagueList.map(([name, n]) => (
+                  <Chip key={name} small active={leagueSel.has(name)} count={n} onClick={() => toggleLeague(name)}>{name}</Chip>
+                ))}
+              </div>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {hasFav && <Chip small active={onlyFav} onClick={() => setOnlyFav(!onlyFav)}>★ Favoritos e clássicos</Chip>}
+              {suggested && <Chip small onClick={useSuggested}>Partir do sugerido</Chip>}
+              {picked.size > 0 && <Chip small onClick={() => setPicked(new Set())}>Limpar marcados</Chip>}
+            </div>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: MUTED, margin: 0 }}>{shown.length} de {all.length} jogos</p>
+          </div>
         </div>
 
         {back && (
@@ -214,7 +259,7 @@ export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAl
 
         <div
           onClick={confirmed || picked.size === 0 ? undefined : () => onConfirm(pickedGames)}
-          style={{ background: confirmed ? "#fff" : picked.size === 0 ? BG : "#7c3aed", border: `1.5px solid ${confirmed ? GREEN : picked.size === 0 ? BORDER : "#7c3aed"}`, borderRadius: 8, padding: "13px 24px", textAlign: "center", cursor: confirmed || picked.size === 0 ? "default" : "pointer" }}
+          style={{ background: confirmed ? "#fff" : picked.size === 0 ? BG : ACCENT, border: `1.5px solid ${confirmed ? GREEN : picked.size === 0 ? BORDER : ACCENT}`, borderRadius: 8, padding: "13px 24px", textAlign: "center", cursor: confirmed || picked.size === 0 ? "default" : "pointer" }}
         >
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: confirmed ? GREEN : picked.size === 0 ? MUTED : "#fff", textTransform: "uppercase", margin: 0 }}>
             {confirmed ? "✓ Opção A escolhida" : picked.size === 0 ? "Marque ao menos um jogo" : saved && saved.custom ? "Atualizar opção A" : "Escolher opção A"}
