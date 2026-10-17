@@ -334,7 +334,6 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: isMobile ? 12 : 14, padding: isMobile ? "14px 16px" : `16px ${px}` }}>
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 10 : 24 }}>
         <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-          <Badge>Meus Roteiros</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 16 : 20, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
         </div>
         {hasContent && (
