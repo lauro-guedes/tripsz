@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X } from "lucide-react";
+import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X, Menu, LogOut, Eye, EyeOff } from "lucide-react";
+import { useIsMobile } from "@/components/ui/useIsMobile";
 import { supabaseBrowser } from "@/lib/supabase";
 import { authFetch } from "@/lib/authFetch";
 
@@ -457,7 +458,7 @@ function UsersView({ email }) {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
+      <div className="adm-table" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
         <div style={{ display: "grid", gridTemplateColumns: "2.2fr 1fr 1.3fr 1fr 1.1fr 0.5fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "País", "Criado em", "Nível", "Assinatura", ""].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
@@ -689,7 +690,7 @@ function SubscriptionsView({ email }) {
         </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
+      <div className="adm-table" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "visible" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 1.2fr 1fr 0.5fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Assinante", "Plano", "Status", "Próxima cobrança", "Cartão", ""].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
@@ -771,7 +772,7 @@ function ConsultingView({ email }) {
         </select>
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+      <div className="adm-table" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "Agendado para", "Status", "Valor"].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
@@ -851,7 +852,7 @@ function TripsView({ email }) {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+      <div className="adm-table" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1.6fr 1.4fr 1fr 1fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["Usuário", "Países", "Datas", "Prioridade", "Criado em"].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
@@ -979,7 +980,7 @@ function GamificationView({ email }) {
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1 }} />
       </div>
 
-      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
+      <div className="adm-table" style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.8fr 1fr 1fr 0.8fr 0.8fr 0.8fr", padding: "0 14px", height: 38, alignItems: "center", background: "#f8faf9" }}>
           {["#", "Usuário", "País", "Nível", "XP", "Estádios", "Países"].map((h) => (
             <p key={h} style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, textTransform: "uppercase", letterSpacing: "0.3px", margin: 0 }}>{h}</p>
@@ -1062,55 +1063,147 @@ function FinanceView({ email }) {
   );
 }
 
+const FONT = "Inter, sans-serif";
+
+/** Tela de login do painel: e-mail e senha (ou Google). Quem pode entrar é decidido no servidor (ADMIN_EMAILS). */
+function AdminLogin({ onLoggedIn }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const field = { width: "100%", boxSizing: "border-box", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, height: 48, padding: "0 14px", fontFamily: FONT, fontSize: 16, color: TEXT, outline: "none" };
+
+  const submit = async (e) => {
+    e && e.preventDefault();
+    setError(null);
+    if (!email.trim() || !password) { setError("Preencha e-mail e senha."); return; }
+    setLoading(true);
+    try {
+      const { error: err } = await supabaseBrowser().auth.signInWithPassword({ email: email.trim(), password });
+      if (err) { setError(err.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : err.message); return; }
+      await onLoggedIn();
+    } catch {
+      setError("Não foi possível conectar. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const google = async () => {
+    setError(null);
+    const { error: err } = await supabaseBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/admin` } });
+    if (err) setError(err.message);
+  };
+
+  return (
+    <div style={{ background: SIDEBAR_BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, boxSizing: "border-box" }}>
+      <form onSubmit={submit} style={{ background: "#fff", borderRadius: 16, padding: "28px 24px", width: "100%", maxWidth: 400, display: "flex", flexDirection: "column", gap: 16, boxSizing: "border-box" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <LayoutDashboard size={20} color={SIDEBAR_BG} />
+          </div>
+          <div>
+            <p style={{ fontFamily: FONT, fontSize: 18, fontWeight: 700, color: TEXT, margin: 0 }}>tripsz</p>
+            <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 10, color: "#008e4a", letterSpacing: 1, textTransform: "uppercase", margin: 0 }}>Admin console</p>
+          </div>
+        </div>
+        <div>
+          <p style={{ fontFamily: FONT, fontSize: 22, fontWeight: 700, color: TEXT, margin: 0 }}>Entrar no painel</p>
+          <p style={{ fontFamily: FONT, fontSize: 13, color: MUTED, margin: "4px 0 0" }}>Acesso restrito a administradores.</p>
+        </div>
+        <input type="email" autoComplete="username" inputMode="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} style={field} />
+        <div style={{ position: "relative" }}>
+          <input type={show ? "text" : "password"} autoComplete="current-password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...field, paddingRight: 46 }} />
+          <div role="button" aria-label={show ? "Ocultar senha" : "Mostrar senha"} onClick={() => setShow((v) => !v)} style={{ position: "absolute", right: 0, top: 0, width: 46, height: 48, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            {show ? <EyeOff size={18} color={MUTED} /> : <Eye size={18} color={MUTED} />}
+          </div>
+        </div>
+        {error && <p style={{ fontFamily: FONT, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
+        <button type="submit" disabled={loading} style={{ background: GREEN, border: "none", borderRadius: 10, height: 48, fontFamily: FONT, fontWeight: 700, fontSize: 14, color: SIDEBAR_BG, cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1 }}>{loading ? "Entrando..." : "Entrar"}</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1, height: 1, background: BORDER }} />
+          <p style={{ fontFamily: FONT, fontSize: 11, color: MUTED_LIGHT, margin: 0 }}>ou</p>
+          <div style={{ flex: 1, height: 1, background: BORDER }} />
+        </div>
+        <button type="button" onClick={google} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, height: 48, fontFamily: FONT, fontWeight: 600, fontSize: 14, color: TEXT, cursor: "pointer" }}>Entrar com Google</button>
+      </form>
+    </div>
+  );
+}
+
+// Regras de tela estreita do painel (as telas usam estilo direto, então aqui entram com !important).
+const ADMIN_MOBILE_CSS = `
+@media (max-width: 768px) {
+  .adm-table { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .adm-table > div { min-width: 640px; }
+  .adm-content div[style*="justify-content: space-between"] { flex-wrap: wrap; gap: 10px; }
+  .adm-content p { overflow-wrap: anywhere; }
+  .adm-content input, .adm-content select { font-size: 16px !important; }
+}`;
+
 export default function AdminPage() {
-  const [status, setStatus] = useState("loading"); // loading | denied | ready
+  const isMobile = useIsMobile();
+  const [status, setStatus] = useState("loading"); // loading | login | denied | ready
   const [userEmail, setUserEmail] = useState("");
   const [view, setView] = useState("overview");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Quem já está logado e é administrador entra direto; sem login, aparece a tela de entrada.
+  const checkAccess = async () => {
+    const supabase = supabaseBrowser();
+    const { data: userData } = await supabase.auth.getUser();
+    const email = userData.user?.email;
+    setUserEmail(email || "");
+    if (!email) { setStatus("login"); return; }
+    try {
+      const res = await authFetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
+      setStatus(res.ok ? "ready" : "denied");
+    } catch {
+      setStatus("denied");
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      const supabase = supabaseBrowser();
-      const { data: userData } = await supabase.auth.getUser();
-      const email = userData.user?.email;
-      setUserEmail(email || "");
-      if (!email) { setStatus("denied"); return; }
-      try {
-        const res = await authFetch(`/api/admin/overview?email=${encodeURIComponent(email)}`);
-        setStatus(res.ok ? "ready" : "denied");
-      } catch {
-        setStatus("denied");
-      }
-    })();
+    checkAccess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const logout = async () => {
+    try { await supabaseBrowser().auth.signOut(); } catch { /* segue */ }
+    setUserEmail("");
+    setMenuOpen(false);
+    setView("overview");
+    setStatus("login");
+  };
 
   if (status === "loading") {
     return (
       <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>
+        <p style={{ fontFamily: FONT, color: MUTED }}>Carregando...</p>
       </div>
     );
   }
 
+  if (status === "login") return <AdminLogin onLoggedIn={checkAccess} />;
+
   if (status === "denied") {
     return (
-      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
-          <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso não autorizado</p>
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: MUTED, margin: 0 }}>{userEmail ? `A conta ${userEmail} não tem acesso ao painel administrativo.` : "Você não está logado nesse navegador — entre com uma conta de administrador para continuar."}</p>
-          {!userEmail && (
-            <a href="/" style={{ background: GREEN, borderRadius: 8, padding: "10px 20px", textDecoration: "none" }}>
-              <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>Ir pra página de login</p>
-            </a>
-          )}
+      <div style={{ background: BG, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box" }}>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 16, alignItems: "center", maxWidth: 420 }}>
+          <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso não autorizado</p>
+          <p style={{ fontFamily: FONT, fontSize: 14, color: MUTED, margin: 0 }}>A conta {userEmail} não tem acesso ao painel administrativo.</p>
+          <div onClick={logout} role="button" style={{ background: GREEN, borderRadius: 8, padding: "12px 20px", cursor: "pointer" }}>
+            <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 13, color: SIDEBAR_BG, margin: 0 }}>Sair e entrar com outra conta</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ background: BG, minHeight: "100vh", fontFamily: "Inter, sans-serif", display: "flex" }}>
-      {/* Navegação lateral */}
-      <div style={{ width: 232, background: SIDEBAR_BG, display: "flex", flexDirection: "column", gap: 22, padding: "24px 16px 20px", flexShrink: 0, minHeight: "100vh" }}>
+  const sidebar = (
+      <div style={{ width: 232, maxWidth: "85vw", background: SIDEBAR_BG, display: "flex", flexDirection: "column", gap: 22, padding: "24px 16px 20px", flexShrink: 0, minHeight: "100vh" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <LayoutDashboard size={18} color={SIDEBAR_BG} />
@@ -1127,7 +1220,7 @@ export default function AdminPage() {
             return (
               <div
                 key={key}
-                onClick={() => enabled && setView(key)}
+                onClick={() => { if (enabled) { setView(key); setMenuOpen(false); } }}
                 style={{ display: "flex", alignItems: "center", gap: 10, height: 38, padding: "0 11px", borderRadius: 8, background: active ? SIDEBAR_ITEM_HOVER : "transparent", cursor: enabled ? "pointer" : "not-allowed", opacity: enabled ? 1 : 0.5 }}
               >
                 <Icon size={16} color={active ? "#fff" : SIDEBAR_TEXT} />
@@ -1153,31 +1246,60 @@ export default function AdminPage() {
               <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#fff", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{userEmail}</p>
               <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>Admin</p>
             </div>
+            <div role="button" aria-label="Sair" title="Sair" onClick={logout} style={{ width: 30, height: 30, borderRadius: 8, background: "#18283a", border: "1px solid #2b3b4b", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+              <LogOut size={14} color={SIDEBAR_TEXT} />
+            </div>
           </div>
         </div>
       </div>
+  );
+
+  return (
+    <div style={{ background: BG, minHeight: "100vh", fontFamily: "Inter, sans-serif", display: "flex" }}>
+      <style>{ADMIN_MOBILE_CSS}</style>
+      {/* Navegação lateral: fixa no computador; no celular abre como gaveta pelo botão de menu */}
+      {!isMobile && sidebar}
+      {isMobile && menuOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 60, display: "flex" }}>
+          <div style={{ display: "flex", overflowY: "auto" }}>{sidebar}</div>
+          <div onClick={() => setMenuOpen(false)} style={{ flex: 1, background: "rgba(16,27,45,0.55)" }} />
+        </div>
+      )}
 
       {/* Área principal */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* Barra superior */}
-        <div style={{ height: 64, borderBottom: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", flexShrink: 0 }}>
-          <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 12px", width: 380 }}>
-            <Search size={15} color={MUTED_LIGHT} />
-            <input placeholder="Buscar usuário, roteiro, cobrança..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1, color: TEXT }} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>⌘ K</p>
-          </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <HelpCircle size={16} color={MUTED} />
+        <div style={{ height: 64, borderBottom: `1px solid ${BORDER}`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: isMobile ? "0 14px" : "0 28px", flexShrink: 0, position: isMobile ? "sticky" : "static", top: 0, zIndex: 20 }}>
+          {isMobile ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div role="button" aria-label="Abrir menu" onClick={() => setMenuOpen(true)} style={{ width: 40, height: 40, borderRadius: 10, background: BG, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                <Menu size={20} color={TEXT} />
+              </div>
+              <p style={{ fontFamily: FONT, fontWeight: 700, fontSize: 15, color: TEXT, margin: 0 }}>{(NAV_ITEMS.find((n) => n[2] === view) || [])[0]}</p>
             </div>
-            <Bell size={18} color={MUTED} />
-            <div style={{ width: 1, height: 24, background: BORDER }} />
-            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: GREEN, margin: 0 }}>BR · Produção</p>
+          ) : (
+            <div style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 12px", width: 380 }}>
+              <Search size={15} color={MUTED_LIGHT} />
+              <input placeholder="Buscar usuário, roteiro, cobrança..." style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Inter, sans-serif", fontSize: 11, flex: 1, color: TEXT }} />
+              <p style={{ fontFamily: "Inter, sans-serif", fontSize: 9, color: MUTED_LIGHT, margin: 0 }}>⌘ K</p>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {!isMobile && (
+              <>
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <HelpCircle size={16} color={MUTED} />
+                </div>
+                <Bell size={18} color={MUTED} />
+                <div style={{ width: 1, height: 24, background: BORDER }} />
+              </>
+            )}
+            <p style={{ fontFamily: "Inter, sans-serif", fontSize: 10, color: GREEN, margin: 0, whiteSpace: "nowrap" }}>BR · Produção</p>
           </div>
         </div>
 
         {/* Conteúdo */}
-        <div style={{ padding: "24px 28px 36px", overflowY: "auto" }}>
+        <div className="adm-content" style={{ padding: isMobile ? "16px 14px 28px" : "24px 28px 36px", overflowY: "auto", minWidth: 0 }}>
           {view === "overview" && <OverviewView email={userEmail} />}
           {view === "users" && <UsersView email={userEmail} />}
           {view === "subscriptions" && <SubscriptionsView email={userEmail} />}
