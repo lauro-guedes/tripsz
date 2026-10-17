@@ -191,6 +191,52 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
     );
   }
 
+  // "Editar local" mora no modal da experiência (aba Estádio): o botão e, quando aberto, o formulário.
+  const renderEditLocal = (g) =>
+    editingId === g.id ? (
+      <div>
+        <div onClick={(e) => e.stopPropagation()} style={{ cursor: "default" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                              {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
+                                <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
+                                  <input value={editForm[k]} onChange={(e) => { if (k === "stadium") { stadiumTouched.current = true; setStadiumSug((st) => ({ ...st, open: true })); } setEditForm((f) => ({ ...f, [k]: e.target.value })); }} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 12px", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none", width: "100%", boxSizing: "border-box" }} />
+                                  {k === "stadium" && stadiumSug.open && editForm.stadium.trim().length >= 3 && (stadiumSug.loading || stadiumSug.items.length > 0 || stadiumTouched.current) && (
+                                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, background: "#fff", overflow: "hidden" }}>
+                                      {stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Buscando estádios...</p>}
+                                      {!stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Nenhum estádio encontrado. Pode manter o nome digitado.</p>}
+                                      {stadiumSug.items.map((sg) => (
+                                        <div
+                                          key={`${sg.name}|${sg.city || ""}`}
+                                          onClick={() => {
+                                            setEditForm((f) => ({ ...f, stadium: sg.name, city: sg.city || f.city, country: sg.country || f.country }));
+                                            stadiumTouched.current = false;
+                                            setStadiumSug({ items: [], loading: false, open: false });
+                                          }}
+                                          style={{ padding: "10px 12px", borderTop: `1px solid ${BORDER}`, cursor: "pointer" }}
+                                        >
+                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{sg.name}</p>
+                                          {(sg.city || sg.country) && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: "2px 0 0" }}>{[sg.city, sg.country].filter(Boolean).join(", ")}</p>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {editError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{editError}</p>}
+                              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                                <div onClick={editSaving ? undefined : () => saveEdit(g)} style={{ background: GREEN, opacity: editSaving ? 0.6 : 1, borderRadius: 8, padding: "10px 18px", cursor: editSaving ? "default" : "pointer" }}>
+                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{editSaving ? "Salvando..." : "Salvar"}</p>
+                                </div>
+                                <p onClick={() => setEditingId(null)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: MUTED, margin: 0, cursor: "pointer" }}>Cancelar</p>
+                              </div>
+                            </div>
+                        </div>
+      </div>
+    ) : (
+      <p role="button" onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 13, color: GREEN_DARK, margin: 0, cursor: "pointer", textDecoration: "underline", width: "fit-content" }}>Editar local</p>
+    );
+
   return (
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
@@ -243,7 +289,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
                 {grouped[season].map((g) => {
                   return (
                     <div key={g.id} onClick={() => { if (editingId !== g.id) setDetailsId(g.id); }} style={{ ...GAME_CARD_STYLE, gap: 12, cursor: editingId === g.id ? "default" : "pointer" }}>
-                      <GameDateLine parts={gameParts({ matchDate: g.match_date })} time={false} right={xpInfo.byId.get(g.id) ? <GameTag tone="green" title="XP que este jogo gerou">+{xpInfo.byId.get(g.id).total} XP</GameTag> : null} />
+                      <GameDateLine parts={gameParts({ matchDate: g.match_date })} time={false} right={xpInfo.byId.get(g.id) ? <GameTag tone="green" big title="XP que este jogo gerou">+{xpInfo.byId.get(g.id).total} XP</GameTag> : null} />
                       <GameLeagueLine>{g.competition}</GameLeagueLine>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
@@ -254,63 +300,23 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
                         <MapPin size={16} color={BODY} style={{ flexShrink: 0 }} />
                         <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.stadium || g.country}</p>
                       </div>
+                      {people[g.id] && <PessoasLinha info={people[g.id]} onOpen={() => setCompanionsId(g.id)} />}
+                      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "nowrap" }}>
+                        {onCompanions ? (
+                          <div role="button" onClick={() => onCompanions(g)} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center", cursor: "pointer", background: "#fff", minWidth: 0 }}>
+                            <Plus size={12} color={BODY} style={{ flexShrink: 0 }} />
+                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: BODY, margin: 0, whiteSpace: "nowrap" }}>
+                              {people[g.id] && ((people[g.id].people || []).length + (people[g.id].invites || []).length) > 0 ? "Adicionar mais companhia" : "Adicionar companhia"}
+                            </p>
+                          </div>
+                        ) : <span />}
+                        <div style={{ flexShrink: 0 }}><GameRemoveLink onClick={() => handleDelete(g.id)}>Remover este jogo</GameRemoveLink></div>
+                      </div>
                       {/* ação principal: botão verde contornado (os outros são links menores, de outro jeito) */}
                       <div role="button" style={{ border: `1.5px solid ${GREEN}`, borderRadius: 8, padding: "10px 16px", display: "flex", gap: 6, alignItems: "center", justifyContent: "center", cursor: "pointer", background: GREEN_BG }}>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN_DARK, margin: 0 }}>Ver detalhes da experiência</p>
                         <Icon name="chevronRight" size={14} color={GREEN_DARK} />
                       </div>
-                      {people[g.id] && <PessoasLinha info={people[g.id]} onOpen={() => setCompanionsId(g.id)} />}
-                      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-                        {onCompanions && (
-                          <div role="button" onClick={() => onCompanions(g)} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center", cursor: "pointer", background: "#fff" }}>
-                            <Plus size={12} color={BODY} />
-                            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: BODY, margin: 0 }}>
-                              {people[g.id] && ((people[g.id].people || []).length + (people[g.id].invites || []).length) > 0 ? "Adicionar mais companhia" : "Adicionar companhia"}
-                            </p>
-                          </div>
-                        )}
-                        <p role="button" onClick={() => startEdit(g)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: MUTED, margin: 0, cursor: "pointer" }}>Editar local</p>
-                        <GameRemoveLink onClick={() => handleDelete(g.id)}>Remover este jogo</GameRemoveLink>
-                      </div>
-                      {editingId === g.id && (
-                        <div onClick={(e) => e.stopPropagation()} style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16, cursor: "default" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                              {[["stadium", "Estádio"], ["city", "Cidade"], ["country", "País"], ["competition", "Competição"]].map(([k, label]) => (
-                                <div key={k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                  <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>{label}</p>
-                                  <input value={editForm[k]} onChange={(e) => { if (k === "stadium") { stadiumTouched.current = true; setStadiumSug((st) => ({ ...st, open: true })); } setEditForm((f) => ({ ...f, [k]: e.target.value })); }} style={{ background: BG, border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 12px", fontFamily: FONT_DISPLAY, fontSize: 14, color: TEXT, outline: "none", width: "100%", boxSizing: "border-box" }} />
-                                  {k === "stadium" && stadiumSug.open && editForm.stadium.trim().length >= 3 && (stadiumSug.loading || stadiumSug.items.length > 0 || stadiumTouched.current) && (
-                                    <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, background: "#fff", overflow: "hidden" }}>
-                                      {stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Buscando estádios...</p>}
-                                      {!stadiumSug.loading && stadiumSug.items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0, padding: "10px 12px" }}>Nenhum estádio encontrado. Pode manter o nome digitado.</p>}
-                                      {stadiumSug.items.map((sg) => (
-                                        <div
-                                          key={`${sg.name}|${sg.city || ""}`}
-                                          onClick={() => {
-                                            setEditForm((f) => ({ ...f, stadium: sg.name, city: sg.city || f.city, country: sg.country || f.country }));
-                                            stadiumTouched.current = false;
-                                            setStadiumSug({ items: [], loading: false, open: false });
-                                          }}
-                                          style={{ padding: "10px 12px", borderTop: `1px solid ${BORDER}`, cursor: "pointer" }}
-                                        >
-                                          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: TEXT, margin: 0 }}>{sg.name}</p>
-                                          {(sg.city || sg.country) && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: "2px 0 0" }}>{[sg.city, sg.country].filter(Boolean).join(", ")}</p>}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                              {editError && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{editError}</p>}
-                              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                                <div onClick={editSaving ? undefined : () => saveEdit(g)} style={{ background: GREEN, opacity: editSaving ? 0.6 : 1, borderRadius: 8, padding: "10px 18px", cursor: editSaving ? "default" : "pointer" }}>
-                                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0 }}>{editSaving ? "Salvando..." : "Salvar"}</p>
-                                </div>
-                                <p onClick={() => setEditingId(null)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: MUTED, margin: 0, cursor: "pointer" }}>Cancelar</p>
-                              </div>
-                            </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -329,6 +335,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
           visits={stadiumVisits(all, detailsGame)}
           isFirstVisit={!!(xpInfo.byId.get(detailsGame.id) && xpInfo.byId.get(detailsGame.id).parts.some((p) => p.key === "stadium"))}
           onClose={() => setDetailsId(null)}
+          editLocalSlot={renderEditLocal(detailsGame)}
         />
       )}
 

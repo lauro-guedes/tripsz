@@ -43,7 +43,7 @@ const ORIGIN = { api: "Via Tripsz", csv: "Importado ✓", manual: "Manual ✓" }
  * totalXp= XP de todos os jogos da pessoa (pra barra da próxima categoria)
  * visits = { count, first } da pessoa neste estádio
  */
-export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVisit, onClose }) {
+export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVisit, onClose, editLocalSlot }) {
   const isMobile = useIsMobile();
   const [tab, setTab] = useState("xp");
   const [state, setState] = useState("loading"); // loading | ready | error
@@ -165,7 +165,7 @@ export function DetalhesExperienciaModal({ game, xp, totalXp, visits, isFirstVis
   let content;
   if (tab === "xp") content = <AbaXP game={game} xp={xp} totalXp={totalXp} isMobile={isMobile} />;
   // A aba Estádio não espera os dados da partida: o nome e a cidade do jogo já bastam para mostrar a foto.
-  else if (tab === "estadio") content = <AbaEstadio game={game} venue={venue || (game.stadium ? { name: game.stadium, city: game.city, country: game.country } : null)} visits={visits} isFirstVisit={isFirstVisit} isMobile={isMobile} />;
+  else if (tab === "estadio") content = <AbaEstadio game={game} venue={venue || (game.stadium ? { name: game.stadium, city: game.city, country: game.country } : null)} visits={visits} isFirstVisit={isFirstVisit} isMobile={isMobile} editLocalSlot={editLocalSlot} />;
   else if (state === "loading") content = <TabLoading />;
   else if (!details) content = noData(tab === "escalacao" ? "a escalação" : tab === "gols" ? "os gols e acontecimentos" : "as estatísticas");
   else if (tab === "escalacao") content = <AbaEscalacao details={details} isMobile={isMobile} />;

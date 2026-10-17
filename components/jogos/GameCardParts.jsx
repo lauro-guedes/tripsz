@@ -39,11 +39,11 @@ export function GameLeagueLine({ children }) {
 }
 
 /** Etiqueta pequena ao lado da data: tone "gray" (JÁ PASSOU), "green" (RECÉM-ADICIONADO, XP). */
-export function GameTag({ children, tone = "gray", title }) {
+export function GameTag({ children, tone = "gray", title, big }) {
   const green = tone === "green";
   return (
-    <div title={title} style={{ background: green ? "#eafbf1" : BG_ALT, padding: "4px 8px", borderRadius: 4 }}>
-      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, color: green ? GREEN_DARK : MUTED, margin: 0, whiteSpace: "nowrap" }}>{children}</p>
+    <div title={title} style={{ background: green ? "#eafbf1" : BG_ALT, padding: big ? "5px 11px" : "4px 8px", borderRadius: big ? 6 : 4 }}>
+      <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: big ? 13 : 9, color: green ? GREEN_DARK : MUTED, margin: 0, whiteSpace: "nowrap" }}>{children}</p>
     </div>
   );
 }

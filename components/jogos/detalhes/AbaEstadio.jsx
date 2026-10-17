@@ -87,7 +87,7 @@ function StadiumPhoto({ venue, wikiState, isMobile }) {
  * nesse estádio. Funciona também em jogo registrado à mão (só sem a capacidade,
  * se o estádio não estiver no cadastro).
  */
-export function AbaEstadio({ game, venue, visits, isFirstVisit, isMobile }) {
+export function AbaEstadio({ game, venue, visits, isFirstVisit, isMobile, editLocalSlot }) {
   const name = (venue && venue.name) || game.stadium || "Estádio não informado";
   const city = (venue && venue.city) || game.city || null;
   const country = (venue && venue.country) || game.country || null;
@@ -148,6 +148,7 @@ export function AbaEstadio({ game, venue, visits, isFirstVisit, isMobile }) {
           {visitsCard}
         </div>
       )}
+      {editLocalSlot && <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>{editLocalSlot}</div>}
       {visits.count > 0 && first && (
         <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 4 }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: 11, lineHeight: 1.4, color: MUTED, margin: 0, textTransform: "uppercase" }}>No seu passaporte desde {first}</p>

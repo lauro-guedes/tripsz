@@ -303,11 +303,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home)} × {teamLabel(g.away)}</p>
             <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {g.venue ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue}</p> : null}
-            {g.city ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.city}</p> : null}
-            {!g.venue && !g.city ? <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>Estádio a confirmar</p> : null}
-          </div>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ") || "Estádio a confirmar"}</p>
           {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
           {saved ? (
             <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>

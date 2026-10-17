@@ -182,10 +182,7 @@ export function MeuCalendario({ onNavigate, onLogout }) {
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, margin: 0 }}>{teamLabel(g.home_team)} × {teamLabel(g.away_team)}</p>
                     <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    {g.venue_name && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_name}</p>}
-                    {g.venue_city && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{g.venue_city}</p>}
-                  </div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{[g.venue_name, g.venue_city].filter(Boolean).join(" • ")}</p>
                   <GameRemoveLink onClick={() => handleRemove(g)} disabled={!!removingId}>
                     {removingId === g.id ? "Removendo..." : "Remover do calendário"}
                   </GameRemoveLink>
