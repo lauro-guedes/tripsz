@@ -94,10 +94,21 @@ export default function App() {
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState(null);
   const trip = useMemo(() => planToTrip(plan, answers.countries), [plan, answers.countries]);
-  // Opções A / B / C montadas a partir dos jogos do plano (vale também pra roteiros já salvos).
+  // Opções A / B montadas a partir dos jogos do plano (vale também pra roteiros já salvos).
   const options = useMemo(() => buildOptions(plan), [plan]);
   // A opção escolhida libera a contratação da consultoria.
-  const [chosenOption, setChosenOption] = useState(null);
+  const [chosenOptionRaw, setChosenOption] = useState(null);
+  // Roteiros antigos tinham A/B/C (A = o que sugerimos; B e C = variações dele). Hoje: A = do seu jeito, B = sugerido.
+  const chosenOption = chosenOptionRaw === "C" || (chosenOptionRaw === "A" && !(plan?.custom?.games?.length > 0)) ? "B" : chosenOptionRaw;
+  // Roteiro salvo não guarda todos os jogos possíveis: a opção A pede o resto ao servidor (sem gravar no banco).
+  const handleLoadAllGames = async () => {
+    try {
+      const fresh = await fetchPlan(answers);
+      if (fresh?.possible?.length) setPlan((p) => (p ? { ...p, possible: fresh.possible } : p));
+    } catch (e) {
+      console.warn("Não foi possível carregar todos os jogos:", e);
+    }
+  };
   // Voltando do Mercado Pago sem concluir o pagamento: "failed" ou "pending" (vem na URL do retorno).
   const [paymentNotice, setPaymentNotice] = useState(null);
   const restart = () => {
@@ -290,14 +301,19 @@ export default function App() {
     }
   };
 
-  // A pessoa escolheu a opção A, B ou C. Guarda no roteiro: é isso que libera a consultoria
+  // A pessoa escolheu a opção A (montou do seu jeito) ou B (sugerida por nós). Guarda no roteiro: é isso que libera a consultoria
   // (o servidor confere de novo em /api/checkout antes de gerar o pagamento).
-  const handleChooseOption = async (key) => {
+  // `customGames` (só na opção A, "monte do seu jeito"): os jogos que a pessoa marcou, guardados dentro do plano.
+  const handleChooseOption = async (key, customGames) => {
     setChosenOption(key);
+    const custom = key === "A" && Array.isArray(customGames) && customGames.length > 0 ? { games: customGames } : null;
+    const nextPlan = custom ? { ...(plan || {}), custom } : plan;
+    if (custom) setPlan(nextPlan);
     if (!answers.tripAnswersId) return;
     try {
       const supabase = supabaseBrowser();
-      const { error } = await supabase.from("trip_answers").update({ selected_option: key, selected_option_at: new Date().toISOString() }).eq("id", answers.tripAnswersId);
+      const patch = { selected_option: key, selected_option_at: new Date().toISOString(), ...(custom ? { plan: slimPlan(nextPlan) } : {}) };
+      const { error } = await supabase.from("trip_answers").update(patch).eq("id", answers.tripAnswersId);
       if (error) console.warn("Não foi possível guardar a opção escolhida (rode a migração da Etapa 3b):", error.message);
     } catch (e) {
       console.warn("Não foi possível guardar a opção escolhida:", e);
@@ -418,7 +434,7 @@ export default function App() {
       {screen === "pessoas" && <StepPessoasOrcamento answers={answers} setAnswers={setAnswers} onNext={() => setScreen("preferencias")} onBack={() => setScreen("datas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "preferencias" && <StepPreferencias answers={answers} setAnswers={setAnswers} onNext={() => setScreen("loading")} onBack={() => setScreen("pessoas")} onHome={restart} stepOffset={stepOffset} />}
       {screen === "loading" && <LoadingScreen onWork={handleSaveTrip} onDone={(next) => setScreen(next || "resultado")} />}
-      {screen === "resultado" && <ResultadoRoteiro answers={answers} trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "resultado" && <ResultadoRoteiro answers={answers} trip={trip} options={options} chosenOption={chosenOption} onChooseOption={handleChooseOption} onLoadAllGames={handleLoadAllGames} planLoading={planLoading} planError={planError} onRetryPlan={() => loadPlan()} onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "checkout" && <Checkout answers={answers} selectedOption={chosenOption} paymentNotice={paymentNotice} onBack={() => setScreen("resultado")} onDone={() => setScreen("roteiro")} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "roteiro" && (
         <RoteiroDetalhe
@@ -427,6 +443,7 @@ export default function App() {
           options={options}
           chosenOption={chosenOption}
           onChooseOption={handleChooseOption}
+          onLoadAllGames={handleLoadAllGames}
           planLoading={planLoading}
           planError={planError}
           onRetryPlan={() => loadPlan()}

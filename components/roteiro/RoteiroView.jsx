@@ -11,8 +11,7 @@ import { Icon } from "../ui/Icon";
 import { useIsMobile } from "../ui/useIsMobile";
 import { PlanFeedback } from "./PlanFeedback";
 import { useEffect, useState } from "react";
-import { CUSTOM_ROUTE_ENABLED } from "../../lib/featureFlags"; // [MONTE-VOCE]
-import { MontarVoce } from "./MontarVoce"; // [MONTE-VOCE]
+import { MontarVoce } from "./MontarVoce";
 
 // Formata uma data como "18 MAR 2025" — igual ao Figma, sem o "de" que o
 // toLocaleDateString("pt-BR") normalmente adiciona.
@@ -28,6 +27,7 @@ export const OPTION_TONES = {
   green: { bg: GREEN },
   navy: { bg: "#1E3A5F" },
   slate: { bg: "#334155" },
+  purple: { bg: "#7c3aed" },
 };
 
 export const NAVY_PILL = { background: "#1E3A5F", borderRadius: 4, padding: "3px 8px", display: "inline-flex" };
@@ -144,7 +144,7 @@ export function OptionCard({ opt, chosen, onChoose, isMobile, gamesById }) {
 }
 
 /** Cartão da consultoria (fica na lateral no computador e depois das opções no celular).
- *  O botão só funciona depois de escolher uma das opções A / B / C. */
+ *  O botão só funciona depois de escolher uma das opções A / B. */
 export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, isMobile }) {
   const enabled = !!chosenOpt;
   return (
@@ -176,7 +176,7 @@ export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, i
         <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>✓ Baseada na Opção {chosenOpt.key} — {chosenOpt.title}</p>
       ) : (
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, lineHeight: 1.4, color: needChoice ? GOLD : MUTED, margin: 0 }}>
-          Escolha uma das opções de roteiro (A, B ou C) para contratar a consultoria.
+          Escolha uma das opções de roteiro (A ou B) para contratar a consultoria.
         </p>
       )}
       <div
@@ -189,7 +189,7 @@ export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, i
   );
 }
 
-/** Avisos do roteiro (sem listar jogo por jogo o que ficou de fora — isso fica na Opção C). */
+/** Avisos do roteiro (sem listar jogo por jogo o que ficou de fora). */
 export function restrictionBullets(trip, options) {
   const bullets = [];
   const route = trip.cities.length >= 2 ? ` ${trip.cities.join(" → ")}` : "";
@@ -215,12 +215,12 @@ export function restrictionBullets(trip, options) {
 }
 
 /** Tela do roteiro: usada logo depois do questionário (Resultado) e ao abrir um roteiro salvo (Detalhe). */
-export function RoteiroView({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout, onBack }) {
+export function RoteiroView({ answers, trip, options, chosenOption, onChooseOption, onLoadAllGames, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout, onBack }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState(null);
-  const [viewKey, setViewKey] = useState("A");
+  const [viewKey, setViewKey] = useState("B"); // B = o roteiro que sugerimos (recomendado)
   const [needChoice, setNeedChoice] = useState(false);
   const [showRestrictions, setShowRestrictions] = useState(false); // aviso começa minimizado
 
@@ -240,7 +240,6 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
 
   const chosenOpt = options.find((o) => o.key === chosenOption) || null;
   const visibleKey = options.some((o) => o.key === viewKey) ? viewKey : options[0]?.key;
-  const activeKey = CUSTOM_ROUTE_ENABLED && viewKey === "D" ? "D" : visibleKey; // [MONTE-VOCE]
   const hasContent = !planLoading && !planError && trip.games.length > 0 && options.length > 0;
   const duration = durationRange(options);
   const durationShort = duration.replace(" a ", "–");
@@ -262,9 +261,9 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
     : [];
   const leagues = [...new Set(trip.games.map((g) => g.competition).filter(Boolean))];
 
-  const handleChoose = (key) => {
+  const handleChoose = (key, extra) => {
     setNeedChoice(false);
-    onChooseOption(key);
+    onChooseOption(key, extra);
   };
   const handleNeedChoice = () => {
     setNeedChoice(true);
@@ -281,7 +280,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
       <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, textTransform: "uppercase", margin: 0 }}>Roteiro completo</p>
       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 26, lineHeight: 1.15, color: TEXT, margin: 0 }}>Roteiro {trip.countries.join(" + ")}</p>
       <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.5, color: BODY, margin: 0 }}>
-        Você já tem acesso ao roteiro completo. Escolha a opção {options.length > 2 ? "A, B ou C" : "A ou B"} que melhor se adapta ao seu estilo de viagem.
+        Você já tem acesso ao roteiro completo. Monte do seu jeito (opção A) ou fique com o que sugerimos (opção B).
       </p>
       <div style={{ height: 1, background: BORDER }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -381,7 +380,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
                 )}
               </div>
 
-              {/* opções A / B / C */}
+              {/* opções A / B */}
               <div id="opcoes-roteiro" style={{ display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 24 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 20 : 28, color: TEXT, margin: 0 }}>Escolha sua opção de roteiro</p>
@@ -389,19 +388,22 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
                 </div>
                 {(
                   <div style={{ display: "flex", gap: 8 }}>
-                    {[...options, ...(CUSTOM_ROUTE_ENABLED && hasContent ? [{ key: "D", badge: "Monte você mesmo" }] : [])].map((o) => ( /* [MONTE-VOCE] aba D */
-                      <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: activeKey === o.key ? GREEN : "#fff", border: `1px solid ${activeKey === o.key ? GREEN : BORDER}` }}>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: activeKey === o.key ? "#fff" : TEXT, margin: 0 }}>{o.badge || `Opção ${o.key}`}{chosenOption === o.key ? " ✓" : ""}</p>
+                    {options.map((o) => (
+                      <div key={o.key} onClick={() => setViewKey(o.key)} style={{ flex: 1, textAlign: "center", padding: "10px 0", borderRadius: 999, cursor: "pointer", background: visibleKey === o.key ? GREEN : "#fff", border: `1px solid ${visibleKey === o.key ? GREEN : BORDER}` }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: visibleKey === o.key ? "#fff" : TEXT, margin: 0 }}>{o.badge || `Opção ${o.key}`}{chosenOption === o.key ? " ✓" : ""}</p>
                       </div>
                     ))}
                   </div>
                 )}
-                {CUSTOM_ROUTE_ENABLED && viewKey === "D" && <MontarVoce trip={trip} options={options} isMobile={isMobile} /> /* [MONTE-VOCE] */}
                 {options
-                  .filter((o) => !(CUSTOM_ROUTE_ENABLED && viewKey === "D") && o.key === visibleKey)
-                  .map((o) => (
-                    <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} gamesById={gamesById} />
-                  ))}
+                  .filter((o) => o.key === visibleKey)
+                  .map((o) =>
+                    o.key === "A" ? (
+                      <MontarVoce key={o.key} trip={trip} suggested={options.find((x) => x.key === "B")} saved={o} chosen={chosenOption === "A"} onConfirm={(games) => handleChoose("A", games)} onLoadAll={onLoadAllGames} isMobile={isMobile} />
+                    ) : (
+                      <OptionCard key={o.key} opt={o} chosen={chosenOption === o.key} onChoose={handleChoose} isMobile={isMobile} gamesById={gamesById} />
+                    )
+                  )}
               </div>
             </>
           )}
@@ -429,7 +431,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
 }
 
 /** Logo depois do questionário. */
-export function ResultadoRoteiro({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
+export function ResultadoRoteiro({ answers, trip, options, chosenOption, onChooseOption, onLoadAllGames, planLoading, planError, onRetryPlan, onHireConsultoria, onNavigate, onLogout }) {
   return (
     <RoteiroView
       answers={answers}
@@ -437,6 +439,7 @@ export function ResultadoRoteiro({ answers, trip, options, chosenOption, onChoos
       options={options}
       chosenOption={chosenOption}
       onChooseOption={onChooseOption}
+      onLoadAllGames={onLoadAllGames}
       planLoading={planLoading}
       planError={planError}
       onRetryPlan={onRetryPlan}
@@ -449,7 +452,7 @@ export function ResultadoRoteiro({ answers, trip, options, chosenOption, onChoos
 }
 
 /** Roteiro salvo, aberto pela Biblioteca. */
-export function RoteiroDetalhe({ answers, trip, options, chosenOption, onChooseOption, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
+export function RoteiroDetalhe({ answers, trip, options, chosenOption, onChooseOption, onLoadAllGames, planLoading, planError, onRetryPlan, onNavigate, onLogout, onBackToRoteiros, onHireConsultoria }) {
   return (
     <RoteiroView
       answers={answers}
@@ -457,6 +460,7 @@ export function RoteiroDetalhe({ answers, trip, options, chosenOption, onChooseO
       options={options}
       chosenOption={chosenOption}
       onChooseOption={onChooseOption}
+      onLoadAllGames={onLoadAllGames}
       planLoading={planLoading}
       planError={planError}
       onRetryPlan={onRetryPlan}

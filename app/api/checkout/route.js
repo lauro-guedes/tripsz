@@ -33,7 +33,7 @@ export async function POST(request) {
     }
 
     // A consultoria só pode ser contratada depois de escolher uma das opções de roteiro
-    // (A, B ou C). Conferimos aqui no servidor — o botão desativado na tela é só conforto.
+    // (A ou B). Conferimos aqui no servidor — o botão desativado na tela é só conforto.
     // A fonte da verdade é a opção guardada no roteiro; se ela ainda não foi gravada (ex.: a
     // migração não rodou), aceitamos a que veio do navegador, desde que seja válida.
     const VALID_OPTIONS = ["A", "B", "C"];
@@ -47,7 +47,7 @@ export async function POST(request) {
     }
     if (!chosenOption && VALID_OPTIONS.includes(selectedOption)) chosenOption = selectedOption;
     if (!chosenOption) {
-      return Response.json({ error: "Escolha uma das opções de roteiro (A, B ou C) antes de contratar a consultoria." }, { status: 400 });
+      return Response.json({ error: "Escolha uma das opções de roteiro (A ou B) antes de contratar a consultoria." }, { status: 400 });
     }
 
     // Sem essas duas variáveis configuradas na Vercel, o Mercado Pago

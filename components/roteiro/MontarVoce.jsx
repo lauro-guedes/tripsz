@@ -1,13 +1,10 @@
 "use client";
 /**
- * Opção D — "Monte você mesmo" (PROTÓTIPO). A pessoa vê todos os jogos possíveis, dia a dia, e marca os que
- * quer; o dia a dia da viagem é montado na hora com os jogos marcados.
- *
- * Isolado de propósito: o interruptor é CUSTOM_ROUTE_ENABLED (lib/featureFlags.js). Para tirar do ar de vez,
- * apague este arquivo e as linhas marcadas com [MONTE-VOCE] (RoteiroView.jsx, tripPlanClient.js, tripOptions.js).
- * Nada aqui salva no banco: é só pra visualizar o conceito.
+ * Opção A — "Monte do seu jeito". A pessoa vê todos os jogos possíveis, dia a dia, e marca os que quer; o dia a dia
+ * da viagem é montado na hora com os jogos marcados. Ao escolher, os jogos ficam salvos no plano (plan.custom.games,
+ * ver handleChooseOption em TripszApp.jsx) e a opção vira a base da consultoria, como a B.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { haversineKm } from "../../lib/citiesCore";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GOLD_BORDER, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
@@ -61,10 +58,23 @@ function Chip({ children, active, onClick }) {
   );
 }
 
-export function MontarVoce({ trip, options, isMobile }) {
-  const all = useMemo(() => [...(trip.gamesPossible || [])].filter((g) => g.matchDate && g.lat != null && g.lon != null).sort(byTime), [trip.gamesPossible]);
+export function MontarVoce({ trip, suggested, saved, chosen, onConfirm, onLoadAll, isMobile }) {
+  // Plano salvo não traz todos os jogos possíveis: pede o resto uma vez (os já marcados nunca somem da lista).
+  const [loadingAll, setLoadingAll] = useState(!!trip.gamesPossibleLimited && !!onLoadAll);
+  useEffect(() => {
+    if (!trip.gamesPossibleLimited || !onLoadAll) return;
+    let alive = true;
+    Promise.resolve(onLoadAll()).finally(() => alive && setLoadingAll(false));
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const all = useMemo(() => {
+    const byId = new Map();
+    for (const g of [...(trip.gamesPossible || []), ...((saved && saved.games) || [])]) byId.set(g.id, g);
+    return [...byId.values()].filter((g) => g.matchDate && g.lat != null && g.lon != null).sort(byTime);
+  }, [trip.gamesPossible, saved]);
   const countries = useMemo(() => [...new Set(all.map((g) => g.country).filter(Boolean))], [all]);
-  const [picked, setPicked] = useState(() => new Set());
+  const [picked, setPicked] = useState(() => new Set((saved && saved.custom && saved.gameIds) || []));
   const [country, setCountry] = useState("");
   const [onlyFav, setOnlyFav] = useState(false);
 
@@ -82,8 +92,10 @@ export function MontarVoce({ trip, options, isMobile }) {
       return next;
     });
   };
-  const fromA = options.find((o) => o.key === "A");
-  const useA = () => fromA && setPicked(new Set(fromA.gameIds.filter((id) => all.some((g) => g.id === id))));
+  const useSuggested = () => suggested && setPicked(new Set(suggested.gameIds.filter((id) => all.some((g) => g.id === id))));
+  const savedIds = (saved && saved.custom && saved.gameIds) || [];
+  const unchanged = savedIds.length === picked.size && savedIds.every((id) => picked.has(id));
+  const confirmed = chosen && unchanged && picked.size > 0;
 
   // dia a dia do que foi marcado
   const items = pickedGames.length > 0 ? buildDayPlan(pickedGames) : [];
@@ -105,22 +117,22 @@ export function MontarVoce({ trip, options, isMobile }) {
       <div style={{ background: "#7c3aed", padding: isMobile ? "14px 16px" : "16px 24px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 8 : 16 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
           <div style={{ width: 28, height: 28, borderRadius: 14, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#7c3aed", margin: 0 }}>D</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#7c3aed", margin: 0 }}>A</p>
           </div>
           <div style={{ minWidth: 0 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 16, color: "#fff", margin: 0 }}>Opção D — Monte você mesmo</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 15 : 16, color: "#fff", margin: 0 }}>Opção A — Monte do seu jeito</p>
             <p style={{ fontFamily: FONT_MONO, fontSize: 11, color: "rgba(255,255,255,0.85)", margin: 0 }}>
               {pickedGames.length === 0 ? "Marque os jogos que quer ver" : `${days} ${days === 1 ? "dia" : "dias"} · ${pickedGames.length} ${pickedGames.length === 1 ? "jogo" : "jogos"} · ${cities.join(" + ")}`}
             </p>
           </div>
         </div>
-        <span style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.45)", borderRadius: 999, padding: "3px 12px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap" }}>Protótipo</span>
+        <span style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.45)", borderRadius: 999, padding: "3px 12px", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: "#fff", textTransform: "uppercase", whiteSpace: "nowrap" }}>Do seu jeito</span>
       </div>
 
       <div style={{ padding: pad, display: "flex", flexDirection: "column", gap: 16 }}>
         <p style={{ fontFamily: FONT_BODY, fontSize: 14, lineHeight: 1.5, color: BODY, margin: 0 }}>
           Veja todos os jogos possíveis e marque os que quiser. Jogos que não cabem com os já marcados (por causa do deslocamento) ficam bloqueados, com o motivo.
-          {trip.gamesPossibleLimited ? " Este roteiro foi salvo antes: mostrando só os jogos das opções A, B e C. Gere um novo para ver todos." : ""}
+          {loadingAll ? " Carregando todos os jogos possíveis…" : ""}
         </p>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -133,7 +145,7 @@ export function MontarVoce({ trip, options, isMobile }) {
             </>
           )}
           {hasFav && <Chip active={onlyFav} onClick={() => setOnlyFav(!onlyFav)}>Só favoritos e clássicos</Chip>}
-          {fromA && <Chip onClick={useA}>Partir da opção A</Chip>}
+          {suggested && <Chip onClick={useSuggested}>Partir do roteiro sugerido</Chip>}
           {picked.size > 0 && <Chip onClick={() => setPicked(new Set())}>Limpar</Chip>}
         </div>
 
@@ -200,8 +212,13 @@ export function MontarVoce({ trip, options, isMobile }) {
           </div>
         )}
 
-        <div style={{ background: BG, border: `1.5px dashed ${BORDER}`, borderRadius: 8, padding: "13px 24px", textAlign: "center" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: MUTED, textTransform: "uppercase", margin: 0 }}>Escolher opção D — em breve (protótipo)</p>
+        <div
+          onClick={confirmed || picked.size === 0 ? undefined : () => onConfirm(pickedGames)}
+          style={{ background: confirmed ? "#fff" : picked.size === 0 ? BG : "#7c3aed", border: `1.5px solid ${confirmed ? GREEN : picked.size === 0 ? BORDER : "#7c3aed"}`, borderRadius: 8, padding: "13px 24px", textAlign: "center", cursor: confirmed || picked.size === 0 ? "default" : "pointer" }}
+        >
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: confirmed ? GREEN : picked.size === 0 ? MUTED : "#fff", textTransform: "uppercase", margin: 0 }}>
+            {confirmed ? "✓ Opção A escolhida" : picked.size === 0 ? "Marque ao menos um jogo" : saved && saved.custom ? "Atualizar opção A" : "Escolher opção A"}
+          </p>
         </div>
       </div>
     </div>
