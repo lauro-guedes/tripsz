@@ -1,5 +1,6 @@
 import "./globals.css";
 import { SITE_URL } from "../lib/siteUrl";
+import NativeBridge from "../components/NativeBridge";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -49,6 +50,7 @@ export const metadata = {
 
 export const viewport = {
   themeColor: "#00c853",
+  viewportFit: "cover", // usa a tela toda no app (notch); as margens seguras vêm do CSS .is-native
 };
 
 // Aquece a conexão (DNS + TLS) com o Supabase e o Google: "Entrar com Google" sai do site por esses dois endereços.
@@ -122,6 +124,7 @@ export default function RootLayout({ children }) {
             }, 10000);`,
           }}
         />
+        <NativeBridge />
         {children}
       </body>
     </html>

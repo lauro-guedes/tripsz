@@ -1,0 +1,16 @@
+{
+  "appId": "br.com.tripsz.app",
+  "appName": "tripsz",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.tripsz.com.br",
+    "cleartext": false,
+    "allowNavigation": ["www.tripsz.com.br", "tripsz.com.br", "*.supabase.co", "*.mercadopago.com.br", "*.mercadopago.com", "*.mercadolibre.com"]
+  },
+  "ios": { "contentInset": "never", "scheme": "tripsz" },
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1500, "backgroundColor": "#f8fafc", "showSpinner": false },
+    "StatusBar": { "style": "LIGHT", "backgroundColor": "#f8fafc" }
+  }
+}

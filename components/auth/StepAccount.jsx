@@ -1,5 +1,6 @@
 "use client";
 import { NomeUsuarioFields } from "./NomeUsuarioFields";
+import { signInWithGoogle } from "@/lib/nativeApp";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar } from "../nav/WizardChrome";
@@ -58,10 +59,7 @@ export function StepAccount({ answers, setAnswers, onNext, onBack, openLogin }) 
     google.run(async () => {
       setError(null);
       const supabase = supabaseBrowser();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
-      });
+      const { error } = await signInWithGoogle(supabase);
       if (error) setError(error.message);
       // O Supabase redireciona pro Google e volta sozinho; o onAuthStateChange
       // no App() detecta a sessão e avança o passo automaticamente.

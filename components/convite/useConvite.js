@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { signInWithGoogle } from "@/lib/nativeApp";
 import { authFetch } from "../../lib/authFetch";
 import { FINAL_INVITE_ERRORS, clearPendingInvite, redeemAndPrepareWelcome, redeemInviteCode, savePendingInvite } from "../../lib/pendingInvite";
 import { navigate } from "../../lib/navigate";
@@ -129,7 +130,7 @@ export function useConvite(code) {
     setBusy(true);
     setMsg(null);
     savePendingInvite(code); // o Google leva a pessoa pra fora do site; o app resgata quando ela voltar logada
-    const { error } = await supabaseBrowser().auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+    const { error } = await signInWithGoogle(supabaseBrowser());
     if (error) {
       setBusy(false);
       setMsg(err("Não foi possível entrar com o Google agora."));

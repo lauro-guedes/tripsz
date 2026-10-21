@@ -1,5 +1,6 @@
 "use client";
 import { NomeUsuarioFields } from "./NomeUsuarioFields";
+import { signInWithGoogle } from "@/lib/nativeApp";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
@@ -57,10 +58,7 @@ export function CriarConta({ onDone, onLogin, onHome }) {
     google.run(async () => {
       setError(null);
       const supabase = supabaseBrowser();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
-      });
+      const { error: oauthError } = await signInWithGoogle(supabase);
       if (oauthError) setError(oauthError.message);
       return !!oauthError; // sem erro: a página já está indo pro Google
     });

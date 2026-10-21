@@ -1,5 +1,6 @@
 "use client";
 import { supabaseBrowser } from "../../lib/supabase";
+import { signInWithGoogle } from "@/lib/nativeApp";
 import { BG, BORDER, FONT_BODY, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
 import { Spinner } from "../ui/Spinner";
@@ -61,10 +62,7 @@ export function LoginModal({ onClose, onCreateAccount }) {
     google.run(async () => {
       setLoginError(null);
       const supabase = supabaseBrowser();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
-      });
+      const { error } = await signInWithGoogle(supabase);
       if (error) setLoginError(error.message);
       return !!error; // sem erro: a página já está indo pro Google
     });

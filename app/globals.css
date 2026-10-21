@@ -3,3 +3,6 @@
 /* Campo de data no iOS/Safari: sem largura mínima própria e texto alinhado à esquerda. */
 input[type="date"] { min-width: 0; max-width: 100%; }
 input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
+
+/* Dentro do app (Capacitor): respeita o notch e a barra inferior; sem seleção/realce de toque de site. */
+html.is-native body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }

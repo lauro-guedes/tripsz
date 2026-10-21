@@ -12,3 +12,8 @@ out/
 .DS_Store
 *.log
 .vercel/
+
+# app nativo (gerado localmente)
+mobile/node_modules/
+mobile/android/
+mobile/ios/
