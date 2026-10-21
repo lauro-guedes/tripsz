@@ -7,6 +7,7 @@ import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, GREEN_BUTTON, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
 import { PHOTO_STADIUM } from "../landing/LandingPage";
+import { isNativeApp } from "../../lib/nativeApp";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav, AvatarCircle } from "../nav/AuthedNav";
 import { Badge } from "../ui/Badge";
@@ -528,6 +529,13 @@ export function MeuPerfil({ onNavigate, onLogout }) {
         </div>
       )}
 
+      {isNativeApp() && (
+        <div style={{ padding: "0 16px 24px" }}>
+          <div onClick={guardedLogout} role="button" style={{ border: "1px solid #fecaca", background: "#fff", borderRadius: 12, padding: "14px 16px", textAlign: "center", cursor: "pointer" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#dc2626", margin: 0 }}>Sair da conta</p>
+          </div>
+        </div>
+      )}
       <AuthedFooter />
     </div>
   );

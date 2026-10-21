@@ -1,61 +1,63 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CalendarDays } from "lucide-react";
-import { BORDER, FONT_DISPLAY, GREEN, GREEN_BG, TEXT } from "../../lib/tokens";
-import { Icon } from "../ui/Icon";
+import { MapPin, PanelLeft, Plus, Search } from "lucide-react";
+import { supabaseBrowser } from "../../lib/supabase";
+import { BORDER, FONT_DISPLAY, GREEN } from "../../lib/tokens";
+import { initials } from "../../lib/textUtils";
 
-/** Barra de navegação de baixo do APP (só depois de logado). Os grupos abrem uma lista curta acima da barra. */
-const TABS = [
-  { id: "inicio", label: "Início", icon: "stadium", screens: ["buscar"] },
-  { id: "jogos", label: "Meus jogos", icon: "soccerBall", screens: ["jogos", "registrar-jogo", "acompanhantes", "jogo-salvo"] },
-  { id: "roteiros", label: "Roteiros", icon: "planeTakeoff", screens: ["roteiros", "roteiro", "resultado"] },
-  { id: "calendario", label: "Calendário", icon: null, screens: ["calendario"] },
-  { id: "passaporte", label: "Passaporte", icon: "shieldBadge", screens: ["nivel", "conquistas", "ranking"], children: [["Nível de Torcedor", "nivel"], ["Meu Passaporte", "conquistas"], ["Ranking", "ranking"]] },
-];
+/**
+ * Barra de baixo do APP (só depois de logado): Home · Explorar · (+) adicionar jogo · Estádios · Perfil.
+ * Jogos, Assinatura, Conquistas, Roteiros e Ranking ficam nas abas do topo (AuthedNav).
+ */
+const HOME = ["buscar"];
+const EXPLORE = ["calendario"];
+const ADD = ["registrar-jogo"];
+const PROFILE = ["perfil"];
 
-// Telas que mostram a barra mesmo sem aba própria (acessadas pelo sino e pelo menu da foto, no topo).
-const EXTRA_SCREENS = ["perfil", "notificacoes", "assinatura", "bem-vindo"];
-export const TAB_SCREENS = new Set([...TABS.flatMap((t) => t.screens), ...EXTRA_SCREENS]);
+// Telas que mostram a barra: as da barra, as do topo e as extras (sino, boas-vindas).
+export const TAB_SCREENS = new Set([
+  ...HOME, ...EXPLORE, ...ADD, ...PROFILE,
+  "jogos", "acompanhantes", "jogo-salvo", "assinatura", "conquistas", "nivel",
+  "roteiros", "roteiro", "resultado", "ranking", "notificacoes", "bem-vindo",
+]);
 export const TAB_BAR_HEIGHT = 60;
 
 export function BottomTabBar({ screen, onNavigate }) {
-  const [open, setOpen] = useState(null);
-  useEffect(() => setOpen(null), [screen]);
+  const [me, setMe] = useState({ name: "", avatar: "" });
+  useEffect(() => {
+    let alive = true;
+    supabaseBrowser().auth.getUser().then(({ data }) => {
+      const m = data?.user?.user_metadata || {};
+      if (alive) setMe({ name: m.full_name || m.name || data?.user?.email || "", avatar: m.avatar_url || m.picture || "" });
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
-  const go = (key) => { setOpen(null); onNavigate(key); };
-  const group = TABS.find((t) => t.id === open);
+  const item = (on, label, onClick, icon) => {
+    const color = on ? GREEN : "#63738c";
+    return (
+      <div onClick={onClick} style={{ height: TAB_BAR_HEIGHT, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer" }}>
+        {icon(color)}
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 500, fontSize: 10.5, color, margin: 0 }}>{label}</p>
+      </div>
+    );
+  };
 
   return (
-    <>
-      {group && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 70 }} onClick={() => setOpen(null)}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.35)" }} />
-          <div onClick={(e) => e.stopPropagation()} style={{ position: "absolute", left: 12, right: 12, bottom: `calc(${TAB_BAR_HEIGHT + 8}px + env(safe-area-inset-bottom))`, background: "#fff", borderRadius: 16, border: `1px solid ${BORDER}`, boxShadow: "0 12px 32px rgba(15,23,42,0.2)", overflow: "hidden" }}>
-            {group.children.map(([label, key]) => {
-              const on = screen === key;
-              return (
-                <div key={key} onClick={() => go(key)} style={{ padding: "16px 20px", borderBottom: `1px solid ${BORDER}`, background: on ? GREEN_BG : "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 500, fontSize: 15, color: on ? GREEN : TEXT, margin: 0 }}>{label}</p>
-                </div>
-              );
-            })}
-          </div>
+    <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 80, background: "#fff", borderTop: `1px solid ${BORDER}`, borderRadius: "20px 20px 0 0", paddingBottom: "env(safe-area-inset-bottom)", display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
+      {item(HOME.includes(screen), "Home", () => onNavigate("buscar"), (c) => <PanelLeft size={22} color={c} strokeWidth={2} />)}
+      {item(EXPLORE.includes(screen), "Explorar", () => onNavigate("calendario"), (c) => <Search size={22} color={c} strokeWidth={2} />)}
+      <div onClick={() => onNavigate("registrar-jogo")} role="button" aria-label="Adicionar jogo" style={{ height: TAB_BAR_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <div style={{ width: 48, height: 48, borderRadius: 24, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: ADD.includes(screen) ? "0 0 0 4px rgba(0,200,83,0.25)" : "0 4px 10px rgba(0,200,83,0.35)" }}>
+          <Plus size={26} color="#fff" strokeWidth={2.6} />
         </div>
-      )}
-      <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 80, background: "#fff", borderTop: `1px solid ${BORDER}`, paddingBottom: "env(safe-area-inset-bottom)", display: "grid", gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}>
-        {TABS.map((t) => {
-          const on = t.screens.includes(screen) || open === t.id;
-          const color = on ? GREEN : "#63738c";
-          return (
-            <div key={t.id} onClick={() => (t.children ? setOpen(open === t.id ? null : t.id) : go(t.screens[0]))} style={{ height: TAB_BAR_HEIGHT, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", position: "relative" }}>
-              <div style={{ position: "relative", display: "flex" }}>
-                {t.icon ? <Icon name={t.icon} size={22} color={color} /> : <CalendarDays size={22} color={color} strokeWidth={2} />}
-              </div>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 500, fontSize: 10.5, color, margin: 0 }}>{t.label}</p>
-            </div>
-          );
-        })}
-      </nav>
-    </>
+      </div>
+      {item(false, "Estádios", () => { window.location.href = "/estadios"; }, (c) => <MapPin size={22} color={c} strokeWidth={2} />)}
+      {item(PROFILE.includes(screen), "Perfil", () => onNavigate("perfil"), (c) => (
+        <div style={{ width: 24, height: 24, borderRadius: 12, background: "#0f172a", boxShadow: PROFILE.includes(screen) ? `0 0 0 2px ${GREEN}` : "none", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {me.avatar ? <img src={me.avatar} alt="" width={24} height={24} style={{ width: 24, height: 24, objectFit: "cover" }} /> : <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#fff", margin: 0 }}>{initials(me.name)}</p>}
+        </div>
+      ))}
+    </nav>
   );
 }
