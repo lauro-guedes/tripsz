@@ -217,7 +217,7 @@ export default function App() {
     const isInstalledApp = inApp || window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
     if (isInstalledApp && (pathScreen || restoredScreen || "landing") === "landing") {
       supabase.auth.getSession().then(({ data }) => {
-        if (data?.session) setScreen((current) => (current === "landing" ? "roteiros" : current));
+        if (data?.session) setScreen((current) => (current === "landing" ? (inApp ? "buscar" : "roteiros") : current));
       }).finally(() => { if (inApp) removeLoader(); });
     } else if (inApp) removeLoader();
 
@@ -394,8 +394,8 @@ export default function App() {
       <FontImports />
       {screen === "landing" && native === true && (
         <Onboarding
-          onCreateAccount={() => { setPostLoginTarget("roteiros"); setScreen("criarconta"); }}
-          onLogin={() => { setPostLoginTarget("roteiros"); setShowGlobalLoginModal(true); }}
+          onCreateAccount={() => { setPostLoginTarget("buscar"); setScreen("criarconta"); }}
+          onLogin={() => { setPostLoginTarget("buscar"); setShowGlobalLoginModal(true); }}
         />
       )}
       {screen === "landing" && native !== true && (
@@ -536,7 +536,7 @@ export default function App() {
           onCreateAccount={() => { setShowGlobalLoginModal(false); setScreen("criarconta"); }}
         />
       )}
-      {native === true && TAB_SCREENS.has(screen) && <BottomTabBar screen={screen} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {native === true && TAB_SCREENS.has(screen) && <BottomTabBar screen={screen} onNavigate={(key) => setScreen(key)} />}
     </div>
   );
 }

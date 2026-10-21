@@ -6,3 +6,5 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 
 
 /* Dentro do app (Capacitor): respeita o notch e a barra inferior; sem seleção/realce de toque de site. */
 html.is-native body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+/* No app não há rodapé de site. */
+html.is-native .tripsz-site-footer { display: none !important; }

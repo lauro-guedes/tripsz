@@ -114,7 +114,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
   return (
     <div>
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 48px", position: "relative" }}>
-        <div style={{ cursor: "pointer" }} onClick={() => go("roteiros")}><Wordmark /></div>
+        <div style={{ cursor: "pointer" }} onClick={() => go(isNativeApp() ? "buscar" : "roteiros")}><Wordmark /></div>
         {!isMobile && (
           <div style={{ display: "flex", gap: 36, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
             {NAV_MAIN.map((it) => {
@@ -167,7 +167,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
           </div>
           {menuOpen && (
             <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 200, overflow: "hidden", zIndex: 20 }}>
-              {[["Notificações", "notificacoes"], ["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
+              {[...(isNativeApp() ? [["Meus roteiros", "roteiros"]] : []), ["Notificações", "notificacoes"], ["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
                 <div key={key} onClick={() => go(key)} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
                   {key === "notificacoes" && notifCount > 0 && (

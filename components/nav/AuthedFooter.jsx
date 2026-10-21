@@ -36,7 +36,7 @@ export function AuthedFooter() {
   };
 
   return (
-    <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: isMobile ? "40px 16px 24px" : "80px 80px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64 }}>
+    <div className="tripsz-site-footer" style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: isMobile ? "40px 16px 24px" : "80px 80px 40px", display: "flex", flexDirection: "column", gap: isMobile ? 32 : 64 }}>
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 32 : 0, alignItems: "flex-start", justifyContent: "space-between" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, width: isMobile ? "100%" : 360 }}>
           <Wordmark />
