@@ -1,6 +1,8 @@
 "use client";
 import { authFetch } from "../../lib/authFetch";
 import { PagamentoModal } from "./PagamentoModal";
+import { StoreCheckout } from "./StoreCheckout";
+import { isNativeApp } from "../../lib/nativeApp";
 
 async function json(res) {
   let data = {};
@@ -16,6 +18,8 @@ async function json(res) {
 /** Checkout transparente do Passaporte: mensal = cartão (recorrente); anual = cartão (recorrente) ou Pix (avulso, 365 dias). */
 export function PassportCheckout({ plan, onClose, onDone }) {
   const annual = plan === "annual";
+  // Dentro do app a assinatura é obrigatoriamente da loja (Apple/Google); no site segue o Mercado Pago.
+  if (isNativeApp()) return <StoreCheckout plan={plan} onClose={onClose} onApproved={() => (onDone ? onDone() : window.location.reload())} />;
   return (
     <PagamentoModal
       amount={annual ? 175 : 16.9}

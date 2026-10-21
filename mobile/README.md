@@ -31,3 +31,13 @@ Só se mudar algo nativo (ícone, permissões, plugin, esquema de link). Mudanç
 
 ## Pagamento
 Apple e Google exigem a compra dentro do app (In-App Purchase / Play Billing) para assinaturas digitais. Antes de publicar, decida: vender a assinatura só pelo site (e o app só libera quem já assinou) ou integrar a compra nativa.
+
+## Assinatura dentro do app (Apple / Google via RevenueCat)
+O site vende pelo Mercado Pago; dentro do app a compra é da App Store / Google Play, intermediada pelo RevenueCat (um só código para as duas lojas). A compra grava na mesma tabela `subscriptions` (`payment_method_id` = `apple` ou `google`), então o acesso ao Passaporte funciona igual.
+
+1. **Lojas:** crie a assinatura em *App Store Connect* e no *Google Play Console*, com dois produtos (mensal R$ 16,90 e anual R$ 175,00) no mesmo grupo.
+2. **RevenueCat** (conta grátis até certo faturamento): crie o projeto, conecte as duas lojas, crie o *entitlement* `premium`, anexe os dois produtos e monte uma *offering* atual com pacotes Mensal e Anual.
+3. **Webhook** no RevenueCat: URL `https://www.tripsz.com.br/api/revenuecat/webhook`, cabeçalho Authorization com um segredo seu.
+4. **Variáveis na Vercel:** `REVENUECAT_SECRET_API_KEY` (chave secreta v1), `REVENUECAT_WEBHOOK_AUTH` (o segredo do passo 3), `NEXT_PUBLIC_REVENUECAT_IOS_KEY`, `NEXT_PUBLIC_REVENUECAT_ANDROID_KEY` (chaves públicas do SDK) e, se mudar o nome, `REVENUECAT_ENTITLEMENT` (padrão `premium`). Depois, redeploy.
+5. No Xcode, ative a capability *In-App Purchase*. Rode `cd mobile && npm install && npx cap sync`.
+6. Teste com conta *sandbox* (Apple) e *licence tester* (Google) antes de publicar.

@@ -233,6 +233,8 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
   // não devolve essa data pronta pra gente exibir, então calculamos com
   // base na frequência do plano (mensal = +1 mês, anual = +1 ano).
   const isPix = sub?.payment_method_id === "pix";
+  const isStore = sub?.payment_method_id === "apple" || sub?.payment_method_id === "google"; // comprada no app: gerenciada na loja
+  const storeManageUrl = sub?.payment_method_id === "apple" ? "https://apps.apple.com/account/subscriptions" : "https://play.google.com/store/account/subscriptions";
   const validUntil = sub?.current_period_end ? new Date(`${sub.current_period_end}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }) : null;
   const nextBilling = !isPix && sub?.created_at
     ? (() => {
@@ -275,7 +277,12 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: GREEN, margin: 0 }}>{planPrice}</p>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {isPix ? (
+                  {isStore ? (
+                    <>
+                      {validUntil && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Válida até: {validUntil}</p>}
+                      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Assinada pelo app ({sub.payment_method_id === "apple" ? "App Store" : "Google Play"}) — renovação e cancelamento são feitos na loja</p>
+                    </>
+                  ) : isPix ? (
                     <>
                       {validUntil && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: MUTED, margin: 0 }}>Acesso válido até: {validUntil}</p>}
                       <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: MUTED, margin: 0 }}>Pago por Pix — não renova automaticamente</p>
@@ -289,16 +296,24 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
                 </div>
                 {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0 }}>{error}</p>}
                 <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                  {isStore ? (
+                    <a href={storeManageUrl} target="_blank" rel="noreferrer" style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", textDecoration: "none" }}>
+                      <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT }}>Gerenciar na {sub.payment_method_id === "apple" ? "App Store" : "Google Play"}</span>
+                    </a>
+                  ) : (
                   <div onClick={switching || canceling ? undefined : isPix ? () => setCheckoutPlan("annual") : () => handleSwitchPlan(sub.plan === "annual" ? "monthly" : "annual")} style={{ border: `1px solid ${BORDER}`, borderRadius: 999, padding: "10px 20px", cursor: switching ? "default" : "pointer", opacity: switching ? 0.6 : 1 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{switching ? "Processando..." : isPix ? "Renovar por mais 12 meses" : `Trocar para ${sub.plan === "annual" ? "mensal" : "anual"}`}</p>
                   </div>
-                  {!isPix && <p onClick={() => setShowCancelModal(true)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Cancelar assinatura</p>}
+                  )}
+                  {!isPix && !isStore && <p onClick={() => setShowCancelModal(true)} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#ef4444", margin: 0, cursor: "pointer" }}>Cancelar assinatura</p>}
                 </div>
               </div>
 
               <div style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0px 4px 6px rgba(15,23,42,0.05)", borderRadius: 16, padding: isMobile ? 20 : 32, display: "flex", flexDirection: "column", gap: 12 }}>
                 <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 16, color: TEXT, margin: 0 }}>Método de Pagamento</p>
-                {sub?.payment_method_id ? (
+                {isStore ? (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Cobrado pela {sub.payment_method_id === "apple" ? "App Store" : "Google Play"}. Forma de pagamento e faturas ficam na sua conta da loja.</p>
+                ) : sub?.payment_method_id ? (
                   <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                     <CreditCard size={32} color={GREEN} />
                     <div>
@@ -309,7 +324,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
                 ) : (
                   <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: MUTED, margin: 0 }}>Ainda não identificamos a forma de pagamento — isso aparece assim que o Mercado Pago confirmar a assinatura.</p>
                 )}
-                {sub?.status === "active" && (
+                {sub?.status === "active" && !isStore && (
                   <div onClick={() => setShowCardModal(true)} style={{ border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 16px", textAlign: "center", cursor: "pointer", width: isMobile ? "100%" : 200 }}>
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>Atualizar cartão</p>
                   </div>
