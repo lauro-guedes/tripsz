@@ -5,7 +5,7 @@ O app é uma casca Capacitor que abre **https://www.tripsz.com.br** numa WebView
 O `www/index.html` é só uma tela reserva exigida pelo Capacitor; com `server.url` o app carrega o site.
 
 ## Primeira vez (no seu computador)
-Requisitos: Node 18+; Android Studio (Android); Mac com Xcode (iOS).
+Requisitos: Node 20+; Android Studio (Android); Mac com Xcode (iOS).
 
 ```bash
 cd mobile
