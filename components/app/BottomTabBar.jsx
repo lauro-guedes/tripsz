@@ -8,12 +8,13 @@ import { Icon } from "../ui/Icon";
 const TABS = [
   { id: "inicio", label: "Início", icon: "stadium", screens: ["buscar"] },
   { id: "jogos", label: "Meus jogos", icon: "soccerBall", screens: ["jogos", "registrar-jogo", "acompanhantes", "jogo-salvo"] },
+  { id: "roteiros", label: "Roteiros", icon: "planeTakeoff", screens: ["roteiros", "roteiro", "resultado"] },
   { id: "calendario", label: "Calendário", icon: null, screens: ["calendario"] },
   { id: "passaporte", label: "Passaporte", icon: "shieldBadge", screens: ["nivel", "conquistas", "ranking"], children: [["Nível de Torcedor", "nivel"], ["Meu Passaporte", "conquistas"], ["Ranking", "ranking"]] },
 ];
 
-// Telas que mostram a barra mesmo sem aba própria (acessadas pelo menu da conta, no topo).
-const EXTRA_SCREENS = ["roteiros", "roteiro", "resultado", "perfil", "notificacoes", "assinatura", "bem-vindo"];
+// Telas que mostram a barra mesmo sem aba própria (acessadas pelo sino e pelo menu da foto, no topo).
+const EXTRA_SCREENS = ["perfil", "notificacoes", "assinatura", "bem-vindo"];
 export const TAB_SCREENS = new Set([...TABS.flatMap((t) => t.screens), ...EXTRA_SCREENS]);
 export const TAB_BAR_HEIGHT = 60;
 

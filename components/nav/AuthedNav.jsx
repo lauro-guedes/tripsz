@@ -9,6 +9,7 @@ import { Wordmark } from "../ui/Wordmark";
 import { useIsMobile } from "../ui/useIsMobile";
 import { useEffect, useRef, useState } from "react";
 import { isNativeApp } from "../../lib/nativeApp";
+import { Bell } from "lucide-react";
 
 export function AvatarCircle({ url, name, size = 36, fontSize }) {
   const [broken, setBroken] = useState(false);
@@ -148,11 +149,18 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
             })}
           </div>
         )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {isNativeApp() && (
+          <div onClick={() => go("notificacoes")} role="button" aria-label="Notificações" style={{ position: "relative", width: 40, height: 40, borderRadius: 20, background: active === "notificacoes" ? GREEN_BG : "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+            <Bell size={20} color={active === "notificacoes" ? GREEN : TEXT} />
+            {notifCount > 0 && <span style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 4px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, lineHeight: 1 }}>{notifCount > 9 ? "9+" : notifCount}</span>}
+          </div>
+        )}
         <div style={{ position: "relative" }}>
           <div onClick={() => { setOpenGroup(null); setMenuOpen((v) => !v); }} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", padding: "8px 12px 8px 8px", borderRadius: 999, cursor: "pointer" }}>
             <div style={{ position: "relative", display: "flex" }}>
               <AvatarCircle url={userAvatar} name={userName} size={isMobile ? 28 : 36} fontSize={isMobile ? 12 : 14} />
-              {notifCount > 0 && (
+              {notifCount > 0 && !isNativeApp() && (
                 <span aria-label={`${notifCount} notificações`} style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 16, height: 16, padding: "0 3px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 9, lineHeight: 1 }}>{notifCount > 9 ? "9+" : notifCount}</span>
               )}
             </div>
@@ -167,7 +175,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
           </div>
           {menuOpen && (
             <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 8, boxShadow: "0px 8px 16px rgba(15,23,42,0.1)", width: 200, overflow: "hidden", zIndex: 20 }}>
-              {[...(isNativeApp() ? [["Meus roteiros", "roteiros"]] : []), ["Notificações", "notificacoes"], ["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]].map(([label, key]) => (
+              {(isNativeApp() ? [["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]] : [["Notificações", "notificacoes"], ["Meu perfil", "perfil"], ["Minha assinatura", "assinatura"]]).map(([label, key]) => (
                 <div key={key} onClick={() => go(key)} style={{ padding: "12px 16px", cursor: "pointer", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: active === key ? GREEN : TEXT, fontWeight: active === key ? 700 : 500, margin: 0 }}>{label}</p>
                   {key === "notificacoes" && notifCount > 0 && (
@@ -180,6 +188,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
       {!emailConfirmed && (
