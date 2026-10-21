@@ -7,10 +7,10 @@ import { Spinner } from "../ui/Spinner";
 import { useIsMobile } from "../ui/useIsMobile";
 import { ResetPasswordModal } from "./ResetPasswordModal";
 import { useGoogleLoading } from "./useGoogleLoading";
-import { Eye, EyeOff, X } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff, X } from "lucide-react";
 import { useState } from "react";
 
-export function LoginModal({ onClose, onCreateAccount }) {
+export function LoginModal({ onClose, onCreateAccount, fullScreen = false }) {
   const isMobile = useIsMobile();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -68,15 +68,25 @@ export function LoginModal({ onClose, onCreateAccount }) {
     });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "#0f172a", opacity: 0.56 }} />
-      <div style={{ position: "relative", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: isMobile ? "calc(100% - 32px)" : 400, maxWidth: 400, maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 20, boxShadow: "0px 12px 16px rgba(15,23,42,0.1)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso</p>
-          <div onClick={onClose} style={{ background: BG, border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <X size={16} color={TEXT} />
+    <div style={fullScreen ? { position: "fixed", inset: 0, zIndex: 50, background: "#fff", overflowY: "auto", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" } : { position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {!fullScreen && <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "#0f172a", opacity: 0.56 }} />}
+      <div style={fullScreen ? { position: "relative", padding: "16px 24px 32px", maxWidth: 440, margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 20 } : { position: "relative", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: isMobile ? "calc(100% - 32px)" : 400, maxWidth: 400, maxHeight: "calc(100dvh - 32px)", overflowY: "auto", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 20, boxShadow: "0px 12px 16px rgba(15,23,42,0.1)" }}>
+        {fullScreen ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div onClick={onClose} role="button" aria-label="Voltar" style={{ width: 40, height: 40, borderRadius: 20, background: BG, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <ChevronLeft size={22} color={TEXT} />
+            </div>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 30, color: TEXT, margin: 0 }}>Entrar</p>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 15, color: MUTED, margin: 0 }}>Acesse sua conta para ver seus roteiros e seu Passaporte.</p>
           </div>
-        </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 20, color: TEXT, margin: 0 }}>Acesso</p>
+            <div onClick={onClose} style={{ background: BG, border: `1px solid ${BORDER}`, width: 32, height: 32, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <X size={16} color={TEXT} />
+            </div>
+          </div>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
           <div role="button" aria-busy={google.loading} onClick={google.loading ? undefined : handleGoogleLogin} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", padding: "14px 24px", borderRadius: 12, width: "100%", cursor: google.loading ? "default" : "pointer", opacity: google.loading ? 0.75 : 1 }}>

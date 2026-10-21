@@ -8,6 +8,7 @@ import { Icon } from "../ui/Icon";
 import { Wordmark } from "../ui/Wordmark";
 import { useIsMobile } from "../ui/useIsMobile";
 import { useEffect, useRef, useState } from "react";
+import { isNativeApp } from "../../lib/nativeApp";
 
 export function AvatarCircle({ url, name, size = 36, fontSize }) {
   const [broken, setBroken] = useState(false);
@@ -189,7 +190,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
           </p>
         </div>
       )}
-      {isMobile && (
+      {isMobile && !isNativeApp() && (
         <div>
           <div style={{ background: "#fff", borderBottom: openGroup ? "none" : `1px solid ${BORDER}`, display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", alignItems: "stretch", gap: 4, padding: "6px 8px" }}>
             {NAV_MAIN.map((it) => {

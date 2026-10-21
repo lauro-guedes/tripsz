@@ -23,6 +23,9 @@ import { CriarConta } from "./auth/CriarConta";
 import { LoginModal } from "./auth/LoginModal";
 import { StepAccount } from "./auth/StepAccount";
 import { LandingPage } from "./landing/LandingPage";
+import { Onboarding } from "./app/Onboarding";
+import { BottomTabBar, TAB_SCREENS } from "./app/BottomTabBar";
+import { isNativeApp } from "../lib/nativeApp";
 import { LoadingScreen } from "./wizard/LoadingScreen";
 import { StepDatas } from "./wizard/StepDatas";
 import { StepDestino } from "./wizard/StepDestino";
@@ -56,9 +59,14 @@ export default function App() {
   // Remove a tela de carregamento estática (do layout.js) assim que o
   // app de verdade termina de montar — é o sinal de que já passamos do
   // momento "tela branca" que a demora de ~7s deixava aparecer.
+  // No app (Capacitor) a landing é trocada pela apresentação; por isso só descobrimos isso aqui, depois de
+  // montar (o servidor sempre entrega a landing do site). Dentro do app o loader fica até saber se há sessão.
+  const [native, setNative] = useState(null);
+  const removeLoader = () => document.getElementById("app-shell-loader")?.remove();
   useEffect(() => {
-    const el = document.getElementById("app-shell-loader");
-    if (el) el.remove();
+    const n = isNativeApp();
+    setNative(n);
+    if (!n) removeLoader();
   }, []);
 
   const [screen, setScreen] = useState("landing");
@@ -205,12 +213,13 @@ export default function App() {
     // App instalado na tela de início (iPhone/Android): abre sempre em "/", que é a
     // página inicial. Se a pessoa já tem sessão, leva direto pra Meus Roteiros em vez
     // de mostrar o "Entrar" de novo. No navegador comum a página inicial continua igual.
-    const isInstalledApp = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    const inApp = isNativeApp();
+    const isInstalledApp = inApp || window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
     if (isInstalledApp && (pathScreen || restoredScreen || "landing") === "landing") {
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session) setScreen((current) => (current === "landing" ? "roteiros" : current));
-      });
-    }
+      }).finally(() => { if (inApp) removeLoader(); });
+    } else if (inApp) removeLoader();
 
     // Convite guardado antes do Google/confirmação de e-mail: resgata assim que há sessão. O resgate é no
     // servidor (pelo código), idempotente, e só é descartado em erro definitivo (vencido, já usado...).
@@ -381,9 +390,15 @@ export default function App() {
   }, [screen, initialized, chosenOption, answers.tripAnswersId]);
 
   return (
-    <div style={{ width: "100%", minHeight: "100vh" }}>
+    <div style={{ width: "100%", minHeight: "100vh", paddingBottom: native && TAB_SCREENS.has(screen) ? "calc(60px + env(safe-area-inset-bottom))" : 0 }}>
       <FontImports />
-      {screen === "landing" && (
+      {screen === "landing" && native === true && (
+        <Onboarding
+          onCreateAccount={() => { setPostLoginTarget("roteiros"); setScreen("criarconta"); }}
+          onLogin={() => { setPostLoginTarget("roteiros"); setShowGlobalLoginModal(true); }}
+        />
+      )}
+      {screen === "landing" && native !== true && (
         <LandingPage
           onStart={async () => {
             const supabase = supabaseBrowser();
@@ -516,10 +531,12 @@ export default function App() {
       {screen === "ranking" && <RankingTorcedores onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {showGlobalLoginModal && (
         <LoginModal
+          fullScreen={native === true}
           onClose={() => setShowGlobalLoginModal(false)}
           onCreateAccount={() => { setShowGlobalLoginModal(false); setScreen("criarconta"); }}
         />
       )}
+      {native === true && TAB_SCREENS.has(screen) && <BottomTabBar screen={screen} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
     </div>
   );
 }
