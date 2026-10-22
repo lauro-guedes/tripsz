@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { MapPin, PanelLeft, Plus, Search } from "lucide-react";
+import { Home, Plus, Search } from "lucide-react";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BORDER, FONT_DISPLAY, GREEN } from "../../lib/tokens";
+import { Icon } from "../ui/Icon";
 import { initials } from "../../lib/textUtils";
 
 /**
@@ -13,6 +14,7 @@ const HOME = ["buscar"];
 const EXPLORE = ["calendario"];
 const ADD = ["registrar-jogo"];
 const PROFILE = ["perfil"];
+const STADIUMS = ["jogos", "jogo-salvo", "acompanhantes"]; // estádios = os jogos que a pessoa já foi
 
 // Telas que mostram a barra: as da barra, as do topo e as extras (sino, boas-vindas).
 export const TAB_SCREENS = new Set([
@@ -45,14 +47,14 @@ export function BottomTabBar({ screen, onNavigate }) {
 
   return (
     <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 80, background: "#fff", borderTop: `1px solid ${BORDER}`, borderRadius: "20px 20px 0 0", paddingBottom: "env(safe-area-inset-bottom)", display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
-      {item(HOME.includes(screen), "Home", () => onNavigate("buscar"), (c) => <PanelLeft size={22} color={c} strokeWidth={2} />)}
+      {item(HOME.includes(screen), "Home", () => onNavigate("buscar"), (c) => <Home size={22} color={c} strokeWidth={2} />)}
       {item(EXPLORE.includes(screen), "Explorar", () => onNavigate("calendario"), (c) => <Search size={22} color={c} strokeWidth={2} />)}
       <div onClick={() => onNavigate("registrar-jogo")} role="button" aria-label="Adicionar jogo" style={{ height: TAB_BAR_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
         <div style={{ width: 48, height: 48, borderRadius: 24, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: ADD.includes(screen) ? "0 0 0 4px rgba(0,200,83,0.25)" : "0 4px 10px rgba(0,200,83,0.35)" }}>
           <Plus size={26} color="#fff" strokeWidth={2.6} />
         </div>
       </div>
-      {item(false, "Estádios", () => { window.location.href = "/estadios"; }, (c) => <MapPin size={22} color={c} strokeWidth={2} />)}
+      {item(STADIUMS.includes(screen), "Estádios", () => onNavigate("jogos"), (c) => <Icon name="stadium" size={22} color={c} />)}
       {item(PROFILE.includes(screen), "Perfil", () => onNavigate("perfil"), (c) => (
         <div style={{ width: 24, height: 24, borderRadius: 12, background: "#0f172a", boxShadow: PROFILE.includes(screen) ? `0 0 0 2px ${GREEN}` : "none", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {me.avatar ? <img src={me.avatar} alt="" width={24} height={24} style={{ width: 24, height: 24, objectFit: "cover" }} /> : <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#fff", margin: 0 }}>{initials(me.name)}</p>}

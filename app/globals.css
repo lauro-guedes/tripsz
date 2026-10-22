@@ -8,3 +8,12 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 
 html.is-native body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
 /* No app não há rodapé de site. */
 html.is-native .tripsz-site-footer { display: none !important; }
+
+/* APP: campo selecionado fica com borda verde */
+html.is-native input:focus,
+html.is-native textarea:focus,
+html.is-native select:focus {
+  border-color: #00c853 !important;
+  box-shadow: 0 0 0 1px #00c853 !important;
+  outline: none !important;
+}
