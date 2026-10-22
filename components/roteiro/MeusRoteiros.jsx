@@ -102,14 +102,14 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0 }}>
+      <div className="app-hero" style={{ position: "relative", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
+        <div className="app-hero-bg" style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "rgba(248,250,252,0.9)" }} />
         </div>
         <Badge>Planejamento Ativo</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0, position: "relative" }}>Biblioteca de Roteiros</p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0, position: "relative", maxWidth: 700 }}>Acompanhe, duplique ou crie variações de trajetos para assistir aos melhores espetáculos de arquibancada do mundo.</p>
+        <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0, position: "relative" }}>Biblioteca de Roteiros</p>
+        <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0, position: "relative", maxWidth: 700 }}>Acompanhe, duplique ou crie variações de trajetos para assistir aos melhores espetáculos de arquibancada do mundo.</p>
         <div style={{ position: "relative" }}>
           <Button onClick={onCreateNew}>Criar Novo Roteiro</Button>
         </div>

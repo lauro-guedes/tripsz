@@ -250,12 +250,12 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
   return (
     <div style={{ background: BG, width: "100%" }}>
       {checkoutPlan && <PassportCheckout plan={checkoutPlan} onClose={() => setCheckoutPlan(null)} onDone={() => { setCheckoutPlan(null); load(); }} />}
-      <AuthedNav active="perfil" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+      <AuthedNav active="assinatura" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
+      <div className="app-hero" style={{ position: "relative", display: "flex", flexDirection: "column", gap: 16, padding: isMobile ? `32px ${px}` : `48px ${px}`, overflow: "hidden" }}>
         <Badge>Configurações de Conta</Badge>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Minha Assinatura</p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>Gerencie seu plano, método de pagamento e histórico de faturas.</p>
+        <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, color: TEXT, margin: 0 }}>Minha Assinatura</p>
+        <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 14, color: MUTED, margin: 0 }}>Gerencie seu plano, método de pagamento e histórico de faturas.</p>
       </div>
 
       <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 24, padding: isMobile ? `24px ${px} 48px` : `40px ${px} 80px` }}>

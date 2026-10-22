@@ -369,11 +369,11 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
     <div style={{ background: BG, width: "100%" }}>
       <AuthedNav active="conquistas" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
 
-      <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `80px ${px}` }}>
+      <div className="app-hero" style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `80px ${px}` }}>
         <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24, padding: isMobile ? `0 ${px}` : 0 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
-          <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
+          <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
+          <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
           <div><Button onClick={onCreateNew}>Montar Outra Viagem</Button></div>
         </div>
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 16, padding: 32, width: isMobile ? "calc(100% - 32px)" : 420, maxWidth: "100%", boxSizing: "border-box", alignSelf: isMobile ? "center" : undefined, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)" }}>

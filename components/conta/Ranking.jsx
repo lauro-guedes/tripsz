@@ -137,8 +137,8 @@ export function RankingTorcedores({ onNavigate, onLogout }) {
           <Badge>Comunidade tripsz</Badge>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: isMobile ? "100%" : 700 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: isMobile ? 28 : 40, color: TEXT, margin: 0 }}>Ranking de Torcedores</p>
-              <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional.</p>
+              <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: isMobile ? 28 : 40, color: TEXT, margin: 0 }}>Ranking de Torcedores</p>
+              <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional.</p>
             </div>
             <div style={{ background: BORDER, padding: 4, borderRadius: 8, display: "flex", width: isMobile ? "100%" : "auto" }}>
               {[["nacional", "Nacional"], ["global", "Global"]].map(([key, label]) => (

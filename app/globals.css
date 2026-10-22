@@ -17,3 +17,11 @@ html.is-native select:focus {
   box-shadow: 0 0 0 1px #00c853 !important;
   outline: none !important;
 }
+
+/* APP: títulos das telas no padrão do Figma (24px, extra-bold) */
+.app-only { display: none; }
+html.is-native .app-only { display: inline-block; }
+html.is-native .app-h1 { font-size: 24px !important; font-weight: 800 !important; line-height: 1.2 !important; }
+html.is-native .app-sub { font-size: 14px !important; line-height: 1.4 !important; color: #334155 !important; }
+html.is-native .app-hero { padding: 16px !important; gap: 10px !important; }
+html.is-native .app-hero-bg { display: none !important; }
