@@ -257,3 +257,15 @@ create policy "Qualquer um pode consultar o slug público" on public.public_prof
 create policy "Usuário cria seu próprio slug" on public.public_profiles for insert with check (auth.uid() = user_id);
 
 create policy "qualquer um pode se inscrever" on public.newsletter_subscribers for insert with check (true);
+
+-- Check-in por GPS: posição de cada estádio (cache; preenchido sob demanda pelo servidor)
+create table if not exists public.venue_geo (
+  venue_key text not null,                       -- "nome do estádio|cidade", sem acento e minúsculo
+  venue_name text,
+  venue_city text,
+  lat double precision,                          -- null = não achou (tenta de novo em 7 dias)
+  lon double precision,
+  fetched_at timestamptz not null default now(),
+  constraint venue_geo_pkey primary key (venue_key)
+);
+alter table public.venue_geo enable row level security;  -- só o servidor (service role) lê e grava

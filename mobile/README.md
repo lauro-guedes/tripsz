@@ -23,6 +23,9 @@ npx cap open android     # ou: npx cap open ios
   - Android: em `android/app/src/main/AndroidManifest.xml`, na `<activity>` principal, adicione
     `<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="br.com.tripsz.app"/></intent-filter>`
   - iOS: em Xcode > Target > Info > URL Types, adicione o esquema `br.com.tripsz.app`.
+- **Localização (check-in por GPS):**
+  - iOS: em `ios/App/App/Info.plist` adicione `NSLocationWhenInUseUsageDescription` com o texto "Usamos sua localização para reconhecer quando você está no estádio e registrar o jogo."
+  - Android: nada a fazer (o plugin `@capacitor/geolocation` já declara as permissões). Depois de `git pull`, rode `npm install` e `npx cap sync`.
 - **Supabase** > Authentication > URL Configuration > Redirect URLs: adicione `br.com.tripsz.app://auth`.
 - **Links universais** (opcional, links de tripsz.com.br abrindo o app): Android App Links (`assetlinks.json`) e iOS Associated Domains (`applinks:www.tripsz.com.br`).
 
