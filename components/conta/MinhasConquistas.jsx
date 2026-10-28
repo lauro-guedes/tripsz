@@ -2,6 +2,7 @@
 import { authFetch } from "../../lib/authFetch";
 import { TOURNAMENTS, hasMainTournament, hasWomenGame, isWomenGame } from "../../lib/competitionBadges";
 import { continentOf, countryKey, sameCountry } from "../../lib/countries";
+import { notifyGamesChanged } from "../../lib/gamesEvents";
 import { dateOnly } from "../../lib/dateOnly";
 import { computeTier } from "../../lib/fanLevels";
 import { PASSPORT_LAUNCH_DATE } from "../../lib/passportAccess";
@@ -247,7 +248,7 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
         body: JSON.stringify({ userId: userData.user?.id, name: userData.user?.user_metadata?.name }),
       });
       const data = await res.json();
-      if (res.ok) setShareLink(`${window.location.origin}/u/${data.slug}`);
+      if (res.ok) { setShareLink(`${window.location.origin}/u/${data.slug}`); notifyGamesChanged(); }
     } catch {
       // silencioso — não é uma ação crítica, a pessoa pode tentar de novo
     } finally {

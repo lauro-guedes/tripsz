@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authFetch } from "../../lib/authFetch";
 import { checkPassportAccess } from "../../lib/passportAccess";
+import { notifyGamesChanged } from "../../lib/gamesEvents";
 import { nativePlugin } from "../../lib/nativeApp";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
@@ -103,6 +104,7 @@ export function CheckinPopup({ onNavigate }) {
       });
       if (error) throw error;
       markAsked(game.fixtureId, "yes");
+      notifyGamesChanged();
       setState("done");
     } catch (e) {
       setMessage(e?.message || "Não deu pra registrar agora.");

@@ -9,6 +9,7 @@ import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GR
 import TeamBadge from "../TeamBadge";
 import { PassportPaywall } from "../conta/PassportPaywall";
 import { AuthedFooter } from "../nav/AuthedFooter";
+import { notifyGamesChanged } from "../../lib/gamesEvents";
 import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
 import { Loading } from "../ui/Loading";
@@ -243,6 +244,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
       if (inserted) setAddedIds((m) => ({ ...m, [g.apiFixtureId]: inserted.id }));
       setSelectedIds((prev) => new Set(prev).add(g.apiFixtureId));
       setAddedThisSession((n) => n + 1);
+      notifyGamesChanged();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -505,6 +507,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
         else successCount += 1;
       }
       setCsvResult({ successCount, skippedCount: skippedCount + failCount });
+      notifyGamesChanged();
       setCsvRows([]);
     } catch (e) {
       setCsvError(e.message || "Não foi possível importar os jogos.");
@@ -540,6 +543,7 @@ export function RegistrarJogo({ onNavigate, onLogout, onDone, onCompanions }) {
       }).select("id").single();
       if (insertError) throw insertError;
       setAddedThisSession((n) => n + 1);
+      notifyGamesChanged();
       // Jogo salvo: segue pra "Quem foi com você?" (marcar amigos / convidar). Sem a tela nova, volta como antes.
       if (onCompanions && saved) onCompanions({ id: saved.id, source: "manual", home_team: manual.home, away_team: manual.away, home_score: null, away_score: null, match_date: manual.date, stadium: manual.stadium || null, city: manual.city || null, country: manual.country, competition: manual.competition || null });
       else onDone();

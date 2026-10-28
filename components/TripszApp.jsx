@@ -26,6 +26,7 @@ import { LandingPage } from "./landing/LandingPage";
 import { Onboarding } from "./app/Onboarding";
 import { BottomTabBar, TAB_SCREENS } from "./app/BottomTabBar";
 import { CheckinPopup } from "./app/CheckinPopup";
+import { AchievementWatcher } from "./conquistas/AchievementUnlock";
 import { isNativeApp } from "../lib/nativeApp";
 import { LoadingScreen } from "./wizard/LoadingScreen";
 import { StepDatas } from "./wizard/StepDatas";
@@ -539,6 +540,7 @@ export default function App() {
       )}
       {native === true && TAB_SCREENS.has(screen) && <BottomTabBar screen={screen} onNavigate={(key) => setScreen(key)} />}
       {native === true && TAB_SCREENS.has(screen) && <CheckinPopup onNavigate={(key) => setScreen(key)} />}
+      <AchievementWatcher active={TAB_SCREENS.has(screen)} />
     </div>
   );
 }
