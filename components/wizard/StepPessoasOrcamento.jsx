@@ -1,6 +1,7 @@
 "use client";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar, WizardTopBar } from "../nav/WizardChrome";
+import { PACKAGE_TYPES } from "../../lib/packageTypes";
 import { useIsMobile } from "../ui/useIsMobile";
 import { useState } from "react";
 
@@ -30,6 +31,10 @@ export function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHo
   const [error, setError] = useState(null);
 
   const handleNext = () => {
+    if (!answers.packageType) {
+      setError("Escolha o tipo de pacote que você procura.");
+      return;
+    }
     if (!answers.budget && !answers.budgetCustom) {
       setError("Escolha um orçamento (ou digite um valor) antes de continuar.");
       return;
@@ -47,6 +52,25 @@ export function StepPessoasOrcamento({ answers, setAnswers, onNext, onBack, onHo
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 13 : 16, color: BODY, width: isMobile ? "100%" : 600, margin: 0 }}>Informe o número de viajantes e o orçamento total estimado para a viagem</p>
         </div>
         {isMobile && <MobileProgress step={5 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, width: isMobile ? "100%" : 800 }}>
+          <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Que tipo de pacote você procura?</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {PACKAGE_TYPES.map((p) => {
+              const on = answers.packageType === p.id;
+              return (
+                <div key={p.id} onClick={() => { setError(null); setAnswers((a) => ({ ...a, packageType: p.id })); }} role="radio" aria-checked={on} style={{ background: on ? "rgba(0,200,83,0.06)" : "#fff", border: `1.5px solid ${on ? GREEN : BORDER}`, borderRadius: 12, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 10, border: `2px solid ${on ? GREEN : BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {on && <div style={{ width: 10, height: 10, borderRadius: 5, background: GREEN }} />}
+                  </div>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: on ? GREEN : TEXT, margin: 0 }}>
+                    {p.label}{p.detail && <span style={{ fontWeight: 500, color: on ? GREEN : MUTED }}> ({p.detail})</span>}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ height: 1, background: BORDER, width: isMobile ? "100%" : 800 }} />
         <div style={{ display: "flex", flexDirection: "column", gap: 16, width: isMobile ? "100%" : 800 }}>
           <p style={{ fontFamily: FONT_MONO, fontSize: isMobile ? 11 : 14, color: GREEN, textTransform: "uppercase", margin: 0 }}>Viajantes</p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 24 }}>

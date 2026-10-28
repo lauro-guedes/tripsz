@@ -269,3 +269,6 @@ create table if not exists public.venue_geo (
   constraint venue_geo_pkey primary key (venue_key)
 );
 alter table public.venue_geo enable row level security;  -- só o servidor (service role) lê e grava
+
+-- Tipo de pacote pedido no questionário (completo, hospedagem-ingresso, hospedagem-aereo, ingresso-aereo, ingresso)
+alter table public.trip_answers add column if not exists package_type text;

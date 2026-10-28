@@ -10,6 +10,7 @@ import { Badge } from "../ui/Badge";
 import { Icon } from "../ui/Icon";
 import { useIsMobile } from "../ui/useIsMobile";
 import { PlanFeedback } from "./PlanFeedback";
+import { packageLabel } from "../../lib/packageTypes";
 import { useEffect, useState } from "react";
 import { MontarVoce } from "./MontarVoce";
 
@@ -269,6 +270,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
     ? [
         answers.dateStart ? ["Ida", fmtDate(answers.dateStart)] : null,
         answers.dateEnd ? ["Volta", fmtDate(answers.dateEnd)] : null,
+        answers.packageType ? ["Pacote", packageLabel(answers.packageType)] : null,
         budgetText ? ["Orçamento", /^R\$/i.test(String(budgetText).trim()) ? String(budgetText).trim() : `R$ ${String(budgetText).trim()}`] : null,
         favs.length > 0 ? ["Clubes favoritos", <FavLogos key="favs" names={favs} />] : null,
       ].filter(Boolean)

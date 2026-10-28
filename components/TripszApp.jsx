@@ -280,12 +280,18 @@ export default function App() {
       adults: answers.adults,
       kids: answers.kids,
       budget: answers.budget || answers.budgetCustom || null,
+      package_type: answers.packageType || null,
       priority: answers.priority,
       pace: answers.pace,
       favorite_teams: answers.favoriteTeams || [],
     };
     const withPlan = newPlan ? { ...row, plan: slimPlan(newPlan), plan_generated_at: new Date().toISOString() } : row;
     let { data, error } = await supabase.from("trip_answers").insert(withPlan).select().single();
+    if (error && /package_type/i.test(error.message || "")) {
+      // Coluna package_type ainda não existe no banco: salva sem ela.
+      const { package_type: _omit, ...rowWithout } = row;
+      ({ data, error } = await supabase.from("trip_answers").insert(newPlan ? { ...rowWithout, plan: slimPlan(newPlan), plan_generated_at: new Date().toISOString() } : rowWithout).select().single());
+    }
     if (error && newPlan && /plan/i.test(error.message || "")) {
       // A coluna `plan` ainda não existe no banco (migração não rodada): salva só as respostas.
       console.warn("Coluna plan ausente em trip_answers — rode supabase-migration-etapa3.sql. Salvando só as respostas.");

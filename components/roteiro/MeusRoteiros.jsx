@@ -69,6 +69,7 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
     adults: row.adults,
     kids: row.kids,
     budget: row.budget,
+    packageType: row.package_type,
     priority: row.priority,
     pace: row.pace,
     modality: (row.plan && row.plan.modality) || "men",
