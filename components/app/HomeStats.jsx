@@ -9,7 +9,7 @@ import { totalXp } from "../../lib/xpRules";
 import { BORDER, FONT_DISPLAY, FONT_MONO, GOLD, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 
 /**
- * Topo do Início do app: cartão "Football Passport" (foto, nome, nível, ID) e, abaixo, as 4 estatísticas.
+ * Topo do Início do app: cartão "Passaporte de Estádios" (foto, nome, nível, ID) e, abaixo, as 4 estatísticas.
  * Mesmas contas da tela Meu Passaporte (jogos registrados de verdade).
  */
 export function HomeStats({ onOpen }) {
@@ -50,7 +50,7 @@ export function HomeStats({ onOpen }) {
     <div style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 16 }}>
       <div onClick={onOpen} role="button" style={{ background: "#fff", border: `2px solid ${GREEN}`, borderRadius: 24, padding: 20, cursor: "pointer", display: "flex", flexDirection: "column", gap: 18, boxShadow: "0 8px 20px rgba(0,200,83,0.08)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: TEXT, margin: 0, letterSpacing: 0.2 }}>FOOTBALL PASSPORT</p>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0, letterSpacing: 0.2 }}>PASSAPORTE DE ESTÁDIOS</p>
           <Award size={28} color={GREEN} strokeWidth={2} />
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
