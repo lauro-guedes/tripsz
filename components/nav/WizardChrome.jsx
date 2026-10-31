@@ -63,9 +63,10 @@ export function WizardTopBar({ step, onExit, onLogoClick, total = WIZARD_TOTAL }
 export function WizardBottomBar({ onBack, onNext, nextLabel = "Continuar", mutedBack, loading = false }) {
   const isMobile = useIsMobile();
   return (
-    <div style={{ width: "100%" }}>
+    // Fixo na base da tela: continua visível enquanto a pessoa rola o questionário.
+    <div style={{ width: "100%", position: "sticky", bottom: 0, zIndex: 50, background: BG_ALT }}>
       <div style={{ height: 1, background: BORDER, width: "100%" }} />
-      <div style={{ background: BG_ALT, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "16px" : "24px 80px", width: "100%" }}>
+      <div style={{ background: BG_ALT, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "16px" : "24px 80px", paddingBottom: isMobile ? "calc(16px + env(safe-area-inset-bottom))" : "24px", width: "100%", boxSizing: "border-box" }}>
         <div onClick={onBack} style={{ background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "12px 20px" : "14px 24px", borderRadius: 8, cursor: "pointer" }}>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 13 : 14, color: mutedBack ? MUTED : TEXT, textTransform: "uppercase", margin: 0 }}>Voltar</p>
         </div>
