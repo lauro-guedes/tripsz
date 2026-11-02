@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Award, MapPin, PanelLeft, Plus } from "lucide-react";
+import { Award, PanelLeft, Plus } from "lucide-react";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BORDER, FONT_DISPLAY, GREEN } from "../../lib/tokens";
 import { initials } from "../../lib/textUtils";
+import { Icon } from "../ui/Icon";
 
 /**
  * Barra de baixo do APP (só depois de logado): Início (o feed) · Estádios · (+) Central · Ranking · Perfil.
@@ -43,7 +44,7 @@ export function BottomTabBar({ screen, onNavigate }) {
   return (
     <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 80, background: "#fff", borderTop: `1px solid ${BORDER}`, borderRadius: "20px 20px 0 0", paddingBottom: "env(safe-area-inset-bottom)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", alignItems: "center", boxShadow: "0 -4px 16px rgba(15,23,42,0.04)" }}>
       {item(HOME.includes(screen), "Início", "feed", (c) => <PanelLeft size={22} color={c} strokeWidth={2} />)}
-      {item(STADIUMS.includes(screen), "Estádios", "estadios", (c) => <MapPin size={22} color={c} strokeWidth={2} />)}
+      {item(STADIUMS.includes(screen), "Estádios", "estadios", (c) => <Icon name="stadium" size={22} color={c} />)}
       <div onClick={() => onNavigate("central")} role="button" aria-label="Adicionar" style={{ height: TAB_BAR_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
         <div style={{ width: 48, height: 48, borderRadius: 24, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: ADD.includes(screen) ? "0 0 0 4px rgba(0,200,83,0.2)" : "0 4px 10px rgba(0,200,83,0.3)" }}>
           <Plus size={26} color="#fff" strokeWidth={2.6} />

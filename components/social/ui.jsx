@@ -115,14 +115,11 @@ export function ScreenHeader({ title, onBack }) {
   );
 }
 
-/** Cabeçalho do Início no APP: a marca "tripsz.social" e o sino das notificações. */
+/** Cabeçalho do Início no APP: a marca "tripsz" e o sino das notificações. */
 export function BrandHeader({ onBell }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", height: 56, boxSizing: "border-box", background: "#fff" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <Wordmark height={24} />
-        <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: GREEN, marginLeft: -2 }}>.social</span>
-      </div>
+      <Wordmark height={24} />
       <div role="button" aria-label="Notificações" onClick={onBell} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Bell size={22} color={TEXT} /></div>
     </div>
   );

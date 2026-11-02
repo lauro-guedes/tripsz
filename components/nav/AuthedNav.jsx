@@ -112,15 +112,8 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
     </div>
   );
 
-  // APP: cabeçalho enxuto (logo + sino) e abaixo as abas Jogos · Assinatura · Conquistas · Roteiros · Ranking.
+  // APP: cabeçalho enxuto (logo + sino). As abas de cima (Jogos, Assinatura...) saíram: o acesso fica no Perfil.
   if (isNativeApp()) {
-    const TOP_TABS = [
-      ["Jogos", "jogos", ["jogos", "registrar-jogo", "acompanhantes", "jogo-salvo", "bem-vindo"]],
-      ["Assinatura", "assinatura", ["assinatura"]],
-      ["Conquistas", "conquistas", ["conquistas", "nivel"]],
-      ["Roteiros", "roteiros", ["roteiros", "roteiro", "resultado"]],
-      ["Ranking", "ranking", ["ranking"]],
-    ];
     return (
       <div>
         <div style={{ background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, padding: "0 16px", boxSizing: "border-box" }}>
@@ -129,16 +122,6 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
             <Bell size={22} color={active === "notificacoes" ? GREEN : TEXT} />
             {notifCount > 0 && <span style={{ position: "absolute", top: 2, right: 2, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 4px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, lineHeight: 1 }}>{notifCount > 9 ? "9+" : notifCount}</span>}
           </div>
-        </div>
-        <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", padding: "10px 16px" }}>
-          {TOP_TABS.map(([label, key, screens]) => {
-            const on = screens.includes(active);
-            return (
-              <div key={key} onClick={() => go(key)} style={{ background: on ? GREEN_BG : "transparent", borderRadius: 6, padding: "7px 6px", cursor: "pointer" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: on ? 700 : 500, fontSize: 10, color: on ? GREEN : "#64748b", margin: 0, whiteSpace: "nowrap" }}>{label}</p>
-              </div>
-            );
-          })}
         </div>
         {!emailConfirmed && (
           <div style={{ background: GOLD_BG, borderBottom: `1px solid ${GOLD}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "10px 16px", flexWrap: "wrap" }}>
