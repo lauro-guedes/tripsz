@@ -13,7 +13,7 @@ import { initials } from "../../lib/textUtils";
 const HOME = ["buscar"];
 const EXPLORE = ["calendario"];
 const ADD = ["registrar-jogo"];
-const PROFILE = ["perfil"];
+const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos"];
 const STADIUMS = ["jogos", "jogo-salvo", "acompanhantes"]; // estádios = os jogos que a pessoa já foi
 
 // Telas que mostram a barra: as da barra, as do topo e as extras (sino, boas-vindas).

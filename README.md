@@ -248,3 +248,20 @@ As rotas de assinatura, checkout, perfil e do painel admin **não confiam** em `
 - Regras do @ em `lib/username.js` (3–20 caracteres, a–z, 0–9, `.` e `_`, sem repetição) e conferência em `GET /api/username/check`.
 - Unicidade garantida no banco: `supabase-profiles-username.sql` (rodar uma vez no SQL Editor) cria `public.profiles` (índice único no @), as funções que geram o @ e um gatilho em `auth.users`. Quem entra com Google recebe `nome.sobrenome` (com número se já existir).
 - O link público do perfil passa a ser o próprio @.
+
+## tripsz.social — Fase 1 (perfil social, seguir, bloquear e denunciar)
+
+Rede social do tripsz, em fases. A Fase 1 entrega a base; posts, check-in no estádio, feed, Explorar, mapa e sala do jogo vêm depois.
+
+- **SQL (rodar UMA vez no Supabase, ANTES de publicar):** `supabase-social-fase1.sql` — colunas novas em `profiles` (nome público, bio, capa, foto, perfis, privado,
+  cidade, país, `social_onboarded_at`), tabelas `follows`, `user_blocks`, `reports` (RLS ligado e sem política: só o servidor mexe) e o bucket público `social`
+  (cada pessoa grava só na própria pasta). Sem o SQL, as rotas respondem "erro do servidor" (e a aba Perfil mostra essa mensagem).
+- **Regras de produto:** seguir = ser amigo (uma relação só); "Amigos" = quem se segue de volta. Perfil privado: seguir vira pedido (`pending`) até a pessoa aprovar;
+  voltar pra público aprova os pedidos na hora. Bloquear remove o seguir nos dois sentidos e some das listas; quem foi bloqueado recebe "não encontrado".
+  Foto de capa/perfil só de lugares conhecidos (`lib/social.js`: `isAllowedMediaUrl`). Sem vídeos.
+- **API (`app/api/social/*`, tudo exige login):** `me` (GET/PUT), `profiles/[username]`, `follow` (POST/DELETE), `friends?tab=`, `requests`, `block` (GET/POST/DELETE), `report`.
+  Código em `lib/social*.js` (regras puras em `lib/social.js`; servidor em `socialShared/Profiles/Graph/Reports.js`; navegador em `socialClient.js` e `socialMedia.js`).
+- **Telas (`components/social/*`):** `PerfilSocial` (o meu e o de outra pessoa; o botão Perfil agora abre este), `SocialOnboarding` (4 passos), `EditarPerfilSocial`,
+  `AmigosSocial`, `ProfileMenu` (denunciar/bloquear). Endereços: `/conta/perfil`, `/conta/perfil/editar`, `/conta/perfil/dados` (a tela antiga de dados da conta),
+  `/conta/amigos` e `/conta/usuario/<@>` (perfil de outra pessoa).
+- **Denúncias:** ficam na tabela `reports` (status `open`); ainda não há tela de moderação (previsto para a fase de notificações/moderação).

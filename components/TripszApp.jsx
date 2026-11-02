@@ -41,6 +41,9 @@ import { Checkout } from "./checkout/Checkout";
 import { AssinarStandalone } from "./conta/AssinarStandalone";
 import { MeuNivel } from "./conta/MeuNivel";
 import { MeuPerfil } from "./conta/MeuPerfil";
+import { AmigosSocial } from "./social/AmigosSocial";
+import { EditarPerfilSocial } from "./social/EditarPerfilSocial";
+import { PerfilSocial } from "./social/PerfilSocial";
 import { Notificacoes } from "./conta/Notificacoes";
 import { MinhaAssinatura } from "./conta/MinhaAssinatura";
 import { MinhasConquistas } from "./conta/MinhasConquistas";
@@ -49,7 +52,7 @@ import { BuscarJogos } from "./jogos/BuscarJogos";
 import { MeuCalendario } from "./jogos/MeuCalendario";
 import { MeusJogosHistorico } from "./jogos/MeusJogosHistorico";
 import { RegistrarJogo } from "./jogos/RegistrarJogo";
-import { PATH_TO_SCREEN, SCREEN_TO_PATH } from "./routes";
+import { pathForScreen, screenFromPath } from "./routes";
 import { BoasVindasConvite } from "./conta/BoasVindasConvite";
 import { JogoSalvo } from "./jogos/acompanhantes/JogoSalvo";
 import { QuemFoiComVoce } from "./jogos/acompanhantes/QuemFoiComVoce";
@@ -72,6 +75,12 @@ export default function App() {
   }, []);
 
   const [screen, setScreen] = useState("landing");
+  const [viewUser, setViewUser] = useState(null); // @ do perfil aberto na tela "usuario"
+  // Ir pra outra tela; as sociais podem levar um argumento (o @ de quem abrir).
+  const goTo = (key, arg) => {
+    if (key === "usuario") setViewUser(arg || null);
+    setScreen(key);
+  };
   const [showGlobalLoginModal, setShowGlobalLoginModal] = useState(false);
   // Quando a pessoa já está logada e começa um roteiro novo, ela pula a
   // tela de Criar Conta — então a numeração dos passos precisa "adiantar"
@@ -142,21 +151,24 @@ export default function App() {
   // a URL original — ver comentário na declaração de `initialized`.
   useEffect(() => {
     if (!initialized) return;
-    const path = SCREEN_TO_PATH[screen] || "/";
+    const path = pathForScreen(screen, viewUser);
     if (window.location.pathname !== path) {
       window.history.pushState({ screen }, "", path);
       // Tela nova começa sempre no topo (ex.: Contratar consultoria → checkout).
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
-  }, [screen, initialized]);
+  }, [screen, viewUser, initialized]);
 
   // Quando a pessoa usa o botão voltar/avançar do navegador, a URL muda
   // sozinha (o navegador cuida disso) — só precisamos escutar e refletir
   // isso de volta no estado do app.
   useEffect(() => {
     const handlePopState = () => {
-      const matched = PATH_TO_SCREEN[window.location.pathname];
-      if (matched) setScreen(matched);
+      const { screen: matched, viewUser: who } = screenFromPath(window.location.pathname);
+      if (matched) {
+        if (matched === "usuario") setViewUser(who);
+        setScreen(matched);
+      }
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -203,7 +215,8 @@ export default function App() {
     // direto, favoritou uma etapa, ou deu F5, respeita a URL atual.
     // Só cai no passo salvo no localStorage se a URL não for reconhecida
     // (ex: a pessoa estava na home "/").
-    const pathScreen = PATH_TO_SCREEN[window.location.pathname];
+    const { screen: pathScreen, viewUser: pathUser } = screenFromPath(window.location.pathname);
+    if (pathScreen === "usuario") setViewUser(pathUser);
     setScreen(pathScreen || restoredScreen || "landing");
     setInitialized(true);
 
@@ -534,7 +547,11 @@ export default function App() {
         />
       )}
       {screen === "notificacoes" && <Notificacoes onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
-      {screen === "perfil" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "perfil" && <PerfilSocial onNavigate={goTo} onLogout={handleLogout} onBack={() => setScreen("perfil")} />}
+      {screen === "usuario" && <PerfilSocial key={viewUser} username={viewUser} onNavigate={goTo} onLogout={handleLogout} onBack={() => window.history.back()} />}
+      {screen === "perfil-editar" && <EditarPerfilSocial onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "amigos" && <AmigosSocial onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "perfil-dados" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "ranking" && <RankingTorcedores onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {showGlobalLoginModal && (
