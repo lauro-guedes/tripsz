@@ -14,29 +14,65 @@ const row = (icon, label, onClick, danger = false) => (
   </div>
 );
 
-/** Menu "⋮" do perfil de outra pessoa: denunciar e bloquear. */
-export function ProfileMenu({ username, displayName, onClose, onBlock }) {
-  const [step, setStep] = useState("menu"); // menu | report | reported | block
+/**
+ * Passo a passo de uma denúncia (motivo + texto opcional), igual pra perfil, post e comentário.
+ * `send(reason, details)` devolve { ok, message }. `doneBody`: o que aparece depois de enviar; `doneExtra`: botão a mais (ex.: bloquear).
+ */
+export function ReportSheet({ title, intro, send, onClose, doneTitle = "Denúncia enviada", doneBody, doneExtra = null }) {
   const [reason, setReason] = useState(null);
   const [details, setDetails] = useState("");
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false); // trava imediata contra toque duplo
+  const [done, setDone] = useState(false);
   const [error, setError] = useState(null);
 
-  const send = async () => {
+  const submit = async () => {
     if (!reason || sendingRef.current) return;
     sendingRef.current = true;
     setSending(true);
     setError(null);
     try {
-      const r = await reportProfile(username, reason, details);
-      if (r.ok) setStep("reported");
+      const r = await send(reason, details);
+      if (r.ok) setDone(true);
       else setError({ type: "error", text: r.message });
     } finally {
       sendingRef.current = false;
       setSending(false);
     }
   };
+
+  if (done)
+    return (
+      <Sheet title={doneTitle} onClose={onClose}>
+        <p style={text(14, TEXT)}>{doneBody}</p>
+        <PrimaryBtn onClick={onClose}>Fechar</PrimaryBtn>
+        {doneExtra}
+      </Sheet>
+    );
+  return (
+    <Sheet title={title} onClose={onClose}>
+      <p style={text(13, MUTED)}>{intro}</p>
+      <div role="radiogroup" aria-label="Motivo da denúncia" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {REPORT_REASONS.map((r) => {
+          const on = reason === r.id;
+          return (
+            <div key={r.id} role="radio" aria-checked={on} onClick={() => setReason(r.id)} style={{ border: `1px solid ${on ? GREEN : BORDER}`, background: on ? "rgba(0,200,83,0.08)" : "#fff", borderRadius: 12, padding: "12px 14px", cursor: "pointer" }}>
+              <p style={text(14, TEXT, { fontWeight: on ? 700 : 500 })}>{r.label}</p>
+            </div>
+          );
+        })}
+      </div>
+      <textarea value={details} onChange={(e) => setDetails(e.target.value.slice(0, 500))} placeholder="Quer contar mais? (opcional)" aria-label="Detalhes da denúncia" rows={3} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, fontSize: 14, fontFamily: FONT_DISPLAY, resize: "none", outline: "none" }} />
+      <Message msg={error} />
+      <PrimaryBtn onClick={submit} disabled={!reason || sending}>{sending ? "Enviando..." : "Enviar denúncia"}</PrimaryBtn>
+      <SecondaryBtn onClick={onClose}>Cancelar</SecondaryBtn>
+    </Sheet>
+  );
+}
+
+/** Menu "⋮" do perfil de outra pessoa: denunciar e bloquear. */
+export function ProfileMenu({ username, displayName, onClose, onBlock }) {
+  const [step, setStep] = useState("menu"); // menu | report | block
 
   if (step === "menu")
     return (
@@ -50,32 +86,14 @@ export function ProfileMenu({ username, displayName, onClose, onBlock }) {
 
   if (step === "report")
     return (
-      <Sheet title="Denunciar perfil" onClose={onClose}>
-        <p style={text(13, MUTED)}>Por que você quer denunciar @{username}? Quem for denunciado não saberá que foi você.</p>
-        <div role="radiogroup" aria-label="Motivo da denúncia" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {REPORT_REASONS.map((r) => {
-            const on = reason === r.id;
-            return (
-              <div key={r.id} role="radio" aria-checked={on} onClick={() => setReason(r.id)} style={{ border: `1px solid ${on ? GREEN : BORDER}`, background: on ? "rgba(0,200,83,0.08)" : "#fff", borderRadius: 12, padding: "12px 14px", cursor: "pointer" }}>
-                <p style={text(14, TEXT, { fontWeight: on ? 700 : 500 })}>{r.label}</p>
-              </div>
-            );
-          })}
-        </div>
-        <textarea value={details} onChange={(e) => setDetails(e.target.value.slice(0, 500))} placeholder="Quer contar mais? (opcional)" aria-label="Detalhes da denúncia" rows={3} style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: 12, fontSize: 14, fontFamily: FONT_DISPLAY, resize: "none", outline: "none" }} />
-        <Message msg={error} />
-        <PrimaryBtn onClick={send} disabled={!reason || sending}>{sending ? "Enviando..." : "Enviar denúncia"}</PrimaryBtn>
-        <SecondaryBtn onClick={onClose}>Cancelar</SecondaryBtn>
-      </Sheet>
-    );
-
-  if (step === "reported")
-    return (
-      <Sheet title="Denúncia enviada" onClose={onClose}>
-        <p style={text(14, TEXT)}>Obrigado por avisar. Vamos analisar o perfil de @{username}. Se quiser, você também pode bloquear essa pessoa.</p>
-        <PrimaryBtn onClick={onClose}>Fechar</PrimaryBtn>
-        <SecondaryBtn onClick={() => setStep("block")}>Bloquear @{username}</SecondaryBtn>
-      </Sheet>
+      <ReportSheet
+        title="Denunciar perfil"
+        intro={`Por que você quer denunciar @${username}? Quem for denunciado não saberá que foi você.`}
+        send={(reason, details) => reportProfile(username, reason, details)}
+        onClose={onClose}
+        doneBody={`Obrigado por avisar. Vamos analisar o perfil de @${username}. Se quiser, você também pode bloquear essa pessoa.`}
+        doneExtra={<SecondaryBtn onClick={() => setStep("block")}>Bloquear @{username}</SecondaryBtn>}
+      />
     );
 
   return (

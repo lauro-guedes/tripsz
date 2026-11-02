@@ -124,7 +124,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
     return (
       <div>
         <div style={{ background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, padding: "0 16px", boxSizing: "border-box" }}>
-          <div style={{ cursor: "pointer", display: "flex" }} onClick={() => go("buscar")}><Wordmark height={28} /></div>
+          <div style={{ cursor: "pointer", display: "flex" }} onClick={() => go("feed")}><Wordmark height={28} /></div>
           <div onClick={() => go("notificacoes")} role="button" aria-label="Notificações" style={{ position: "relative", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
             <Bell size={22} color={active === "notificacoes" ? GREEN : TEXT} />
             {notifCount > 0 && <span style={{ position: "absolute", top: 2, right: 2, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 4px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, lineHeight: 1 }}>{notifCount > 9 ? "9+" : notifCount}</span>}
@@ -155,7 +155,7 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
   return (
     <div>
       <div style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "12px 16px" : "24px 48px", position: "relative" }}>
-        <div style={{ cursor: "pointer" }} onClick={() => go(isNativeApp() ? "buscar" : "roteiros")}><Wordmark /></div>
+        <div style={{ cursor: "pointer" }} onClick={() => go(isNativeApp() ? "feed" : "roteiros")}><Wordmark /></div>
         {!isMobile && (
           <div style={{ display: "flex", gap: 36, alignItems: "center", fontFamily: FONT_DISPLAY, fontSize: 14 }}>
             {NAV_MAIN.map((it) => {

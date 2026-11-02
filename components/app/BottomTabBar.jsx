@@ -5,20 +5,21 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { BORDER, FONT_DISPLAY, GREEN } from "../../lib/tokens";
 import { Icon } from "../ui/Icon";
 import { initials } from "../../lib/textUtils";
+import { AddSheet } from "./AddSheet";
 
 /**
- * Barra de baixo do APP (só depois de logado): Home · Explorar · (+) adicionar jogo · Estádios · Perfil.
+ * Barra de baixo do APP (só depois de logado): Home (o feed) · Explorar · (+) check-in / publicar / registrar jogo · Estádios · Perfil.
  * Jogos, Assinatura, Conquistas, Roteiros e Ranking ficam nas abas do topo (AuthedNav).
  */
-const HOME = ["buscar"];
+const HOME = ["feed"];
 const EXPLORE = ["calendario"];
-const ADD = ["registrar-jogo"];
+const ADD = ["checkin", "post-novo", "registrar-jogo"];
 const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos"];
 const STADIUMS = ["jogos", "jogo-salvo", "acompanhantes"]; // estádios = os jogos que a pessoa já foi
 
 // Telas que mostram a barra: as da barra, as do topo e as extras (sino, boas-vindas).
 export const TAB_SCREENS = new Set([
-  ...HOME, ...EXPLORE, ...ADD, ...PROFILE,
+  ...HOME, ...EXPLORE, ...ADD, ...PROFILE, "buscar",
   "jogos", "acompanhantes", "jogo-salvo", "assinatura", "conquistas", "nivel",
   "roteiros", "roteiro", "resultado", "ranking", "notificacoes", "bem-vindo",
 ]);
@@ -26,6 +27,7 @@ export const TAB_BAR_HEIGHT = 60;
 
 export function BottomTabBar({ screen, onNavigate }) {
   const [me, setMe] = useState({ name: "", avatar: "" });
+  const [addOpen, setAddOpen] = useState(false); // o "+" abre a folha com check-in / publicar / registrar jogo
   useEffect(() => {
     let alive = true;
     supabaseBrowser().auth.getUser().then(({ data }) => {
@@ -46,10 +48,11 @@ export function BottomTabBar({ screen, onNavigate }) {
   };
 
   return (
+    <>
     <nav style={{ position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 80, background: "#fff", borderTop: `1px solid ${BORDER}`, borderRadius: "20px 20px 0 0", paddingBottom: "env(safe-area-inset-bottom)", display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
-      {item(HOME.includes(screen), "Home", () => onNavigate("buscar"), (c) => <Home size={22} color={c} strokeWidth={2} />)}
+      {item(HOME.includes(screen), "Home", () => onNavigate("feed"), (c) => <Home size={22} color={c} strokeWidth={2} />)}
       {item(EXPLORE.includes(screen), "Explorar", () => onNavigate("calendario"), (c) => <Search size={22} color={c} strokeWidth={2} />)}
-      <div onClick={() => onNavigate("registrar-jogo")} role="button" aria-label="Adicionar jogo" style={{ height: TAB_BAR_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+      <div onClick={() => setAddOpen(true)} role="button" aria-label="Adicionar" style={{ height: TAB_BAR_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
         <div style={{ width: 48, height: 48, borderRadius: 24, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: ADD.includes(screen) ? "0 0 0 4px rgba(0,200,83,0.25)" : "0 4px 10px rgba(0,200,83,0.35)" }}>
           <Plus size={26} color="#fff" strokeWidth={2.6} />
         </div>
@@ -61,5 +64,7 @@ export function BottomTabBar({ screen, onNavigate }) {
         </div>
       ))}
     </nav>
+    {addOpen && <AddSheet onClose={() => setAddOpen(false)} onPick={(key) => { setAddOpen(false); onNavigate(key); }} />}
+    </>
   );
 }

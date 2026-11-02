@@ -265,3 +265,18 @@ Rede social do tripsz, em fases. A Fase 1 entrega a base; posts, check-in no est
   `AmigosSocial`, `ProfileMenu` (denunciar/bloquear). Endereços: `/conta/perfil`, `/conta/perfil/editar`, `/conta/perfil/dados` (a tela antiga de dados da conta),
   `/conta/amigos` e `/conta/usuario/<@>` (perfil de outra pessoa).
 - **Denúncias:** ficam na tabela `reports` (status `open`); ainda não há tela de moderação (previsto para a fase de notificações/moderação).
+
+## tripsz.social — Fase 2 (posts, check-in no estádio, feed, curtidas e comentários)
+
+- **SQL (rodar UMA vez no Supabase, depois do da Fase 1 e ANTES de publicar):** `supabase-social-fase2.sql` — tabelas `posts` (kind `post` ou `checkin`), `post_likes` e `post_comments`
+  (RLS ligado e sem política: só o servidor mexe). As fotos usam o bucket `social` da Fase 1.
+- **Regras de produto:** a Home (aba Home do app) é o feed: posts e check-ins de quem a pessoa segue e os dela. **Check-in só dentro do estádio:** o servidor confere o GPS
+  contra a coordenada do estádio (700 m, mais até 300 m de folga da imprecisão) e a localização exata NÃO é guardada; 3 check-ins/dia e não repete o mesmo estádio em 6 h.
+  **Post** só sobre estádio que a pessoa JÁ visitou (do Passaporte), com fotos (até 4) e/ou texto (500), jogo opcional; 10 posts/dia. Visibilidade: Público, Quem me segue ou Só eu
+  (perfil privado: só quem segue vê). Curtir, comentar (300; 200/dia), apagar o seu post/comentário (o dono do post apaga qualquer comentário), denunciar post e comentário.
+  Sem vídeos, sem salvar e sem compartilhar (ainda).
+- **API (`app/api/social/*`):** `feed`, `posts` (POST), `posts/[id]` (DELETE), `posts/[id]/like`, `posts/[id]/comments`, `comments/[id]`, `profiles/[username]/posts?kind=`,
+  `checkin/nearby`, `visited`. Regras puras em `lib/socialPostRules.js`; servidor em `lib/socialFeed.js`, `socialPosts.js`, `socialEngage.js`, `socialCheckin.js`, `socialPostsShared.js`.
+- **Telas (`components/social/*`):** `FeedSocial`, `PostCard`/`PostList`, `Comentarios`, `PostMenu`, `NovaPublicacao`, `CheckinSocial`, `PhotoPicker`, `ProfilePosts` (abas Posts e Check-ins
+  do perfil) e `components/app/AddSheet.jsx` (o "+" da barra: Fazer check-in / Nova publicação / Registrar um jogo). Endereços: `/conta/feed`, `/conta/checkin`, `/conta/post/novo`.
+- **Navegação do app:** Home = feed; "+" = folha com as 3 opções; Explorar (calendário) e Estádios (meus jogos) seguem como estavam; o "Buscar jogos" virou atalho no feed (só no app).

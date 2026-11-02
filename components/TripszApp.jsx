@@ -43,6 +43,9 @@ import { MeuNivel } from "./conta/MeuNivel";
 import { MeuPerfil } from "./conta/MeuPerfil";
 import { AmigosSocial } from "./social/AmigosSocial";
 import { EditarPerfilSocial } from "./social/EditarPerfilSocial";
+import { CheckinSocial } from "./social/CheckinSocial";
+import { FeedSocial } from "./social/FeedSocial";
+import { NovaPublicacao } from "./social/NovaPublicacao";
 import { PerfilSocial } from "./social/PerfilSocial";
 import { Notificacoes } from "./conta/Notificacoes";
 import { MinhaAssinatura } from "./conta/MinhaAssinatura";
@@ -232,7 +235,7 @@ export default function App() {
     const isInstalledApp = inApp || window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
     if (isInstalledApp && (pathScreen || restoredScreen || "landing") === "landing") {
       supabase.auth.getSession().then(({ data }) => {
-        if (data?.session) setScreen((current) => (current === "landing" ? (inApp ? "buscar" : "roteiros") : current));
+        if (data?.session) setScreen((current) => (current === "landing" ? (inApp ? "feed" : "roteiros") : current));
       }).finally(() => { if (inApp) removeLoader(); });
     } else if (inApp) removeLoader();
 
@@ -415,8 +418,8 @@ export default function App() {
       <FontImports />
       {screen === "landing" && native === true && (
         <Onboarding
-          onCreateAccount={() => { setPostLoginTarget("buscar"); setScreen("criarconta"); }}
-          onLogin={() => { setPostLoginTarget("buscar"); setShowGlobalLoginModal(true); }}
+          onCreateAccount={() => { setPostLoginTarget("feed"); setScreen("criarconta"); }}
+          onLogin={() => { setPostLoginTarget("feed"); setShowGlobalLoginModal(true); }}
         />
       )}
       {screen === "landing" && native !== true && (
@@ -549,6 +552,9 @@ export default function App() {
       {screen === "notificacoes" && <Notificacoes onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "perfil" && <PerfilSocial onNavigate={goTo} onLogout={handleLogout} onBack={() => setScreen("perfil")} />}
       {screen === "usuario" && <PerfilSocial key={viewUser} username={viewUser} onNavigate={goTo} onLogout={handleLogout} onBack={() => window.history.back()} />}
+      {screen === "feed" && <FeedSocial onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "checkin" && <CheckinSocial onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "post-novo" && <NovaPublicacao onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil-editar" && <EditarPerfilSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "amigos" && <AmigosSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil-dados" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}

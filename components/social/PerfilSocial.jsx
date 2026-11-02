@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
 import { BORDER, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { ProfileMenu } from "./ProfileMenu";
+import { ProfilePosts } from "./ProfilePosts";
 import { SocialOnboarding } from "./SocialOnboarding";
 import { Avatar, EmptyState, SmallBtn, SocialShell, Tabs } from "./ui";
 import { useProfile } from "./useProfile";
@@ -132,7 +133,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
             </div>
             <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Posts" }, { id: "checkins", label: "Check-ins" }, { id: "estadios", label: "Estádios" }, { id: "passaporte", label: "Passaporte" }]} />
             <div style={{ background: "#fff", minHeight: 160 }}>
-              {(tab === "posts" || tab === "checkins") && <EmptyState title={self ? (tab === "posts" ? "Suas publicações vão aparecer aqui" : "Seus check-ins vão aparecer aqui") : "Nada por aqui ainda"} body={self ? "Em breve você poderá publicar fotos e fazer check-in nos estádios." : null} />}
+              {(tab === "posts" || tab === "checkins") && <ProfilePosts key={`${pr.username}-${tab}`} username={pr.username} kind={tab === "posts" ? "post" : "checkin"} self={self} onNavigate={onNavigate} />}
               {tab === "estadios" &&
                 (d.passport.stadiums.length === 0 ? (
                   <EmptyState title="Nenhum estádio registrado" />
