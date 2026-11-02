@@ -1,15 +1,38 @@
 "use client";
-import { MapPin, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { Message, SecondaryBtn, text } from "../convite/ConviteUi";
-import { getPosition } from "../../lib/devicePosition";
-import { getStadiums } from "../../lib/socialClient";
+import { ChevronDown, MapPin, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Message, PrimaryBtn, SecondaryBtn, text } from "../convite/ConviteUi";
+import { getFeed } from "../../lib/socialClient";
+import { searchKey } from "../../lib/searchKey";
+import { supabaseBrowser } from "../../lib/supabase";
 import { getVenuePhoto } from "../../lib/venuePhoto";
 import { BORDER, FONT_DISPLAY, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import { PostList } from "./PostList";
 import { EmptyState, SocialShell } from "./ui";
 
 /** 70 -> "70 m"; 4200 -> "4,2 km" */
 export const distLabel = (m) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`);
+
+/** "2026-11-02" ou "2026-11-02T20:45:00Z" -> "02/11/2026" */
+export function dayLabel(value) {
+  const m = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}
+
+/** Agrupa os jogos que a pessoa já foi por estádio: mais jogos primeiro, empate pelo mais recente. Cada grupo traz os jogos do mais novo pro mais antigo. */
+export function groupByStadium(games) {
+  const by = new Map();
+  for (const g of games || []) {
+    const key = searchKey(g.stadium);
+    if (!key) continue;
+    if (!by.has(key)) by.set(key, { key, name: g.stadium, city: g.city || null, country: g.country || null, games: [] });
+    by.get(key).games.push(g);
+  }
+  const date = (g) => String(g.match_date || "");
+  const out = [...by.values()];
+  for (const s of out) s.games.sort((a, b) => (date(a) < date(b) ? 1 : date(a) > date(b) ? -1 : 0));
+  return out.sort((a, b) => b.games.length - a.games.length || (date(a.games[0]) < date(b.games[0]) ? 1 : -1));
+}
 
 function Photo({ name, city }) {
   const [url, setUrl] = useState(null);
@@ -25,76 +48,128 @@ function Photo({ name, city }) {
   );
 }
 
-const TABS = [["todos", "Todos"], ["visitados", "Visitados"], ["nao_visitados", "Não visitados"]];
+const TABS = [["meus", "Meus estádios"], ["hoje", "Hoje"]];
 
-/** Estádios: descobrir arquibancadas (as do calendário do app), com distância, o que já visitei, check-ins de hoje e amigos que já foram. */
-export function EstadiosSocial({ onNavigate, onLogout, openPage = (path) => window.location.assign(path) }) {
-  const [scope, setScope] = useState("todos");
-  const [query, setQuery] = useState("");
-  const [pos, setPos] = useState(undefined); // undefined = ainda pedindo; null = sem localização
-  const [data, setData] = useState(null);
+/** Meus estádios: os estádios do meu Passaporte. O cartão abre a lista dos MEUS jogos naquele estádio. */
+function MeusEstadios({ onNavigate }) {
+  const [stadiums, setStadiums] = useState(null);
   const [error, setError] = useState(null);
-  const seq = useRef(0);
+  const [query, setQuery] = useState("");
+  const [openKey, setOpenKey] = useState(null);
 
-  useEffect(() => { let alive = true; getPosition().then((p) => alive && setPos(p || null)); return () => { alive = false; }; }, []);
   useEffect(() => {
-    if (pos === undefined) return undefined;
-    const mine = ++seq.current;
-    const t = setTimeout(async () => {
-      const r = await getStadiums({ scope, q: query.trim(), lat: pos ? pos.lat : undefined, lon: pos ? pos.lon : undefined });
-      if (mine !== seq.current) return; // resposta de uma busca antiga
-      if (!r.ok) { setError({ type: "error", text: r.message }); return setData({ stadiums: [], total: 0 }); }
-      setError(null);
-      setData(r);
-    }, query ? 300 : 0);
-    return () => clearTimeout(t);
-  }, [scope, query, pos]);
+    let alive = true;
+    (async () => {
+      const { data, error: err } = await supabaseBrowser().from("attended_games").select("*").order("match_date", { ascending: false });
+      if (!alive) return;
+      if (err) { setError({ type: "error", text: "Não foi possível carregar seus estádios agora." }); return setStadiums([]); }
+      setStadiums(groupByStadium(data || []));
+    })();
+    return () => { alive = false; };
+  }, []);
 
-  const open = (slug) => openPage(`/estadios/${slug}`); // a página pública do estádio
-  const where = data && data.nearCity ? `Perto de ${data.nearCity} · Mais próximos` : pos ? "Mais próximos" : "Mais check-ins hoje";
+  const needle = searchKey(query.slice(0, 80));
+  const list = (stadiums || []).filter((s) => !needle || searchKey(`${s.name} ${s.city || ""}`).includes(needle));
 
+  return (
+    <div style={{ padding: "6px 16px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ background: "#eef2f6", borderRadius: 14, padding: "0 14px", display: "flex", gap: 10, alignItems: "center" }}>
+        <Search size={18} color={MUTED} />
+        <input aria-label="Buscar estádio ou cidade" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar estádio ou cidade..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", padding: "14px 0", fontSize: 14, fontFamily: FONT_DISPLAY }} />
+      </div>
+      <Message msg={error} />
+      {!stadiums && <EmptyState title="Carregando seus estádios..." />}
+      {stadiums && stadiums.length === 0 && !error && (
+        <>
+          <EmptyState title="Você ainda não registrou nenhum jogo" body="Registre um jogo a que você já foi e o estádio aparece aqui." />
+          <PrimaryBtn onClick={() => onNavigate("registrar-jogo")}>Adicionar jogo passado</PrimaryBtn>
+        </>
+      )}
+      {stadiums && stadiums.length > 0 && list.length === 0 && <EmptyState title="Nenhum estádio encontrado" body="Tente outro nome ou cidade." />}
+      {list.map((s) => {
+        const open = openKey === s.key;
+        const last = dayLabel(s.games[0] && s.games[0].match_date);
+        return (
+          <div key={s.key} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div role="button" aria-expanded={open} aria-label={`Meus jogos em ${s.name}`} onClick={() => setOpenKey(open ? null : s.key)} style={{ display: "flex", flexDirection: "column", gap: 10, cursor: "pointer" }}>
+              <Photo name={s.name} city={s.city} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 19, color: TEXT, margin: 0 }}>{s.name}</p>
+                <ChevronDown size={20} color={MUTED} style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none" }} />
+              </div>
+              <p style={text(13, MUTED)}>{[[s.city, s.country].filter(Boolean).join(", "), `${s.games.length} ${s.games.length === 1 ? "jogo" : "jogos"}`, last ? `último em ${last}` : null].filter(Boolean).join(" · ")}</p>
+            </div>
+            {open && (
+              <div style={{ display: "flex", flexDirection: "column", borderTop: `1px solid ${BORDER}` }}>
+                {s.games.map((g) => (
+                  <div key={g.id} style={{ padding: "10px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <p style={text(14, TEXT, { fontWeight: 700 })}>
+                      {g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score} × ${g.away_score}` : "×"} {g.away_team}
+                    </p>
+                    <p style={text(12, MUTED)}>{[dayLabel(g.match_date), g.competition].filter(Boolean).join(" · ")}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Hoje: os check-ins das últimas 24 h (os públicos, os de quem eu sigo e os meus). */
+function HojeCheckins({ onNavigate }) {
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState({ hasMore: false, cursor: null });
+  const [status, setStatus] = useState("loading");
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async (cursor) => {
+    const r = await getFeed(cursor, "todos", "checkin");
+    if (!r.ok) { setError({ type: "error", text: r.message }); return setStatus("ready"); }
+    setError(null);
+    setPosts((list) => (cursor ? [...list, ...r.posts] : r.posts));
+    setPage({ hasMore: !!r.hasMore, cursor: r.nextCursor || null });
+    setStatus("ready");
+  }, []);
+  useEffect(() => { load(null); }, [load]);
+
+  return (
+    <div style={{ padding: "6px 16px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <Message msg={error} />
+      {status === "loading" && <EmptyState title="Procurando check-ins..." />}
+      {status === "ready" && posts.length === 0 && !error && (
+        <>
+          <EmptyState title="Ninguém fez check-in hoje ainda" body="Esteja num estádio e seja o primeiro." />
+          <PrimaryBtn onClick={() => onNavigate("checkin")}>Fazer check-in</PrimaryBtn>
+        </>
+      )}
+      <PostList posts={posts} setPosts={setPosts} onNavigate={onNavigate} />
+      {page.hasMore && <SecondaryBtn onClick={() => load(page.cursor)}>Ver mais</SecondaryBtn>}
+    </div>
+  );
+}
+
+/** Estádios: os que eu já conheço (Meus estádios, com os meus jogos em cada um) e os check-ins de hoje. */
+export function EstadiosSocial({ onNavigate, onLogout, openPage = (path) => window.location.assign(path) }) {
+  const [tab, setTab] = useState("meus");
   return (
     <SocialShell onNavigate={onNavigate} onLogout={onLogout}>
       <div style={{ padding: "18px 16px 8px" }}>
-        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>Encontre sua próxima arquibancada.</h1>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 28, color: TEXT, margin: 0 }}>Estádios</h1>
       </div>
       <div style={{ padding: "6px 16px" }}>
-        <div style={{ background: "#eef2f6", borderRadius: 14, padding: "0 14px", display: "flex", gap: 10, alignItems: "center" }}>
-          <Search size={18} color={MUTED} />
-          <input aria-label="Buscar estádio ou cidade" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar estádio ou cidade..." style={{ flex: 1, border: "none", outline: "none", background: "transparent", padding: "14px 0", fontSize: 14, fontFamily: FONT_DISPLAY }} />
-        </div>
-      </div>
-      <div style={{ padding: "6px 16px" }}>
-        <div role="tablist" aria-label="Quais estádios" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
+        <div role="tablist" aria-label="Estádios" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
           {TABS.map(([id, label]) => (
-            <div key={id} role="tab" aria-selected={scope === id} onClick={() => setScope(id)} style={{ flex: 1, textAlign: "center", padding: "9px 0", borderRadius: 9, cursor: "pointer", background: scope === id ? "#fff" : "transparent" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: scope === id ? GREEN_DARK : MUTED, margin: 0 }}>{label}</p>
+            <div key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} style={{ flex: 1, textAlign: "center", padding: "9px 0", borderRadius: 9, cursor: "pointer", background: tab === id ? "#fff" : "transparent" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: tab === id ? GREEN_DARK : MUTED, margin: 0 }}>{label}</p>
             </div>
           ))}
         </div>
       </div>
-      <div style={{ padding: "6px 16px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
-        <p style={text(12, MUTED)}>{where}</p>
-        <Message msg={error} />
-        {!data && <EmptyState title="Procurando estádios..." />}
-        {data && data.stadiums.length === 0 && !error && <EmptyState title={scope === "visitados" ? "Você ainda não visitou nenhum estádio daqui" : "Nenhum estádio encontrado"} body={query ? "Tente outro nome ou cidade." : null} />}
-        {(data ? data.stadiums : []).map((s) => (
-          <div key={s.slug} role="button" aria-label={`Abrir ${s.name}`} onClick={() => open(s.slug)} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18, padding: 12, display: "flex", flexDirection: "column", gap: 10, cursor: "pointer" }}>
-            <Photo name={s.name} city={s.city} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 19, color: TEXT, margin: 0 }}>{s.name}</p>
-              <span style={{ background: s.visited ? "rgba(0,200,83,0.14)" : "#eef2f6", color: s.visited ? GREEN_DARK : MUTED, borderRadius: 999, padding: "5px 12px", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, whiteSpace: "nowrap" }}>{s.visited ? "Visitado" : "Não visitado"}</span>
-            </div>
-            <p style={text(13, MUTED)}>{[[s.city, s.country].filter(Boolean).join(", "), s.distance != null ? distLabel(s.distance) : null].filter(Boolean).join(" · ")}</p>
-            {(s.checkinsToday > 0 || s.friends > 0) && (
-              <p style={text(13, GREEN_DARK, { fontWeight: 600 })}>
-                {s.visited
-                  ? [s.checkinsToday > 0 && `${s.checkinsToday} ${s.checkinsToday === 1 ? "check-in hoje" : "check-ins hoje"}`, s.friends > 0 && `${s.friends} ${s.friends === 1 ? "amigo" : "amigos"}`].filter(Boolean).join(" · ")
-                  : [s.checkinsToday > 0 && `${s.checkinsToday} ${s.checkinsToday === 1 ? "check-in hoje" : "check-ins hoje"}`, s.friends > 0 && `${s.friends} ${s.friends === 1 ? "amigo já visitou" : "amigos já visitaram"}`].filter(Boolean).join(" · ")}
-              </p>
-            )}
-          </div>
-        ))}
+      {tab === "meus" ? <MeusEstadios onNavigate={onNavigate} /> : <HojeCheckins onNavigate={onNavigate} />}
+      <div style={{ padding: "0 16px 28px" }}>
         <SecondaryBtn onClick={() => openPage("/estadios")}>Explorar todos os estádios</SecondaryBtn>
       </div>
     </SocialShell>

@@ -16,10 +16,10 @@ const body = async (request) => {
   }
 };
 
-/** GET /api/social/feed?scope=seguindo|todos&cursor=... — a Home: "seguindo" = posts e check-ins de quem eu sigo e os meus; "todos" = posts públicos de qualquer pessoa e os meus. */
+/** GET /api/social/feed?scope=seguindo|todos&kind=checkin&cursor=... (kind=checkin: só os check-ins das últimas 24 h) — a Home: "seguindo" = posts e check-ins de quem eu sigo e os meus; "todos" = posts públicos de qualquer pessoa e os meus. */
 export async function GET(request) {
   const user = await authUser(request);
   if (!user) return send(fail("unauthorized"));
   if (!allow(`social-feed:${user.id}`, 60, 60_000)) return send(fail("rate_limited"));
-  return send(await guard(async () => getFeed(supabaseAdmin(), user, { cursor: new URL(request.url).searchParams.get("cursor"), scope: new URL(request.url).searchParams.get("scope") || "seguindo" })));
+  return send(await guard(async () => getFeed(supabaseAdmin(), user, { cursor: new URL(request.url).searchParams.get("cursor"), scope: new URL(request.url).searchParams.get("scope") || "seguindo", kind: new URL(request.url).searchParams.get("kind") || null })));
 }
