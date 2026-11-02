@@ -32,6 +32,8 @@ export const SCREEN_TO_PATH = {
   "perfil-dados": "/conta/perfil/dados",
   amigos: "/conta/amigos",
   feed: "/conta/feed",
+  central: "/conta/mais",
+  estadios: "/conta/estadios",
   checkin: "/conta/checkin",
   "post-novo": "/conta/post/novo",
   notificacoes: "/conta/notificacoes",

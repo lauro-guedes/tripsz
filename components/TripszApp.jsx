@@ -43,7 +43,9 @@ import { MeuNivel } from "./conta/MeuNivel";
 import { MeuPerfil } from "./conta/MeuPerfil";
 import { AmigosSocial } from "./social/AmigosSocial";
 import { EditarPerfilSocial } from "./social/EditarPerfilSocial";
+import { CentralMais } from "./social/CentralMais";
 import { CheckinSocial } from "./social/CheckinSocial";
+import { EstadiosSocial } from "./social/EstadiosSocial";
 import { FeedSocial } from "./social/FeedSocial";
 import { NovaPublicacao } from "./social/NovaPublicacao";
 import { PerfilSocial } from "./social/PerfilSocial";
@@ -553,6 +555,8 @@ export default function App() {
       {screen === "perfil" && <PerfilSocial onNavigate={goTo} onLogout={handleLogout} onBack={() => setScreen("perfil")} />}
       {screen === "usuario" && <PerfilSocial key={viewUser} username={viewUser} onNavigate={goTo} onLogout={handleLogout} onBack={() => window.history.back()} />}
       {screen === "feed" && <FeedSocial onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "central" && <CentralMais onNavigate={goTo} onLogout={handleLogout} />}
+      {screen === "estadios" && <EstadiosSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "checkin" && <CheckinSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "post-novo" && <NovaPublicacao onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil-editar" && <EditarPerfilSocial onNavigate={goTo} onLogout={handleLogout} />}

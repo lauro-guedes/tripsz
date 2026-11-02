@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { countryKey } from "@/lib/countries";
+import { authUser } from "@/lib/serverAuth";
+import { followGraph } from "@/lib/socialShared";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,9 @@ const COUNTRY_FLAGS = {
 };
 
 /**
- * GET /api/ranking?userId=UUID&scope=nacional|global
+ * GET /api/ranking?userId=UUID&scope=nacional|global|amigos
+ *
+ * scope "amigos": só quem a pessoa segue e ela mesma. EXIGE login (a lista de quem alguém segue não é pública): o userId vem da sessão.
  *
  * Calcula o XP de TODOS os usuários (só jogos registrados de verdade
  * contam, igual em Meu Nível) e monta o ranking. Só dá pra fazer isso
@@ -39,8 +43,14 @@ const COUNTRY_FLAGS = {
  */
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-  const scope = searchParams.get("scope") === "global" ? "global" : "nacional";
+  let userId = searchParams.get("userId");
+  const param = searchParams.get("scope");
+  const scope = param === "global" || param === "amigos" ? param : "nacional";
+  if (scope === "amigos") {
+    const user = await authUser(request);
+    if (!user) return Response.json({ error: "Faça login para ver o ranking dos seus amigos." }, { status: 401 });
+    userId = user.id;
+  }
 
   if (!userId) {
     return Response.json({ error: "Usuário não informado." }, { status: 400 });
@@ -101,9 +111,14 @@ export async function GET(request) {
     const me = entries.find((e) => e.userId === userId);
     const myHomeCountry = me?.homeCountry || null;
 
-    const filtered = scope === "nacional" && myHomeCountry
+    let filtered = scope === "nacional" && myHomeCountry
       ? entries.filter((e) => e.homeCountry === myHomeCountry)
       : entries;
+    if (scope === "amigos") {
+      const graph = await followGraph(supabase, userId);
+      const ids = new Set([userId, ...graph.following]);
+      filtered = entries.filter((e) => ids.has(e.userId));
+    }
 
     const ranked = filtered.map((e, i) => ({ ...e, position: i + 1 }));
     const podium = ranked.slice(0, 3);
@@ -113,6 +128,6 @@ export async function GET(request) {
     return Response.json({ podium, rest, myEntry, scope, total: ranked.length });
   } catch (e) {
     console.error("Erro em /api/ranking:", e);
-    return Response.json({ error: e.message || "Não foi possível montar o ranking." }, { status: 500 });
+    return Response.json({ error: "Não foi possível montar o ranking." }, { status: 500 }); // o detalhe fica só no log do servidor
   }
 }

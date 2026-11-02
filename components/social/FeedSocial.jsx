@@ -1,28 +1,44 @@
 "use client";
-import { Camera, MapPin } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CampoArroba } from "../jogos/acompanhantes/CampoArroba";
 import { useAuthedUser } from "../jogos/acompanhantes/useAcompanhantes";
 import { Message, PrimaryBtn, SecondaryBtn, text } from "../convite/ConviteUi";
 import { cleanUsername } from "../../lib/social";
 import { isNativeApp } from "../../lib/nativeApp";
-import { getFeed } from "../../lib/socialClient";
-import { BORDER, FONT_DISPLAY, GREEN, MUTED, TEXT } from "../../lib/tokens";
+import { getFeed, getTodayCheckins } from "../../lib/socialClient";
+import { BORDER, FONT_DISPLAY, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { PostList } from "./PostList";
-import { Avatar, EmptyState, SmallBtn, SocialShell } from "./ui";
+import { Avatar, BrandHeader, EmptyState, SmallBtn, SocialShell } from "./ui";
 
-/** Quem está no estádio agora: o círculo de cada pessoa com o estádio embaixo. */
-function NowAtStadium({ people, onOpen }) {
-  if (!people || people.length === 0) return null;
+const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+/** "Segunda-feira, 02 de novembro de 2026" */
+export function todayLabel(now = new Date()) {
+  const s = now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+/** "02 nov · 20:45" */
+export function kickoffLabel(iso) {
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return "";
+  return `${String(d.getDate()).padStart(2, "0")} ${MONTHS[d.getMonth()]} · ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+/** "Mais check-ins hoje": os jogos com mais gente fazendo check-in (contagens, nada de quem). */
+function TodayCheckins({ games, onSeeAll }) {
+  if (!games || games.length === 0) return null;
   return (
-    <div style={{ background: "#fff", padding: "14px 16px 12px", borderBottom: `1px solid ${BORDER}` }}>
-      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: MUTED, textTransform: "uppercase", margin: "0 0 10px" }}>No estádio agora</p>
-      <div style={{ display: "flex", gap: 14, overflowX: "auto" }}>
-        {people.map((p) => (
-          <div key={p.username} role="button" aria-label={`${p.mine ? "Você" : p.displayName} está no ${p.stadium}`} onClick={() => onOpen(p.username)} style={{ width: 64, flexShrink: 0, textAlign: "center", cursor: "pointer" }}>
-            <div style={{ borderRadius: 999, padding: 2, border: `2px solid ${GREEN}`, display: "inline-block" }}><Avatar url={p.avatarUrl} name={p.displayName} size={52} /></div>
-            <p style={text(12, TEXT, { fontWeight: 700, marginTop: 4 })}>{p.mine ? "Você" : p.displayName.split(" ")[0]}</p>
-            <p style={{ ...text(10, MUTED), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.stadium}</p>
+    <div style={{ padding: "0 16px 6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "4px 0 10px" }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>Mais check-ins hoje</p>
+        <p role="button" aria-label="Ver jogos" onClick={onSeeAll} style={{ ...text(13, GREEN_DARK, { fontWeight: 700 }), cursor: "pointer" }}>Ver jogos</p>
+      </div>
+      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+        {games.map((g) => (
+          <div key={g.fixtureId} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 14, minWidth: 168, maxWidth: 190, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+            <p style={text(11, MUTED)}>{kickoffLabel(g.kickoff)}</p>
+            <p style={text(15, TEXT, { fontWeight: 800 })}>{g.home} × {g.away}</p>
+            <p style={text(12, MUTED)}>{[g.competition, g.stadium].filter(Boolean).join(" · ")}</p>
+            <p style={text(12, GREEN_DARK, { fontWeight: 700 })}>📍 {g.count} {g.count === 1 ? "check-in" : "check-ins"}</p>
           </div>
         ))}
       </div>
@@ -30,33 +46,34 @@ function NowAtStadium({ people, onOpen }) {
   );
 }
 
-/** Home: check-ins e publicações de quem eu sigo (e as minhas), com atalhos pra publicar e fazer check-in. */
+/** Início: os posts e check-ins (Todos ou só de quem eu sigo), com os jogos de hoje com mais check-ins no topo. */
 export function FeedSocial({ onNavigate, onLogout }) {
   const me = useAuthedUser();
+  const [scope, setScope] = useState("todos");
   const [posts, setPosts] = useState([]);
-  const [now, setNow] = useState([]);
+  const [today, setToday] = useState([]);
   const [page, setPage] = useState({ hasMore: false, cursor: null });
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
   const [handle, setHandle] = useState("");
   const loadingMore = useRef(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (which) => {
     setStatus("loading");
-    const r = await getFeed();
+    const r = await getFeed(null, which);
     if (!r.ok) { setError({ type: "error", text: r.message }); return setStatus("error"); }
     setError(null);
     setPosts(r.posts);
-    setNow(r.nowAtStadium || []);
     setPage({ hasMore: r.hasMore, cursor: r.nextCursor });
     setStatus("ready");
   }, []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(scope); }, [scope, load]);
+  useEffect(() => { let alive = true; getTodayCheckins().then((r) => alive && r.ok && setToday(r.games)); return () => { alive = false; }; }, []);
 
   const more = async () => {
     if (loadingMore.current || !page.cursor) return;
     loadingMore.current = true;
-    const r = await getFeed(page.cursor);
+    const r = await getFeed(page.cursor, scope);
     loadingMore.current = false;
     if (!r.ok) return setError({ type: "error", text: r.message });
     setPosts((list) => [...list, ...r.posts.filter((p) => !list.some((x) => x.id === p.id))]);
@@ -66,33 +83,44 @@ export function FeedSocial({ onNavigate, onLogout }) {
 
   return (
     <SocialShell onNavigate={onNavigate} onLogout={onLogout}>
-      <NowAtStadium people={now} onOpen={(u) => onNavigate("usuario", u)} />
-      <div style={{ background: "#fff", padding: "12px 16px", display: "flex", gap: 10, alignItems: "center", borderBottom: `1px solid ${BORDER}` }}>
-        <Avatar url={me.avatar} name={me.name} size={40} />
-        <div role="button" aria-label="Nova publicação" onClick={() => onNavigate("post-novo")} style={{ flex: 1, background: "#eef2f6", borderRadius: 999, padding: "11px 16px", cursor: "pointer" }}><p style={text(14, MUTED)}>O que você viveu no futebol hoje?</p></div>
-        <div role="button" aria-label="Adicionar foto à publicação" onClick={() => onNavigate("post-novo")} style={{ width: 42, height: 42, borderRadius: 999, background: "#eef2f6", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Camera size={20} color={TEXT} /></div>
-        <div role="button" aria-label="Fazer check-in" onClick={() => onNavigate("checkin")} style={{ width: 42, height: 42, borderRadius: 999, background: GREEN, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><MapPin size={20} color="#fff" /></div>
+      {isNativeApp() && <BrandHeader onBell={() => onNavigate("notificacoes")} />}
+      <div style={{ padding: "14px 16px 8px" }}>
+        <p style={text(13, MUTED)}>{todayLabel()}</p>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 26, color: TEXT, margin: "4px 0 0" }}>O futebol acontece aqui.</h1>
       </div>
-      {isNativeApp() && (
-        <div style={{ display: "flex", gap: 8, padding: "10px 16px", overflowX: "auto" }}>
-          <SmallBtn kind="outline" onClick={() => onNavigate("buscar")}>Buscar jogos</SmallBtn>
-          <SmallBtn kind="outline" onClick={() => onNavigate("calendario")}>Calendário</SmallBtn>
-          <SmallBtn kind="outline" onClick={() => onNavigate("roteiros")}>Roteiros</SmallBtn>
+      <TodayCheckins games={today} onSeeAll={() => onNavigate("estadios")} />
+      <div style={{ padding: "8px 16px" }}>
+        <div role="tablist" aria-label="Quem aparece no Início" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
+          {[["todos", "Todos"], ["seguindo", "Seguindo"]].map(([id, label]) => (
+            <div key={id} role="tab" aria-selected={scope === id} onClick={() => setScope(id)} style={{ flex: 1, textAlign: "center", padding: "9px 0", borderRadius: 9, cursor: "pointer", background: scope === id ? "#fff" : "transparent" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: scope === id ? GREEN_DARK : MUTED, margin: 0 }}>{label}</p>
+            </div>
+          ))}
         </div>
-      )}
-      <div style={{ padding: "12px 16px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+      </div>
+      <div style={{ padding: "4px 16px 8px", display: "flex", gap: 10, alignItems: "center" }}>
+        <Avatar url={me.avatar} name={me.name} size={40} />
+        <div role="button" aria-label="Nova publicação" onClick={() => onNavigate("post-novo")} style={{ flex: 1, background: "#eef2f6", borderRadius: 999, padding: "12px 16px", cursor: "pointer" }}><p style={text(14, MUTED)}>O que você viveu no futebol hoje?</p></div>
+      </div>
+      <div style={{ padding: "4px 16px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
         <Message msg={error} />
-        {status === "loading" && <EmptyState title="Carregando o feed..." />}
-        {status === "error" && <div style={{ display: "flex", justifyContent: "center" }}><SmallBtn onClick={load}>Tentar de novo</SmallBtn></div>}
-        {status === "ready" && posts.length === 0 && (
+        {status === "loading" && <EmptyState title="Carregando o Início..." />}
+        {status === "error" && <div style={{ display: "flex", justifyContent: "center" }}><SmallBtn onClick={() => load(scope)}>Tentar de novo</SmallBtn></div>}
+        {status === "ready" && posts.length === 0 && scope === "seguindo" && (
           <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-            <p style={text(17, TEXT, { fontWeight: 700 })}>Seu feed está vazio</p>
-            <p style={text(13, MUTED)}>Siga amigos para ver os check-ins e as publicações deles, ou faça o seu primeiro check-in ou publicação.</p>
-            <PrimaryBtn onClick={() => onNavigate("checkin")}>Fazer check-in</PrimaryBtn>
-            <SecondaryBtn onClick={() => onNavigate("post-novo")}>Nova publicação</SecondaryBtn>
+            <p style={text(17, TEXT, { fontWeight: 700 })}>Nada de quem você segue ainda</p>
+            <p style={text(13, MUTED)}>Quando as pessoas que você segue publicarem ou fizerem check-in, aparece aqui. Veja o que está rolando com todos.</p>
+            <PrimaryBtn onClick={() => setScope("todos")}>Ver todos</PrimaryBtn>
             <p style={text(12, MUTED, { fontWeight: 700, marginTop: 4 })}>Encontrar uma pessoa pelo @</p>
             <CampoArroba value={handle} onChange={setHandle} ariaLabel="Buscar pessoa pelo @" />
             <SecondaryBtn onClick={() => target && onNavigate("usuario", target)} disabled={!target}>Ver perfil</SecondaryBtn>
+          </div>
+        )}
+        {status === "ready" && posts.length === 0 && scope === "todos" && (
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={text(17, TEXT, { fontWeight: 700 })}>Ainda não há publicações</p>
+            <p style={text(13, MUTED)}>Seja o primeiro: faça um check-in no estádio ou compartilhe uma história.</p>
+            <PrimaryBtn onClick={() => onNavigate("central")}>Registrar agora</PrimaryBtn>
           </div>
         )}
         <PostList posts={posts} setPosts={setPosts} onNavigate={onNavigate} />

@@ -1,44 +1,51 @@
 "use client";
-import { ArrowLeft, Lock, MoreVertical } from "lucide-react";
+import { ChevronRight, Settings } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
-import { BORDER, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { ProfileMenu } from "./ProfileMenu";
 import { ProfilePosts } from "./ProfilePosts";
 import { SocialOnboarding } from "./SocialOnboarding";
-import { Avatar, EmptyState, SmallBtn, SocialShell, Tabs } from "./ui";
+import { Avatar, EmptyState, ScreenHeader, SmallBtn, SocialShell, Tabs } from "./ui";
 import { useProfile } from "./useProfile";
 
-const MONTHS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-/** "2025-10-14" -> "14 OUT 2025" */
-export function journeyDate(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
-  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : "";
-}
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 function Stat({ value, label }) {
   return (
     <div style={{ flex: 1, textAlign: "center" }}>
-      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: GREEN, margin: 0 }}>{value}</p>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: GREEN_DARK, margin: 0 }}>{value}</p>
       <p style={text(12, MUTED)}>{label}</p>
     </div>
   );
 }
 
-function Locked({ icon, title, body }) {
+function Locked({ title, body }) {
   return (
-    <div style={{ margin: "16px 20px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
-      {icon}
+    <div style={{ margin: "16px 16px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
       <p style={text(15, TEXT, { fontWeight: 700 })}>{title}</p>
       <p style={text(13, MUTED)}>{body}</p>
     </div>
   );
 }
 
+/** A linha do menu do meu perfil (Conquistas, Histórico de jogos, Minha assinatura). */
+function MenuRow({ title, hint, onClick, last }) {
+  return (
+    <div role="button" aria-label={title} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", cursor: "pointer", borderBottom: last ? "none" : `1px solid ${BORDER}` }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{title}</p>
+        <p style={text(13, MUTED)}>{hint}</p>
+      </div>
+      <ChevronRight size={20} color={MUTED} />
+    </div>
+  );
+}
+
 /**
- * Perfil social. Sem `username`: o MEU perfil (na primeira vez, passa pelos 4 passos do onboarding).
- * Com `username`: o perfil de outra pessoa (seguir, denunciar, bloquear).
+ * Perfil social. Sem `username`: o MEU perfil (na primeira vez, passa pelos 4 passos do onboarding), com o menu de
+ * Conquistas, Histórico de jogos e Minha assinatura. Com `username`: o perfil de outra pessoa (seguir, denunciar, bloquear).
  */
 export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) {
   const p = useProfile(username);
@@ -63,76 +70,78 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
     const pr = d.profile;
     const rel = d.relation.state;
     const self = rel === "self";
+    const mutual = rel === "following" && d.relation.followsYou;
     const where = [pr.city, pr.country].filter(Boolean).join(", ");
     const action = self ? (
-      <SmallBtn kind="outline" onClick={() => onNavigate("perfil-editar")}>Editar perfil</SmallBtn>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <SmallBtn kind="soft" onClick={() => onNavigate("perfil-editar")}>Editar perfil</SmallBtn>
+        <div role="button" aria-label="Configurações da conta" onClick={() => onNavigate("perfil-dados")} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Settings size={22} color={TEXT} /></div>
+      </div>
     ) : rel === "blocked" ? (
       <SmallBtn onClick={p.unblock} disabled={p.busy}>Desbloquear</SmallBtn>
     ) : rel === "following" ? (
-      <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Seguindo</SmallBtn>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        {mutual && <SmallBtn kind="soft">Amigos ✓</SmallBtn>}
+        <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Seguindo</SmallBtn>
+      </div>
     ) : rel === "requested" ? (
       <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Solicitado</SmallBtn>
     ) : (
       <SmallBtn onClick={p.follow} disabled={p.busy}>Seguir</SmallBtn>
     );
-    const counts = `${plural(d.counts.followers, "seguidor", "seguidores")} · ${d.counts.following} seguindo`;
+    const social = `${plural(d.counts.followers, "seguidor", "seguidores")} · ${d.counts.following} seguindo`;
     body = (
       <>
-        <div style={{ position: "relative", height: 150, background: "linear-gradient(135deg,#0f172a,#14532d)", overflow: "hidden" }}>
+        <ScreenHeader title={self ? "Meu perfil" : pr.displayName} onBack={self ? () => window.history.back() : onBack} />
+        <div style={{ position: "relative", height: 130, margin: "0 16px", borderRadius: 16, background: "linear-gradient(135deg,#0f172a,#14532d)", overflow: "hidden" }}>
           {pr.coverUrl && <img src={pr.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
           {!self && (
-            <>
-              <div role="button" aria-label="Voltar" onClick={onBack} style={{ position: "absolute", top: 12, left: 12, width: 36, height: 36, borderRadius: 999, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <ArrowLeft size={20} color="#fff" />
-              </div>
-              <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ position: "absolute", top: 12, right: 12, width: 36, height: 36, borderRadius: 999, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <MoreVertical size={20} color="#fff" />
-              </div>
-            </>
-          )}
-        </div>
-        <div style={{ background: "#fff", padding: "0 20px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: -40 }}>
-            <Avatar url={pr.avatarUrl} name={pr.displayName} size={80} ring />
-            <div style={{ paddingBottom: 6 }}>{action}</div>
-          </div>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h1>
-          <p style={text(14, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
-          {d.mutualCount > 0 && <p style={text(12, MUTED, { marginTop: 2 })}>🤝 {plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
-          {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 10, whiteSpace: "pre-line" }}>{pr.bio}</p>}
-          {pr.kinds.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-              {pr.kinds.map((k) => (
-                <span key={k} style={{ border: `1px solid ${GREEN}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 11, color: GREEN_DARK }}>{k}</span>
-              ))}
+            <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ position: "absolute", top: 10, right: 10, width: 36, height: 36, borderRadius: 999, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <MoreVertical size={20} color="#fff" />
             </div>
           )}
-          {self ? (
-            <p role="button" aria-label="Abrir amigos" onClick={() => onNavigate("amigos")} style={{ ...text(13, TEXT, { fontWeight: 600 }), marginTop: 12, cursor: "pointer" }}>{counts}</p>
-          ) : (
-            <p style={{ ...text(13, MUTED), marginTop: 12 }}>{counts}</p>
+        </div>
+        <div style={{ padding: "12px 16px 8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Avatar url={pr.avatarUrl} name={pr.displayName} size={68} />
+            {action}
+          </div>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h2>
+          <p style={text(14, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
+          {d.mutualCount > 0 && <p style={text(12, GREEN_DARK, { marginTop: 2, fontWeight: 600 })}>{plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
+          {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 8, whiteSpace: "pre-line" }}>{pr.bio}</p>}
+          {pr.kinds.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+              {pr.kinds.map((k) => <span key={k} style={{ border: `1px solid ${GREEN}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 11, color: GREEN_DARK }}>{k}</span>)}
+            </div>
           )}
         </div>
+        <div role={self ? "button" : undefined} aria-label={self ? "Abrir amigos" : undefined} onClick={self ? () => onNavigate("amigos") : undefined} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0 16px 10px", cursor: self ? "pointer" : "default" }}>
+          {self && d.counts.friends != null ? <p style={text(14, TEXT, { fontWeight: 800 })}>{plural(d.counts.friends, "amigo", "amigos")}</p> : <span />}
+          <p style={text(13, MUTED)}>{social}</p>
+        </div>
         <Message msg={p.notice} />
-        {rel === "blocked" && <Locked icon={null} title={`Você bloqueou @${pr.username}`} body="Desbloqueie para voltar a ver o perfil e seguir." />}
-        {rel !== "blocked" && !d.canSeeContent && <Locked icon={<Lock size={28} color={MUTED} />} title="Este perfil é privado" body={rel === "requested" ? "Pedido enviado. Quando for aprovado, você verá os jogos e estádios." : "Siga para ver os jogos, estádios e publicações."} />}
+        {rel === "blocked" && <Locked title={`Você bloqueou @${pr.username}`} body="Desbloqueie para voltar a ver o perfil e seguir." />}
+        {rel !== "blocked" && !d.canSeeContent && <Locked title="Este perfil é privado" body={rel === "requested" ? "Pedido enviado. Quando for aprovado, você verá os jogos e estádios." : "Siga para ver os jogos, estádios e publicações."} />}
         {d.canSeeContent && d.stats && (
           <>
-            <div style={{ background: "#fff", display: "flex", padding: "4px 12px 16px", borderBottom: `1px solid ${BORDER}` }}>
+            <div style={{ display: "flex", padding: "8px 12px 6px" }}>
               <Stat value={d.stats.stadiums} label="estádios" />
               <Stat value={d.stats.countries} label="países" />
               <Stat value={d.stats.games} label="jogos" />
               <Stat value={d.stats.competitions} label="ligas" />
             </div>
-            <div role={self ? "button" : undefined} aria-label={self ? "Abrir conquistas" : undefined} onClick={self ? () => onNavigate("conquistas") : undefined} style={{ margin: "16px 20px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 6, cursor: self ? "pointer" : "default" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 13, color: TEXT, margin: 0, textTransform: "uppercase" }}>Passaporte de Estádios</p>
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0, textTransform: "uppercase" }}>Nível: {d.stats.level}</p>
+            {self && (
+              <div style={{ margin: "0 16px 14px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18 }}>
+                <MenuRow title="Conquistas" hint={`Football Passport · Nível ${d.stats.level}`} onClick={() => onNavigate("conquistas")} />
+                <MenuRow title="Histórico de jogos" hint={`${plural(d.stats.games, "jogo registrado", "jogos registrados")}`} onClick={() => onNavigate("jogos")} />
+                <MenuRow title="Minha assinatura" hint="Plano, pagamento e faturas" onClick={() => onNavigate("assinatura")} last />
               </div>
-              <p style={text(13, MUTED)}>Jogos e estádios registrados no Passaporte</p>
+            )}
+            <div style={{ padding: "0 16px" }}>
+              <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Publicações" }, { id: "checkins", label: "Check-ins" }, { id: "estadios", label: "Estádios" }]} />
             </div>
-            <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Posts" }, { id: "checkins", label: "Check-ins" }, { id: "estadios", label: "Estádios" }, { id: "passaporte", label: "Passaporte" }]} />
-            <div style={{ background: "#fff", minHeight: 160 }}>
+            <div style={{ background: "#fff", minHeight: 160, margin: "0 0 0" }}>
               {(tab === "posts" || tab === "checkins") && <ProfilePosts key={`${pr.username}-${tab}`} username={pr.username} kind={tab === "posts" ? "post" : "checkin"} self={self} onNavigate={onNavigate} />}
               {tab === "estadios" &&
                 (d.passport.stadiums.length === 0 ? (
@@ -147,21 +156,6 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
                       <p style={text(13, GREEN_DARK, { fontWeight: 700 })}>{plural(st.visits, "visita", "visitas")}</p>
                     </div>
                   ))
-                ))}
-              {tab === "passaporte" &&
-                (d.passport.journey.length === 0 ? (
-                  <EmptyState title="A jornada começa no primeiro jogo" />
-                ) : (
-                  <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-                    <p style={text(16, TEXT, { fontWeight: 700 })}>{self ? "Minha Jornada" : "Jornada"}</p>
-                    {d.passport.journey.map((j) => (
-                      <div key={`${j.stadium}-${j.date}`} style={{ borderLeft: `2px solid ${GREEN}`, paddingLeft: 14, display: "flex", flexDirection: "column", gap: 2 }}>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GREEN, margin: 0 }}>{journeyDate(j.date)}</p>
-                        <p style={text(15, TEXT, { fontWeight: 700 })}>{j.stadium}</p>
-                        {j.game && <p style={text(12, MUTED)}>{j.game}</p>}
-                      </div>
-                    ))}
-                  </div>
                 ))}
             </div>
           </>

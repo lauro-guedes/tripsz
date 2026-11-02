@@ -1,22 +1,29 @@
 "use client";
+import { ArrowLeft, Bell } from "lucide-react";
 import { useAuthedUser } from "../jogos/acompanhantes/useAcompanhantes";
 import { SheetHandle, useBodyLock } from "../jogos/acompanhantes/ui";
 import { useSheetDrag } from "../jogos/acompanhantes/useSheetDrag";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
 import { useIsMobile } from "../ui/useIsMobile";
+import { Wordmark } from "../ui/Wordmark";
+import { isNativeApp } from "../../lib/nativeApp";
 import { text } from "../convite/ConviteUi";
 import { initialsOf } from "../../lib/social";
 import { BG, BORDER, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
 
 export const MAX_W = 480; // largura das telas sociais (desenhadas pro celular); no computador ficam centralizadas
 
-/** Casca das telas sociais: navegação do app em cima e uma coluna de celular no meio. */
+/**
+ * Casca das telas sociais: uma coluna de celular no meio. No SITE tem a navegação do topo; no APP não (cada tela desenha o próprio
+ * cabeçalho: marca + sino no Início, "voltar + título" nas outras) e a navegação é a barra de baixo.
+ */
 export function SocialShell({ onNavigate, onLogout, children }) {
   const user = useAuthedUser();
+  const native = isNativeApp();
   return (
     <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
-      <AuthedNav active="perfil" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />
+      {!native && <AuthedNav active="perfil" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />}
       <div style={{ maxWidth: MAX_W, margin: "0 auto", width: "100%", background: BG }}>{children}</div>
       <AuthedFooter />
     </div>
@@ -52,9 +59,10 @@ export function Tabs({ tabs, value, onChange, label = "Abas" }) {
 /** Botão pequeno (Seguir, Seguindo, Aceitar...). `kind`: solid (verde) | outline. */
 export function SmallBtn({ kind = "solid", onClick, disabled, children, label }) {
   const solid = kind === "solid";
+  const soft = kind === "soft"; // verde claro, sem borda
   return (
-    <div role="button" aria-label={label} aria-disabled={!!disabled} onClick={disabled ? undefined : onClick} style={{ background: solid ? GREEN : "#fff", border: `1px solid ${solid ? GREEN : BORDER}`, borderRadius: 999, padding: "9px 20px", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 6 }}>
-      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: solid ? "#fff" : TEXT, margin: 0 }}>{children}</p>
+    <div role="button" aria-label={label} aria-disabled={!!disabled} onClick={disabled ? undefined : onClick} style={{ background: solid ? GREEN : soft ? "rgba(0,200,83,0.12)" : "#fff", border: `1px solid ${solid ? GREEN : soft ? "transparent" : BORDER}`, borderRadius: 999, padding: "9px 20px", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.6 : 1, whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: solid ? "#fff" : soft ? "#008a3a" : TEXT, margin: 0 }}>{children}</p>
     </div>
   );
 }
@@ -90,6 +98,32 @@ export function Sheet({ title, onClose, children }) {
           {children}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Cabeçalho "voltar + título" das telas internas. Sem `onBack`, só o título. */
+export function ScreenHeader({ title, onBack }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", background: BG }}>
+      <div style={{ width: 40 }}>
+        {onBack && <div role="button" aria-label="Voltar" onClick={onBack} style={{ width: 40, height: 40, display: "flex", alignItems: "center", cursor: "pointer" }}><ArrowLeft size={24} color={TEXT} /></div>}
+      </div>
+      <h1 style={{ flex: 1, textAlign: "center", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 17, color: TEXT, margin: 0 }}>{title}</h1>
+      <div style={{ width: 40 }} />
+    </div>
+  );
+}
+
+/** Cabeçalho do Início no APP: a marca "tripsz.social" e o sino das notificações. */
+export function BrandHeader({ onBell }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", height: 56, boxSizing: "border-box", background: "#fff" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <Wordmark height={24} />
+        <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 20, color: GREEN, marginLeft: -2 }}>.social</span>
+      </div>
+      <div role="button" aria-label="Notificações" onClick={onBell} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Bell size={22} color={TEXT} /></div>
     </div>
   );
 }

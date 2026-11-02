@@ -1,4 +1,5 @@
 "use client";
+import { authFetch } from "../../lib/authFetch";
 import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, GREEN_BG, MUTED, TEXT } from "../../lib/tokens";
@@ -115,7 +116,7 @@ export function RankingTorcedores({ onNavigate, onLogout }) {
 
       setLoading(true);
       try {
-        const res = await fetch(`/api/ranking?userId=${userData.user?.id}&scope=${scope}`);
+        const res = await (scope === "amigos" ? authFetch : fetch)(`/api/ranking?userId=${userData.user?.id}&scope=${scope}`); // "amigos" exige login (vai com o token)
         const json = await res.json();
         setData(json);
       } finally {
@@ -141,7 +142,7 @@ export function RankingTorcedores({ onNavigate, onLogout }) {
               <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional.</p>
             </div>
             <div style={{ background: BORDER, padding: 4, borderRadius: 8, display: "flex", width: isMobile ? "100%" : "auto" }}>
-              {[["nacional", "Nacional"], ["global", "Global"]].map(([key, label]) => (
+              {[["nacional", "Nacional"], ["global", "Global"], ["amigos", "Amigos"]].map(([key, label]) => (
                 <div key={key} onClick={() => setScope(key)} style={{ flex: isMobile ? 1 : "none", background: scope === key ? GREEN : "transparent", padding: "10px 24px", borderRadius: 6, textAlign: "center", cursor: "pointer" }}>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: scope === key ? 700 : 500, fontSize: isMobile ? 13 : 14, color: scope === key ? "#fff" : MUTED, margin: 0 }}>{label}</p>
                 </div>

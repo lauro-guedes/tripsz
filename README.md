@@ -280,3 +280,20 @@ Rede social do tripsz, em fases. A Fase 1 entrega a base; posts, check-in no est
 - **Telas (`components/social/*`):** `FeedSocial`, `PostCard`/`PostList`, `Comentarios`, `PostMenu`, `NovaPublicacao`, `CheckinSocial`, `PhotoPicker`, `ProfilePosts` (abas Posts e Check-ins
   do perfil) e `components/app/AddSheet.jsx` (o "+" da barra: Fazer check-in / Nova publicação / Registrar um jogo). Endereços: `/conta/feed`, `/conta/checkin`, `/conta/post/novo`.
 - **Navegação do app:** Home = feed; "+" = folha com as 3 opções; Explorar (calendário) e Estádios (meus jogos) seguem como estavam; o "Buscar jogos" virou atalho no feed (só no app).
+
+## tripsz.social — Navegação do app (Fase 3, etapa 1)
+
+Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICATIVO · Social e torcida"). **Sem SQL novo.** Precisa da Fase 2 aplicada antes.
+
+- **Barra de baixo (app):** Início (o feed) · Estádios · (+) · Ranking · Perfil. O Explorar saiu. O "+" abre a **Central +** (`/conta/mais`): Fazer check-in, Adicionar jogo passado
+  (o registro de jogo) e Criar publicação. Conquistas, Histórico de jogos, Minha assinatura e Amigos ficam dentro do Perfil.
+- **Início (`/conta/feed`):** data, "O futebol acontece aqui.", **Mais check-ins hoje** (jogos com mais pessoas com check-in público nas últimas 24 h), abas **Todos | Seguindo**.
+  "Todos" = posts públicos de qualquer pessoa (perfil privado só se eu seguir) + tudo o que eu veria em "Seguindo" + os meus. API: `GET /api/social/feed?scope=todos|seguindo`,
+  `GET /api/social/checkins/today`.
+- **Estádios (`/conta/estadios`):** descoberta com busca, abas Todos | Visitados | Não visitados, distância (se a pessoa liberar a localização), "check-ins hoje" e "amigos que já visitaram".
+  Os estádios vêm do calendário de jogos do app; o cartão abre a página pública do estádio (`/estadios/<slug>`). API: `GET /api/social/stadiums`.
+- **Ranking:** nova aba **Amigos** (quem eu sigo e eu). Exige login: `GET /api/ranking?scope=amigos` usa o usuário da sessão (o `userId` da URL é ignorado).
+- **Meu perfil:** cabeçalho "voltar + título", "Editar perfil" e engrenagem (dados da conta), "N amigos" (quem eu sigo e me segue de volta), menu com Conquistas, Histórico de jogos e
+  Minha assinatura, abas Publicações | Check-ins | Estádios (a aba Passaporte/jornada saiu). Perfil de outra pessoa: selo "Amigos ✓" quando se seguem.
+- No app, as telas sociais não têm mais a barra antiga do topo (cada uma tem o próprio cabeçalho); no site continua a navegação do topo.
+- Removidos: `components/app/AddSheet.jsx` (a folha do "+") e o "No estádio agora" / atalhos Buscar jogos, Calendário e Roteiros do feed.
