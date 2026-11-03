@@ -6,7 +6,7 @@ import { Message, PrimaryBtn, SecondaryBtn, text } from "../convite/ConviteUi";
 import { cleanUsername } from "../../lib/social";
 import { isNativeApp } from "../../lib/nativeApp";
 import { getFeed, getTodayCheckins } from "../../lib/socialClient";
-import { BORDER, FONT_DISPLAY, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { PostList } from "./PostList";
 import { Avatar, BrandHeader, EmptyState, SmallBtn, SocialShell } from "./ui";
 
@@ -47,7 +47,7 @@ function TodayCheckins({ games, onSeeAll }) {
 }
 
 /** Início: os posts e check-ins (Todos ou só de quem eu sigo), com os jogos de hoje com mais check-ins no topo. */
-export function FeedSocial({ onNavigate, onLogout }) {
+export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
   const me = useAuthedUser();
   const [scope, setScope] = useState("todos");
   const [posts, setPosts] = useState([]);
@@ -88,6 +88,19 @@ export function FeedSocial({ onNavigate, onLogout }) {
         <p style={text(13, MUTED)}>{todayLabel()}</p>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 26, color: TEXT, margin: "4px 0 0" }}>O futebol acontece aqui.</h1>
       </div>
+      {onCreateTrip && (
+        <div style={{ padding: "4px 16px 10px" }}>
+          <div style={{ borderRadius: 18, background: "linear-gradient(135deg,#0f172a,#14532d)", padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.75)", margin: 0, textTransform: "uppercase" }}>Roteiro de viagem</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: "#fff", margin: 0, lineHeight: 1.2 }}>Monte seu roteiro para ver seu time ao vivo.</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0 }}>Conte o destino, as datas e o orçamento e a gente sugere os jogos, a hospedagem e o ingresso.</p>
+            <div role="button" aria-label="Montar meu roteiro" onClick={onCreateTrip} style={{ background: GREEN, borderRadius: 12, padding: "13px 16px", textAlign: "center", cursor: "pointer" }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", margin: 0 }}>Montar meu roteiro</p>
+            </div>
+            <p role="button" aria-label="Ver meus roteiros" onClick={() => onNavigate("roteiros")} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, textAlign: "center", textDecoration: "underline", cursor: "pointer" }}>Ver meus roteiros</p>
+          </div>
+        </div>
+      )}
       <TodayCheckins games={today} onSeeAll={() => onNavigate("buscar")} />
       <div style={{ padding: "8px 16px" }}>
         <div role="tablist" aria-label="Quem aparece no Início" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
