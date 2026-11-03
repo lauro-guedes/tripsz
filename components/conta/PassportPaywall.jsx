@@ -8,7 +8,7 @@ import { useIsMobile } from "../ui/useIsMobile";
 import { Award, BarChart2, Clipboard, Share2, Star, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
-export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew, hidePassCard = false }) {
+export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCreateNew, hidePassCard = false, hideIntro = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -31,12 +31,15 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
   return (
     <div style={{ background: BG, width: "100%" }}>
       {loadingPlan && <PassportCheckout plan={loadingPlan} onClose={() => setLoadingPlan(null)} />}
+      {(!hideIntro || !hidePassCard) && (
       <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: isMobile ? "stretch" : "center", flexWrap: "wrap", padding: isMobile ? "32px 0" : `64px ${px}` }}>
+          {!hideIntro && (
         <div style={{ position: "relative", flex: isMobile ? 1 : "1 1 360px", minWidth: 0, display: "flex", flexDirection: "column", gap: 24, padding: isMobile ? `0 ${px}` : 0 }}>
           <Badge>Documento Oficial do Torcedor</Badge>
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 28 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Seu Passaporte de Estádios</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 15 : 22, lineHeight: 1.5, color: BODY, margin: 0 }}>Toda atmosfera vivida, cada arquibancada tremendo e os templos do futebol mundial que você já conquistou. Colecione conquistas de suas viagens.</p>
         </div>
+          )}
         {!hidePassCard && (
         <div style={{ position: "relative", background: "#fff", border: `2px solid ${GREEN}`, boxShadow: "0px 12px 24px rgba(0,200,83,0.08)", borderRadius: 16, padding: isMobile ? 20 : 32, width: isMobile ? "calc(100% - 32px)" : 420, maxWidth: "100%", boxSizing: "border-box", alignSelf: isMobile ? "center" : undefined, flexShrink: 0, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -65,9 +68,10 @@ export function PassportPaywall({ userId, userEmail, userName, userAvatar, onCre
         </div>
         )}
       </div>
+      )}
 
       <div style={{ padding: isMobile ? `24px ${px} 48px` : `24px ${px} 80px`, display: "flex", flexDirection: "column", gap: 24 }}>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>O que você desbloqueia com o Passport:</p>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>O que você desbloqueia com o Passaporte de Estádios:</p>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
           {features.map(([Ic, title, body]) => (
             <div key={title} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20, display: "flex", gap: 16, alignItems: "center" }}>

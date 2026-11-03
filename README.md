@@ -309,3 +309,14 @@ Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICAT
   `PATCH /api/social/posts/<id>` só muda a visibilidade) ou "Ver no feed", e "Voltar ao Início".
 - **Adicionar jogo passado** (Central +) continua abrindo o registro de jogo, que já leva ao "Quem foi com você?" depois de salvar (código não mexido).
 - **Atalhos:** "Ver jogos" (Início) abre o Buscar jogos; **Meu calendário** e **Meus roteiros** são linhas do menu do Perfil.
+
+## Perfil mais enxuto e Minha assinatura sem o bloco de abertura (Fase 3, etapa 3)
+
+**Sem SQL novo.**
+
+- **Meu perfil:** sem o banner da capa (o "⋮" de denunciar/bloquear de OUTRA pessoa foi pro cabeçalho). A aba **Estádios** do meu perfil virou **Conquistas** (os "Meus estádios" já estão na aba Estádios da barra):
+  mostra "N de M conquistas", os primeiros 9 selos e "Ver todas as conquistas" (a conta é a mesma da tela Conquistas: `computeBadgeCategories`; os dados vêm de `lib/badgeContext.js`, cópia do que
+  a tela monta). Em perfil de OUTRA pessoa as abas continuam Publicações | Check-ins | Estádios.
+- **Atalhos:** o cartão alto virou UMA linha de botões pequenos (rola de lado se não couber): Histórico de jogos, Meu calendário, Meus roteiros, Minha assinatura. Conquistas saiu da lista (virou aba).
+- **Minha assinatura:** `PassportPaywall` ganhou `hideIntro`; a assinatura passa a ir direto pro "O que você desbloqueia com o Passaporte de Estádios:" (sem "Documento Oficial do Torcedor", o título e o texto).
+  A lista antes dizia "com o Passport:" (agora em português, em todas as telas que usam o paywall). Nas outras telas a abertura continua.

@@ -362,7 +362,7 @@ export function MinhaAssinatura({ onNavigate, onLogout }) {
               </div>
             </>
           ) : (
-            <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} hidePassCard />
+            <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} hidePassCard hideIntro />
           )}
         </div>
 

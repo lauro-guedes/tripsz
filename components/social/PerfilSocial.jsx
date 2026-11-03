@@ -1,9 +1,10 @@
 "use client";
-import { ChevronRight, Settings, UserPlus } from "lucide-react";
+import { CalendarDays, CreditCard, History, Route, Settings, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import { ConquistasTab } from "./ConquistasTab";
 import { ProfileMenu } from "./ProfileMenu";
 import { ProfilePosts } from "./ProfilePosts";
 import { SocialOnboarding } from "./SocialOnboarding";
@@ -26,19 +27,6 @@ function Locked({ title, body }) {
     <div style={{ margin: "16px 16px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
       <p style={text(15, TEXT, { fontWeight: 700 })}>{title}</p>
       <p style={text(13, MUTED)}>{body}</p>
-    </div>
-  );
-}
-
-/** A linha do menu do meu perfil (Conquistas, Histórico de jogos, Minha assinatura). */
-function MenuRow({ title, hint, onClick, last }) {
-  return (
-    <div role="button" aria-label={title} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px", cursor: "pointer", borderBottom: last ? "none" : `1px solid ${BORDER}` }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, margin: 0 }}>{title}</p>
-        <p style={text(13, MUTED)}>{hint}</p>
-      </div>
-      <ChevronRight size={20} color={MUTED} />
     </div>
   );
 }
@@ -92,15 +80,11 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
     const social = `${plural(d.counts.followers, "seguidor", "seguidores")} · ${d.counts.following} seguindo`;
     body = (
       <>
-        <ScreenHeader title={self ? "Meu perfil" : pr.displayName} onBack={self ? () => window.history.back() : onBack} />
-        <div style={{ position: "relative", height: 130, margin: "0 16px", borderRadius: 16, background: "linear-gradient(135deg,#0f172a,#14532d)", overflow: "hidden" }}>
-          {pr.coverUrl && <img src={pr.coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-          {!self && (
-            <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ position: "absolute", top: 10, right: 10, width: 36, height: 36, borderRadius: 999, background: "rgba(15,23,42,0.55)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-              <MoreVertical size={20} color="#fff" />
-            </div>
-          )}
-        </div>
+        <ScreenHeader
+          title={self ? "Meu perfil" : pr.displayName}
+          onBack={self ? () => window.history.back() : onBack}
+          right={!self ? <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><MoreVertical size={22} color={TEXT} /></div> : null}
+        />
         <div style={{ padding: "12px 16px 8px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Avatar url={pr.avatarUrl} name={pr.displayName} size={68} />
@@ -138,20 +122,22 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
               <Stat value={d.stats.competitions} label="ligas" />
             </div>
             {self && (
-              <div style={{ margin: "0 16px 14px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18 }}>
-                <MenuRow title="Conquistas" hint={`Football Passport · Nível ${d.stats.level}`} onClick={() => onNavigate("conquistas")} />
-                <MenuRow title="Histórico de jogos" hint={`${plural(d.stats.games, "jogo registrado", "jogos registrados")}`} onClick={() => onNavigate("jogos")} />
-                <MenuRow title="Meu calendário" hint="Os jogos que vêm por aí" onClick={() => onNavigate("calendario")} />
-                <MenuRow title="Meus roteiros" hint="Suas viagens de futebol" onClick={() => onNavigate("roteiros")} />
-                <MenuRow title="Minha assinatura" hint="Plano, pagamento e faturas" onClick={() => onNavigate("assinatura")} last />
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "2px 16px 14px" }}>
+                {[[History, "Histórico de jogos", "jogos"], [CalendarDays, "Meu calendário", "calendario"], [Route, "Meus roteiros", "roteiros"], [CreditCard, "Minha assinatura", "assinatura"]].map(([Ic, label, to]) => (
+                  <div key={to} role="button" aria-label={label} onClick={() => onNavigate(to)} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${BORDER}`, background: "#fff", borderRadius: 999, padding: "9px 14px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                    <Ic size={16} color={GREEN_DARK} />
+                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
+                  </div>
+                ))}
               </div>
             )}
             <div style={{ padding: "0 16px" }}>
-              <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Publicações" }, { id: "checkins", label: "Check-ins" }, { id: "estadios", label: "Estádios" }]} />
+              <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Publicações" }, { id: "checkins", label: "Check-ins" }, self ? { id: "conquistas", label: "Conquistas" } : { id: "estadios", label: "Estádios" }]} />
             </div>
             <div style={{ background: "#fff", minHeight: 160, margin: "0 0 0" }}>
               {(tab === "posts" || tab === "checkins") && <ProfilePosts key={`${pr.username}-${tab}`} username={pr.username} kind={tab === "posts" ? "post" : "checkin"} self={self} onNavigate={onNavigate} />}
-              {tab === "estadios" &&
+              {tab === "conquistas" && self && <ConquistasTab onNavigate={onNavigate} />}
+              {tab === "estadios" && !self &&
                 (d.passport.stadiums.length === 0 ? (
                   <EmptyState title="Nenhum estádio registrado" />
                 ) : (

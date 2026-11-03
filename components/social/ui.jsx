@@ -103,14 +103,14 @@ export function Sheet({ title, onClose, children }) {
 }
 
 /** Cabeçalho "voltar + título" das telas internas. Sem `onBack`, só o título. */
-export function ScreenHeader({ title, onBack }) {
+export function ScreenHeader({ title, onBack, right = null }) {
   return (
     <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", background: BG }}>
       <div style={{ width: 40 }}>
         {onBack && <div role="button" aria-label="Voltar" onClick={onBack} style={{ width: 40, height: 40, display: "flex", alignItems: "center", cursor: "pointer" }}><ArrowLeft size={24} color={TEXT} /></div>}
       </div>
       <h1 style={{ flex: 1, textAlign: "center", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 17, color: TEXT, margin: 0 }}>{title}</h1>
-      <div style={{ width: 40 }} />
+      <div style={{ width: 40, display: "flex", justifyContent: "flex-end" }}>{right}</div>
     </div>
   );
 }
