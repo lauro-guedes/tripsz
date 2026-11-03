@@ -1,8 +1,9 @@
 "use client";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Message, text } from "../convite/ConviteUi";
-import { timeAgo } from "../../lib/social";
+import { Message, SecondaryBtn, text } from "../convite/ConviteUi";
+import { CampoArroba } from "../jogos/acompanhantes/CampoArroba";
+import { cleanUsername, timeAgo } from "../../lib/social";
 import { answerRequest, followUser, listFriends, unfollowUser } from "../../lib/socialClient";
 import { BORDER, FONT_DISPLAY, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { Avatar, EmptyState, SmallBtn, SocialShell, Tabs } from "./ui";
@@ -24,6 +25,7 @@ export function AmigosSocial({ onNavigate, onLogout }) {
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null); // @ da linha em andamento
+  const [handle, setHandle] = useState("");
   const busyRef = useRef(false); // trava imediata contra toque duplo
 
   const load = useCallback(async (which, offset = 0) => {
@@ -58,6 +60,11 @@ export function AmigosSocial({ onNavigate, onLogout }) {
       <div style={{ background: "#fff", padding: "16px 20px 0", display: "flex", alignItems: "center", gap: 12 }}>
         <div role="button" aria-label="Voltar ao perfil" onClick={() => onNavigate("perfil")} style={{ width: 40, height: 40, borderRadius: 999, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><ArrowLeft size={20} color={TEXT} /></div>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>Amigos</h1>
+      </div>
+      <div style={{ padding: "14px 16px 4px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <p style={text(14, TEXT, { fontWeight: 700 })}>Adicionar amigo</p>
+        <CampoArroba value={handle} onChange={setHandle} ariaLabel="Buscar amigo pelo @" />
+        <SecondaryBtn onClick={() => cleanUsername(handle) && open(cleanUsername(handle))} disabled={!cleanUsername(handle)}>Ver perfil e seguir</SecondaryBtn>
       </div>
       <Tabs label="Listas de amigos" value={tab} onChange={setTab} tabs={[{ id: "amigos", label: "Amigos", count: counts.amigos }, { id: "seguidores", label: "Seguidores", count: counts.seguidores }, { id: "seguindo", label: "Seguindo", count: counts.seguindo }, { id: "solicitacoes", label: "Solicitações", count: counts.solicitacoes }]} />
       <div style={{ padding: "12px 16px 24px", display: "flex", flexDirection: "column", gap: 10 }}>

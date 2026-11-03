@@ -48,7 +48,7 @@ function Photo({ name, city }) {
   );
 }
 
-const TABS = [["meus", "Meus estádios"], ["hoje", "Hoje"]];
+const TABS = [["meus", "Meus estádios"], ["hoje", "Na arquibancada"]];
 
 /** Meus estádios: os estádios do meu Passaporte. O cartão abre a lista dos MEUS jogos naquele estádio. */
 function MeusEstadios({ onNavigate }) {
@@ -118,7 +118,7 @@ function MeusEstadios({ onNavigate }) {
   );
 }
 
-/** Hoje: os check-ins das últimas 24 h (os públicos, os de quem eu sigo e os meus). */
+/** Na arquibancada: os check-ins das últimas 24 h (os públicos, os de quem eu sigo e os meus). */
 function HojeCheckins({ onNavigate }) {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState({ hasMore: false, cursor: null });
@@ -137,11 +137,12 @@ function HojeCheckins({ onNavigate }) {
 
   return (
     <div style={{ padding: "6px 16px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <p style={text(13, MUTED)}>Quem fez check-in em estádios nas últimas 24 horas.</p>
       <Message msg={error} />
       {status === "loading" && <EmptyState title="Procurando check-ins..." />}
       {status === "ready" && posts.length === 0 && !error && (
         <>
-          <EmptyState title="Ninguém fez check-in hoje ainda" body="Esteja num estádio e seja o primeiro." />
+          <EmptyState title="A arquibancada está vazia" body="Ninguém fez check-in nas últimas 24 horas. Esteja num estádio e seja o primeiro." />
           <PrimaryBtn onClick={() => onNavigate("checkin")}>Fazer check-in</PrimaryBtn>
         </>
       )}
@@ -151,7 +152,7 @@ function HojeCheckins({ onNavigate }) {
   );
 }
 
-/** Estádios: os que eu já conheço (Meus estádios, com os meus jogos em cada um) e os check-ins de hoje. */
+/** Estádios: os que eu já conheço (Meus estádios, com os meus jogos em cada um) e quem está na arquibancada (check-ins das últimas 24 h). */
 export function EstadiosSocial({ onNavigate, onLogout, openPage = (path) => window.location.assign(path) }) {
   const [tab, setTab] = useState("meus");
   return (

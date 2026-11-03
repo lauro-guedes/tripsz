@@ -1,5 +1,5 @@
 "use client";
-import { ChevronRight, Settings } from "lucide-react";
+import { ChevronRight, Settings, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
@@ -108,6 +108,12 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
           </div>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h2>
           <p style={text(14, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
+          {self && (
+            <div role="button" aria-label="Adicionar amigo" onClick={() => onNavigate("amigos")} style={{ marginTop: 12, background: GREEN, borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer" }}>
+              <UserPlus size={20} color="#fff" />
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", margin: 0 }}>Adicionar amigo</p>
+            </div>
+          )}
           {d.mutualCount > 0 && <p style={text(12, GREEN_DARK, { marginTop: 2, fontWeight: 600 })}>{plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
           {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 8, whiteSpace: "pre-line" }}>{pr.bio}</p>}
           {pr.kinds.length > 0 && (
