@@ -1,8 +1,9 @@
 "use client";
-import { CalendarDays, CreditCard, History, Route, Settings, UserPlus } from "lucide-react";
+import { CalendarDays, CreditCard, History, Route, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
+import { shareProfile } from "../../lib/profileShare";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { ConquistasTab } from "./ConquistasTab";
 import { ProfileMenu } from "./ProfileMenu";
@@ -17,6 +18,16 @@ function Stat({ value, label }) {
   return (
     <div style={{ flex: 1, textAlign: "center" }}>
       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: GREEN_DARK, margin: 0 }}>{value}</p>
+      <p style={text(12, MUTED)}>{label}</p>
+    </div>
+  );
+}
+
+/** Número do cabeçalho do perfil (como numa rede de fotos): valor em cima, rótulo embaixo. */
+function Count({ value, label, onClick }) {
+  return (
+    <div role={onClick ? "button" : undefined} aria-label={onClick ? `Abrir ${label}` : undefined} onClick={onClick} style={{ flex: 1, textAlign: "center", cursor: onClick ? "pointer" : "default" }}>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{value}</p>
       <p style={text(12, MUTED)}>{label}</p>
     </div>
   );
@@ -39,6 +50,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
   const p = useProfile(username);
   const [tab, setTab] = useState("posts");
   const [menu, setMenu] = useState(false);
+  const [note, setNote] = useState(null);
   const s = p.state;
 
   if (s.status === "onboarding") return <SocialOnboarding me={s.me} onDone={() => p.reload()} />;
@@ -60,24 +72,37 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
     const self = rel === "self";
     const mutual = rel === "following" && d.relation.followsYou;
     const where = [pr.city, pr.country].filter(Boolean).join(", ");
+    const share = async () => {
+      const r = await shareProfile(pr.username, pr.displayName);
+      if (r === "copied") setNote({ type: "success", text: "Link do perfil copiado." });
+      else if (r === "failed") setNote({ type: "error", text: "Não foi possível compartilhar agora." });
+    };
+    const shareBtn = <SmallBtn kind="soft" onClick={share} label="Compartilhar perfil">Compartilhar perfil</SmallBtn>;
     const action = self ? (
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <>
         <SmallBtn kind="soft" onClick={() => onNavigate("perfil-editar")}>Editar perfil</SmallBtn>
-        <div role="button" aria-label="Configurações da conta" onClick={() => onNavigate("perfil-dados")} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Settings size={22} color={TEXT} /></div>
-      </div>
+        {shareBtn}
+      </>
     ) : rel === "blocked" ? (
       <SmallBtn onClick={p.unblock} disabled={p.busy}>Desbloquear</SmallBtn>
     ) : rel === "following" ? (
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <>
         {mutual && <SmallBtn kind="soft">Amigos ✓</SmallBtn>}
         <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Seguindo</SmallBtn>
-      </div>
+        {shareBtn}
+      </>
     ) : rel === "requested" ? (
-      <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Solicitado</SmallBtn>
+      <>
+        <SmallBtn kind="outline" onClick={p.unfollow} disabled={p.busy}>Solicitado</SmallBtn>
+        {shareBtn}
+      </>
     ) : (
-      <SmallBtn onClick={p.follow} disabled={p.busy}>Seguir</SmallBtn>
+      <>
+        <SmallBtn onClick={p.follow} disabled={p.busy}>Seguir</SmallBtn>
+        {shareBtn}
+      </>
     );
-    const social = `${plural(d.counts.followers, "seguidor", "seguidores")} · ${d.counts.following} seguindo`;
+    const openFriends = self ? () => onNavigate("amigos") : undefined;
     body = (
       <>
         <ScreenHeader
@@ -86,30 +111,27 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
           right={!self ? <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><MoreVertical size={22} color={TEXT} /></div> : null}
         />
         <div style={{ padding: "12px 16px 8px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Avatar url={pr.avatarUrl} name={pr.displayName} size={68} />
-            {action}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Avatar url={pr.avatarUrl} name={pr.displayName} size={80} />
+            <div style={{ flex: 1, display: "flex" }}>
+              <Count value={d.counts.posts || 0} label="publicações" />
+              <Count value={d.counts.followers} label="seguidores" onClick={openFriends} />
+              <Count value={d.counts.following} label="seguindo" onClick={openFriends} />
+            </div>
           </div>
-          <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h2>
-          <p style={text(14, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
+          <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h2>
+          <p style={text(13, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
+          {d.mutualCount > 0 && <p style={text(12, GREEN_DARK, { marginTop: 2, fontWeight: 600 })}>{plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
+          {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 8, whiteSpace: "pre-line" }}>{pr.bio}</p>}
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }}>{action}</div>
           {self && (
-            <div role="button" aria-label="Adicionar amigo" onClick={() => onNavigate("amigos")} style={{ marginTop: 12, background: GREEN, borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer" }}>
+            <div role="button" aria-label="Adicionar amigo" onClick={() => onNavigate("amigos")} style={{ marginTop: 10, background: GREEN, borderRadius: 14, padding: "13px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer" }}>
               <UserPlus size={20} color="#fff" />
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", margin: 0 }}>Adicionar amigo</p>
             </div>
           )}
-          {d.mutualCount > 0 && <p style={text(12, GREEN_DARK, { marginTop: 2, fontWeight: 600 })}>{plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
-          {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 8, whiteSpace: "pre-line" }}>{pr.bio}</p>}
-          {pr.kinds.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
-              {pr.kinds.map((k) => <span key={k} style={{ border: `1px solid ${GREEN}`, borderRadius: 999, padding: "3px 10px", fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 11, color: GREEN_DARK }}>{k}</span>)}
-            </div>
-          )}
         </div>
-        <div role={self ? "button" : undefined} aria-label={self ? "Abrir amigos" : undefined} onClick={self ? () => onNavigate("amigos") : undefined} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "0 16px 10px", cursor: self ? "pointer" : "default" }}>
-          {self && d.counts.friends != null ? <p style={text(14, TEXT, { fontWeight: 800 })}>{plural(d.counts.friends, "amigo", "amigos")}</p> : <span />}
-          <p style={text(13, MUTED)}>{social}</p>
-        </div>
+        <div style={{ padding: "0 16px" }}><Message msg={note} /></div>
         <Message msg={p.notice} />
         {rel === "blocked" && <Locked title={`Você bloqueou @${pr.username}`} body="Desbloqueie para voltar a ver o perfil e seguir." />}
         {rel !== "blocked" && !d.canSeeContent && <Locked title="Este perfil é privado" body={rel === "requested" ? "Pedido enviado. Quando for aprovado, você verá os jogos e estádios." : "Siga para ver os jogos, estádios e publicações."} />}

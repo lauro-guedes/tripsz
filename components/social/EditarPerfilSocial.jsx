@@ -84,6 +84,10 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
           <div role="button" aria-label="Voltar ao perfil" onClick={() => onNavigate("perfil")} style={{ width: 40, height: 40, borderRadius: 999, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><ArrowLeft size={20} color={TEXT} /></div>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>Editar perfil</h1>
         </div>
+        <div role="button" aria-label="Dados da conta" onClick={() => onNavigate("perfil-dados")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+          <div style={{ flex: 1 }}><p style={text(15, TEXT, { fontWeight: 700 })}>Dados da conta</p><p style={text(12, MUTED)}>E-mail, WhatsApp, senha, times favoritos e sair da conta</p></div>
+          <ChevronRight size={20} color={MUTED} />
+        </div>
         <Section title="Foto de perfil"><AvatarPicker value={form.avatarUrl} name={form.displayName} onChange={(avatarUrl) => set({ avatarUrl })} userId={userId} /></Section>
         <Section title="Seu usuário">
           <UsernameEditField value={form.username} original={me.username} onChange={(username) => set({ username })} onValidity={setTaken} fieldStyle={field} />
@@ -120,10 +124,6 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
             </div>
           ))}
         </Section>
-        <div role="button" aria-label="Dados da conta" onClick={() => onNavigate("perfil-dados")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-          <div style={{ flex: 1 }}><p style={text(15, TEXT, { fontWeight: 700 })}>Dados da conta</p><p style={text(12, MUTED)}>E-mail, WhatsApp, senha, times favoritos e sair da conta</p></div>
-          <ChevronRight size={20} color={MUTED} />
-        </div>
         <SecondaryBtn onClick={() => onNavigate("perfil")}>Voltar ao perfil</SecondaryBtn>
       </div>
     </SocialShell>

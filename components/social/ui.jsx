@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Bell } from "lucide-react";
 import { useAuthedUser } from "../jogos/acompanhantes/useAcompanhantes";
 import { SheetHandle, useBodyLock } from "../jogos/acompanhantes/ui";
@@ -85,13 +86,29 @@ export function EmptyState({ title, body }) {
 }
 
 /** Folha de baixo (celular) / janela no meio (computador), com alça e travando a página de fundo. */
+/** Altura do teclado coberta sobre a tela (visualViewport): 0 quando o aparelho já redimensiona a página sozinho. */
+export function useKeyboardInset() {
+  const [inset, setInset] = useState(0);
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return undefined;
+    const update = () => setInset(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => { vv.removeEventListener("resize", update); vv.removeEventListener("scroll", update); };
+  }, []);
+  return inset;
+}
+
 export function Sheet({ title, onClose, children }) {
   const isMobile = useIsMobile();
+  const keyboard = useKeyboardInset(); // a folha sobe junto com o teclado: o campo de texto fica sempre visível
   useBodyLock();
   const { dragY, dragging, dragProps } = useSheetDrag(onClose);
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, overscrollBehavior: "contain" }}>
-      <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 440, borderRadius: isMobile ? "20px 20px 0 0" : 16, maxHeight: "88vh", overflowY: "auto", boxSizing: "border-box", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(15,23,42,0.6)", display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", padding: isMobile ? 0 : 24, paddingBottom: isMobile ? keyboard : 24, overscrollBehavior: "contain" }}>
+      <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} style={{ background: "#fff", width: "100%", maxWidth: isMobile ? "100%" : 440, borderRadius: isMobile ? "20px 20px 0 0" : 16, maxHeight: keyboard ? `calc(100% - ${keyboard > 0 ? 12 : 0}px)` : "88vh", overflowY: "auto", boxSizing: "border-box", transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragging ? "none" : "transform 0.2s ease" }}>
         {isMobile && <SheetHandle onClose={onClose} dragProps={dragProps} />}
         <div style={{ padding: isMobile ? "8px 20px 24px" : 24, display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={text(18, TEXT, { fontWeight: 700 })}>{title}</p>

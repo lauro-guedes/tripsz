@@ -85,8 +85,8 @@ export function Comentarios({ post, onClose, onCount }) {
         ))}
       </div>
       <Message msg={error} />
-      <div style={{ display: "flex", gap: 8, alignItems: "center", borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <input value={draft} onChange={(e) => setDraft(e.target.value.slice(0, COMMENT_MAX))} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva um comentário..." aria-label="Escreva um comentário" style={{ flex: 1, border: `1px solid ${BORDER}`, borderRadius: 999, padding: "11px 16px", fontSize: 14, fontFamily: FONT_DISPLAY, outline: "none" }} />
+      <div style={{ display: "flex", gap: 8, alignItems: "center", borderTop: `1px solid ${BORDER}`, paddingTop: 12, paddingBottom: 4, position: "sticky", bottom: 0, background: "#fff" }}>
+        <input value={draft} onChange={(e) => setDraft(e.target.value.slice(0, COMMENT_MAX))} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Escreva um comentário..." enterKeyHint="send" aria-label="Escreva um comentário" style={{ flex: 1, border: `1px solid ${BORDER}`, borderRadius: 999, padding: "11px 16px", fontSize: 16, fontFamily: FONT_DISPLAY, outline: "none" }} />
         <div role="button" aria-label="Enviar comentário" aria-disabled={!draft.trim() || sending} onClick={send} style={{ width: 42, height: 42, borderRadius: 999, background: draft.trim() ? GREEN : "#cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", cursor: draft.trim() ? "pointer" : "default" }}><Send size={18} color="#fff" /></div>
       </div>
     </Sheet>
