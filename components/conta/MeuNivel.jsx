@@ -15,7 +15,7 @@ import { useIsMobile } from "../ui/useIsMobile";
 import { PassportPaywall } from "./PassportPaywall";
 import { useEffect, useState } from "react";
 
-export function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
+export function MeuNivel({ onNavigate, onLogout, onCreateNew, embedded = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -53,7 +53,7 @@ export function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
   if (access === null) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
-        <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        {!embedded && <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
         <Loading />
       </div>
     );
@@ -61,9 +61,9 @@ export function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
   if (!access.hasAccess) {
     return (
       <div style={{ background: BG, width: "100%" }}>
-        <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        {!embedded && <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
         <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} onCreateNew={onCreateNew} />
-        <AuthedFooter />
+        {!embedded && <AuthedFooter />}
       </div>
     );
   }
@@ -77,7 +77,7 @@ export function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+      {!embedded && <AuthedNav active="nivel" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
 
       <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 24 : 64, alignItems: "center", flexWrap: "wrap", padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0 }}>
@@ -152,7 +152,7 @@ export function MeuNivel({ onNavigate, onLogout, onCreateNew }) {
         </div>
       </div>
 
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }

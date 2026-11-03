@@ -13,8 +13,8 @@ import { Icon } from "../ui/Icon";
 const HOME = ["feed", "notificacoes", "publicacao", "buscar"]; // "buscar" (Buscar jogos) abre pelo "Ver jogos" do Início
 const STADIUMS = ["estadios", "estadio", "jogo-ao-vivo"];
 const ADD = ["central", "checkin", "post-novo", "registrar-jogo", "jogo-salvo", "acompanhantes"];
-const JORNADA = ["jornada", "ranking", "calendario", "roteiros", "roteiro", "resultado", "nivel"]; // o cartão "Você" abre o Meu nível
-const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "jogos", "assinatura"];
+const JORNADA = ["jornada", "ranking", "calendario", "roteiros", "roteiro", "resultado", "nivel", "jogos"]; // o cartão "Você" abre o Ranking e o Meu nível
+const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "assinatura"];
 
 // Telas que mostram a barra: as da barra e as que continuam existindo no app sem ter aba (roteiros, buscar, calendário...).
 export const TAB_SCREENS = new Set([...HOME, ...STADIUMS, ...ADD, ...JORNADA, ...PROFILE, "buscar", "bem-vindo"]);

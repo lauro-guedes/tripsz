@@ -104,13 +104,13 @@ function MeusEstadios({ onNavigate }) {
               <div style={{ display: "flex", flexDirection: "column", borderTop: `1px solid ${BORDER}` }}>
                 {s.games.map((g) => (
                   <div key={g.id} style={{ padding: "10px 0", borderBottom: `1px solid ${BORDER}`, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <TeamBadge name={g.home_team} url={g.home_logo} size={26} resolve />
-                      <p style={{ ...text(14, TEXT, { fontWeight: 700 }), flex: 1, minWidth: 0 }}>
-                        {g.home_team} {g.home_score != null && g.away_score != null ? `${g.home_score} × ${g.away_score}` : "×"} {g.away_team}
-                      </p>
-                      <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
-                    </div>
+                    {[[g.home_team, g.home_logo, g.home_score], [g.away_team, g.away_logo, g.away_score]].map(([team, logo, score], i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <TeamBadge name={team} url={logo} size={26} resolve />
+                        <p style={{ ...text(14, TEXT, { fontWeight: 700 }), flex: 1, minWidth: 0 }}>{team}</p>
+                        {score != null && <p style={text(14, TEXT, { fontWeight: 800 })}>{score}</p>}
+                      </div>
+                    ))}
                     <p style={text(12, MUTED)}>{[dayLabel(g.match_date), g.competition].filter(Boolean).join(" · ")}</p>
                   </div>
                 ))}

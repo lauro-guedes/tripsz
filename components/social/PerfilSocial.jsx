@@ -1,7 +1,8 @@
 "use client";
-import { CreditCard, History, UserPlus } from "lucide-react";
+import { ChevronRight, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { checkPassportAccess } from "../../lib/passportAccess";
 import { Message, text } from "../convite/ConviteUi";
 import { shareProfile } from "../../lib/profileShare";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
@@ -29,6 +30,42 @@ function Count({ value, label, onClick }) {
     <div role={onClick ? "button" : undefined} aria-label={onClick ? `Abrir ${label}` : undefined} onClick={onClick} style={{ flex: 1, textAlign: "center", cursor: onClick ? "pointer" : "default" }}>
       <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: 0 }}>{value}</p>
       <p style={text(12, MUTED)}>{label}</p>
+    </div>
+  );
+}
+
+/** O plano da pessoa, só no MEU perfil: Free (com quantos jogos já registrou e o convite pra assinar) ou Passaporte ativo. */
+function PlanCard({ onNavigate }) {
+  const [acc, setAcc] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    checkPassportAccess().then((a) => alive && setAcc(a)).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  if (!acc || !acc.userId) return null;
+  if (acc.isPaid) {
+    return (
+      <div role="button" aria-label="Minha assinatura" onClick={() => onNavigate("assinatura")} style={{ margin: "4px 16px 10px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+        <span style={{ background: "rgba(0,200,83,0.12)", color: GREEN_DARK, borderRadius: 999, padding: "4px 10px", fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 11 }}>PASSAPORTE ATIVO</span>
+        <p style={{ ...text(13, MUTED), flex: 1 }}>Todas as funcionalidades liberadas.</p>
+        <span style={{ display: "inline-flex", alignItems: "center" }}><span style={text(12, GREEN_DARK, { fontWeight: 700 })}>Minha assinatura</span><ChevronRight size={16} color={GREEN_DARK} /></span>
+      </div>
+    );
+  }
+  const used = Math.min(acc.gamesCount, acc.gamesLimit);
+  const pct = acc.gamesLimit ? Math.round((used / acc.gamesLimit) * 100) : 0;
+  return (
+    <div style={{ margin: "4px 16px 10px", background: "linear-gradient(135deg,#0f172a,#14532d)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ background: "rgba(255,255,255,0.16)", color: "#fff", borderRadius: 999, padding: "4px 10px", fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 11 }}>PLANO FREE</span>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "rgba(255,255,255,0.85)", margin: 0 }}>{used} de {acc.gamesLimit} jogos</p>
+      </div>
+      <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.2)" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: GREEN }} /></div>
+      <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: "#fff", margin: 0, lineHeight: 1.25 }}>Assine o Passaporte e tenha acesso a todas as funcionalidades.</p>
+      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "rgba(255,255,255,0.85)", margin: 0 }}>Registre jogos sem limite e desbloqueie tudo o que o app oferece.</p>
+      <div role="button" aria-label="Assinar o Passaporte" onClick={() => onNavigate("assinatura")} style={{ background: GREEN, borderRadius: 10, padding: "11px 14px", textAlign: "center", cursor: "pointer", marginTop: 2 }}>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Assinar o Passaporte</p>
+      </div>
     </div>
   );
 }
@@ -132,6 +169,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
           )}
         </div>
         <div style={{ padding: "0 16px" }}><Message msg={note} /></div>
+        {self && <PlanCard onNavigate={onNavigate} />}
         <Message msg={p.notice} />
         {rel === "blocked" && <Locked title={`Você bloqueou @${pr.username}`} body="Desbloqueie para voltar a ver o perfil e seguir." />}
         {rel !== "blocked" && !d.canSeeContent && <Locked title="Este perfil é privado" body={rel === "requested" ? "Pedido enviado. Quando for aprovado, você verá os jogos e estádios." : "Siga para ver os jogos, estádios e publicações."} />}
@@ -143,22 +181,12 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
               <Stat value={d.stats.games} label="jogos" />
               <Stat value={d.stats.competitions} label="ligas" />
             </div>
-            {self && (
-              <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "2px 16px 14px" }}>
-                {[[History, "Histórico de jogos", "jogos"], [CreditCard, "Minha assinatura", "assinatura"]].map(([Ic, label, to]) => (
-                  <div key={to} role="button" aria-label={label} onClick={() => onNavigate(to)} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${BORDER}`, background: "#fff", borderRadius: 999, padding: "9px 14px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                    <Ic size={16} color={GREEN_DARK} />
-                    <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>
-                  </div>
-                ))}
-              </div>
-            )}
             <div style={{ padding: "0 16px" }}>
               <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "posts", label: "Publicações" }, { id: "checkins", label: "Check-ins" }, self ? { id: "conquistas", label: "Conquistas" } : { id: "estadios", label: "Estádios" }]} />
             </div>
             <div style={{ background: "#fff", minHeight: 160, margin: "0 0 0" }}>
               {(tab === "posts" || tab === "checkins") && <ProfilePosts key={`${pr.username}-${tab}`} username={pr.username} kind={tab === "posts" ? "post" : "checkin"} self={self} onNavigate={onNavigate} />}
-              {tab === "conquistas" && self && <ConquistasTab onNavigate={onNavigate} />}
+              {tab === "conquistas" && self && <ConquistasTab />}
               {tab === "estadios" && !self &&
                 (d.passport.stadiums.length === 0 ? (
                   <EmptyState title="Nenhum estádio registrado" />

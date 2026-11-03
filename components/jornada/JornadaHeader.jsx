@@ -8,7 +8,7 @@ import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/
 import { ScreenHeader } from "../social/ui";
 
 /** As abas da Jornada. A chave é a própria tela (assim cada aba tem o seu endereço e o botão voltar funciona). */
-export const JORNADA_TABS = [["ranking", "Ranking"], ["calendario", "Calendário"], ["roteiros", "Roteiros"]];
+export const JORNADA_TABS = [["calendario", "Calendário"], ["roteiros", "Roteiros"], ["jogos", "Histórico de jogos"]];
 export const xpLabel = (n) => (Number.isFinite(Number(n)) ? Number(n) : 0).toLocaleString("pt-BR");
 
 /** Onde a pessoa está na escada de níveis: o nível, quanto já andou (%) e quanto falta pro próximo (`next` null = nível máximo). */
@@ -20,7 +20,7 @@ export function nextLevelInfo(xpRaw) {
   return { cur, next, pct: Math.max(0, Math.min(100, Math.round(((xp - cur.min) / (next.min - cur.min)) * 100))), missing: next.min - xp, xp };
 }
 
-/** O cartão "Você": posição no ranking, nível, XP e quanto falta pro próximo nível. Toque abre o Meu nível. */
+/** O cartão "Você": posição no ranking, nível, XP e quanto falta pro próximo nível. Toque no cartão abre o Ranking; "Ver meu nível" abre o Meu nível. */
 function VoceCard({ onNavigate }) {
   const [state, setState] = useState({ status: "loading" });
   useEffect(() => {
@@ -47,10 +47,10 @@ function VoceCard({ onNavigate }) {
   const entry = state.entry;
   const lv = nextLevelInfo(entry ? entry.xp : 0);
   return (
-    <div role="button" aria-label="Ver meu nível" onClick={() => onNavigate("nivel")} style={{ ...box, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10 }}>
+    <div role="button" aria-label="Ver ranking" onClick={() => onNavigate("ranking")} style={{ ...box, cursor: "pointer", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ background: "rgba(0,200,83,0.12)", color: GREEN_DARK, borderRadius: 999, padding: "4px 10px", fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 11 }}>VOCÊ</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 2 }}><span style={text(12, GREEN_DARK, { fontWeight: 700 })}>Ver meu nível</span><ChevronRight size={16} color={GREEN_DARK} /></span>
+        <span role="button" aria-label="Ver meu nível" onClick={(e) => { e.stopPropagation(); onNavigate("nivel"); }} style={{ display: "inline-flex", alignItems: "center", gap: 2, cursor: "pointer", padding: "4px 0 4px 8px" }}><span style={text(12, GREEN_DARK, { fontWeight: 700 })}>Ver meu nível</span><ChevronRight size={16} color={GREEN_DARK} /></span>
       </div>
       <div>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>{entry ? `#${entry.position} no ranking` : "Sem posição ainda"}</p>
@@ -62,7 +62,7 @@ function VoceCard({ onNavigate }) {
   );
 }
 
-/** O topo da Jornada (a aba do meio da barra): título, o cartão "Você" e as abas Ranking | Calendário | Roteiros. */
+/** O topo da Jornada (a aba do meio da barra): título, o cartão "Você" e as abas Calendário | Roteiros | Histórico de jogos. */
 export function JornadaHeader({ tab, onTab, onNavigate }) {
   return (
     <div style={{ background: "#f8fafc" }}>

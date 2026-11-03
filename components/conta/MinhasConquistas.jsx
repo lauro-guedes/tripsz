@@ -223,6 +223,55 @@ export function computeBadgeCategories(ctx) {
   ];
 }
 
+const fmtBadgeDate = (d) => {
+  if (!d) return null;
+  const dd = new Date(d);
+  if (isNaN(dd)) return null;
+  return `${String(dd.getDate()).padStart(2, "0")} ${MESES_ABREV[dd.getMonth()].charAt(0) + MESES_ABREV[dd.getMonth()].slice(1).toLowerCase()} ${dd.getFullYear()}`;
+};
+
+/** As conquistas de viagem por categoria (a mesma lista do site), usada na tela Conquistas e na aba Conquistas do perfil no app. */
+export function BadgeCategoryList({ categories, isMobile }) {
+  return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+          {categories.map((cat) => (
+            <div key={cat.title} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                <div style={{ background: GREEN, width: 4, height: 32, borderRadius: 2 }} />
+                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, textTransform: "uppercase", margin: 0 }}>{cat.title}</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
+                {cat.badges.map((bdg) => {
+                  const dateLabel = bdg.unlocked ? (fmtBadgeDate(bdg.detail) || "Desbloqueado") : "Bloqueado";
+                  // Mesmo ícone que o Figma usa por categoria: Globe pra
+                  // país/continente, estádio de verdade (ícone próprio)
+                  // pros estádios, Trophy pra competição, Award pro resto.
+                  const isStadiumBadge = cat.title === "Estádios & Geografia" && !/país|continente/i.test(bdg.label);
+                  let BadgeIcon = Award;
+                  if (cat.title === "Estádios & Geografia") {
+                    BadgeIcon = Globe;
+                  } else if (cat.title === "Competições") {
+                    BadgeIcon = Trophy;
+                  }
+                  return (
+                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, minHeight: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
+                      <div style={{ background: bdg.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {isStadiumBadge ? <Icon name="stadium" size={20} color={bdg.unlocked ? GREEN : MUTED} /> : <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />}
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: bdg.unlocked ? TEXT : MUTED, margin: 0 }}>{bdg.label}</p>
+                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: bdg.unlocked ? GREEN : MUTED, textTransform: "uppercase", margin: 0 }}>{dateLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+  );
+}
+
 export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   const isMobile = useIsMobile();
   const [userName, setUserName] = useState("");
@@ -357,12 +406,6 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
   // Mesma categoria de Meu Nível (vem do XP), pra as duas telas nunca divergirem.
   const level = computeTier(stats?.xp ?? 0).name.toUpperCase();
 
-  const fmtDate = (d) => {
-    if (!d) return null;
-    const dd = new Date(d);
-    if (isNaN(dd)) return null;
-    return `${String(dd.getDate()).padStart(2, "0")} ${MESES_ABREV[dd.getMonth()].charAt(0) + MESES_ABREV[dd.getMonth()].slice(1).toLowerCase()} ${dd.getFullYear()}`;
-  };
 
   const badgeCategories = computeBadgeCategories(ctx);
 
@@ -449,42 +492,7 @@ export function MinhasConquistas({ onNavigate, onLogout, onCreateNew }) {
       <div style={{ background: BG_ALT, padding: isMobile ? `32px ${px}` : `80px ${px}`, display: "flex", flexDirection: "column", gap: 24 }}>
         <Badge gold>Passaporte de Estádios</Badge>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 22 : 32, color: TEXT, margin: 0 }}>Conquistas de Viagem</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-          {badgeCategories.map((cat) => (
-            <div key={cat.title} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                <div style={{ background: GREEN, width: 4, height: 32, borderRadius: 2 }} />
-                <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 12, color: TEXT, textTransform: "uppercase", margin: 0 }}>{cat.title}</p>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 16 }}>
-                {cat.badges.map((bdg) => {
-                  const dateLabel = bdg.unlocked ? (fmtDate(bdg.detail) || "Desbloqueado") : "Bloqueado";
-                  // Mesmo ícone que o Figma usa por categoria: Globe pra
-                  // país/continente, estádio de verdade (ícone próprio)
-                  // pros estádios, Trophy pra competição, Award pro resto.
-                  const isStadiumBadge = cat.title === "Estádios & Geografia" && !/país|continente/i.test(bdg.label);
-                  let BadgeIcon = Award;
-                  if (cat.title === "Estádios & Geografia") {
-                    BadgeIcon = Globe;
-                  } else if (cat.title === "Competições") {
-                    BadgeIcon = Trophy;
-                  }
-                  return (
-                    <div key={bdg.id} style={{ background: "#fff", border: `1.5px solid ${bdg.unlocked ? GREEN : BORDER}`, borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16, minHeight: 160, opacity: bdg.unlocked ? 1 : 0.6 }}>
-                      <div style={{ background: bdg.unlocked ? GREEN_BG : BG_ALT, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {isStadiumBadge ? <Icon name="stadium" size={20} color={bdg.unlocked ? GREEN : MUTED} /> : <BadgeIcon size={20} color={bdg.unlocked ? GREEN : MUTED} />}
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 16, color: bdg.unlocked ? TEXT : MUTED, margin: 0 }}>{bdg.label}</p>
-                        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 10, color: bdg.unlocked ? GREEN : MUTED, textTransform: "uppercase", margin: 0 }}>{dateLabel}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        <BadgeCategoryList categories={badgeCategories} isMobile={isMobile} />
       </div>
 
       {showShare && shareLink && <ShareProfileModal link={shareLink} name={userName} onClose={() => setShowShare(false)} />}

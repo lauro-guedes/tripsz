@@ -27,7 +27,7 @@ import { DetalhesExperienciaModal } from "./detalhes/DetalhesExperienciaModal";
 import { MapPin, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onCompanions }) {
+export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onCompanions, embedded = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -176,7 +176,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
   if (access === null) {
     return (
       <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
-        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        {!embedded && <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
         <Loading />
       </div>
     );
@@ -184,9 +184,9 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
   if (!access.hasAccess) {
     return (
       <div style={{ background: BG, width: "100%" }}>
-        <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+        {!embedded && <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
         <PassportPaywall userId={access.userId} userEmail={access.userEmail} userName={userName} userAvatar={userAvatar} />
-        <AuthedFooter />
+        {!embedded && <AuthedFooter />}
       </div>
     );
   }
@@ -239,10 +239,10 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+      {!embedded && <AuthedNav active="jogos" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: isMobile ? `24px ${px} 8px` : `48px ${px} 8px` }}>
-        <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Meus Jogos</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: isMobile ? `${embedded ? 8 : 24}px ${px} 8px` : `48px ${px} 8px` }}>
+        {!embedded && <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 26 : 40, lineHeight: 1.1, color: TEXT, margin: 0 }}>Meus Jogos</p>}
         <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>
           {all.length} {all.length === 1 ? "jogo" : "jogos"} · {stadiums.size} {stadiums.size === 1 ? "estádio" : "estádios"} · {countries.size} {countries.size === 1 ? "país" : "países"}
         </p>
@@ -341,7 +341,7 @@ export function MeusJogosHistorico({ onNavigate, onLogout, onRegisterNew, onComp
 
       {companionsGame && <DetalhesJogoModal key={companionsGame.id} game={companionsGame} info={people[companionsGame.id]} onClose={() => setCompanionsId(null)} onRefresh={refreshPeople} />}
 
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }
