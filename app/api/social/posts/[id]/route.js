@@ -1,4 +1,4 @@
-import { deletePost, fail, guard } from "@/lib/socialServer";
+import { deletePost, fail, guard, setPostVisibility } from "@/lib/socialServer";
 import { allow } from "@/lib/rateLimit";
 import { authUser } from "@/lib/serverAuth";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -22,4 +22,12 @@ export async function DELETE(request, { params }) {
   if (!user) return send(fail("unauthorized"));
   if (!allow(`social-post-del:${user.id}`, 30, 60_000)) return send(fail("rate_limited"));
   return send(await guard(async () => deletePost(supabaseAdmin(), user, params.id)));
+}
+
+/** PATCH /api/social/posts/<id>  { visibility } — mudar quem pode ver um post meu. */
+export async function PATCH(request, { params }) {
+  const user = await authUser(request);
+  if (!user) return send(fail("unauthorized"));
+  if (!allow(`social-post-vis:${user.id}`, 30, 60_000)) return send(fail("rate_limited"));
+  return send(await guard(async () => setPostVisibility(supabaseAdmin(), user, params.id, (await body(request)).visibility)));
 }

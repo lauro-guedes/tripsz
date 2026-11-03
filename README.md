@@ -297,3 +297,15 @@ Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICAT
   Minha assinatura, abas Publicações | Check-ins | Estádios (a aba Passaporte/jornada saiu). Perfil de outra pessoa: selo "Amigos ✓" quando se seguem.
 - No app, as telas sociais não têm mais a barra antiga do topo (cada uma tem o próprio cabeçalho); no site continua a navegação do topo.
 - Removidos: `components/app/AddSheet.jsx` (a folha do "+") e o "No estádio agora" / atalhos Buscar jogos, Calendário e Roteiros do feed.
+
+## tripsz.social — Check-in por jogo, com amigos (Fase 3, etapa 2)
+
+**Sem SQL novo.** Segue o desenho "Fazer check-in" / "Presença registrada" e mantém o "Quem foi com você?".
+
+- **Check-in (`/conta/checkin`):** estádio selecionado (com "Alterar"), "Selecione o jogo" com **"N torcedores presentes"** (pessoas com check-in público nesse jogo nas últimas 24 h), caixa
+  **"Estou no estádio"** (obrigatória), foto, texto, "Quem pode ver?" e **"Confirmar presença"**. Continua valendo só dentro do estádio (o servidor confere o GPS de novo).
+- **Ao confirmar:** cria o check-in e **coloca o jogo no Passaporte** (`lib/checkinGame.js`, a mesma regra do pop-up de GPS: não duplica, respeita o limite de jogos do plano grátis; se estourar o limite o check-in fica e avisa).
+- **Presença registrada:** botão **"Quem foi com você?"** (abre a MESMA tela de amigos do registro de jogo, pelo rascunho `companionDraft`), **"Compartilhar no feed"** (se o check-in estava "Só eu";
+  `PATCH /api/social/posts/<id>` só muda a visibilidade) ou "Ver no feed", e "Voltar ao Início".
+- **Adicionar jogo passado** (Central +) continua abrindo o registro de jogo, que já leva ao "Quem foi com você?" depois de salvar (código não mexido).
+- **Atalhos:** "Ver jogos" (Início) abre o Buscar jogos; **Meu calendário** e **Meus roteiros** são linhas do menu do Perfil.

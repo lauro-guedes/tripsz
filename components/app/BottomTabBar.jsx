@@ -10,11 +10,11 @@ import { Icon } from "../ui/Icon";
  * Barra de baixo do APP (só depois de logado): Início (o feed) · Estádios · (+) Central · Ranking · Perfil.
  * O "+" abre a Central (check-in, jogo passado ou publicação). Conquistas, Histórico de jogos, Assinatura e Amigos ficam dentro do Perfil.
  */
-const HOME = ["feed", "notificacoes", "publicacao"];
+const HOME = ["feed", "notificacoes", "publicacao", "buscar"]; // "buscar" (Buscar jogos) abre pelo "Ver jogos" do Início
 const STADIUMS = ["estadios", "estadio", "jogo-ao-vivo"];
 const ADD = ["central", "checkin", "post-novo", "registrar-jogo", "jogo-salvo", "acompanhantes"];
 const RANKING = ["ranking"];
-const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "nivel", "jogos", "assinatura"];
+const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "nivel", "jogos", "assinatura", "calendario", "roteiros", "roteiro", "resultado"]; // calendário e roteiros abrem pelo menu do Perfil
 
 // Telas que mostram a barra: as da barra e as que continuam existindo no app sem ter aba (roteiros, buscar, calendário...).
 export const TAB_SCREENS = new Set([...HOME, ...STADIUMS, ...ADD, ...RANKING, ...PROFILE, "buscar", "calendario", "roteiros", "roteiro", "resultado", "bem-vindo"]);

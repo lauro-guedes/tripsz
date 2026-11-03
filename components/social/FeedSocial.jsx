@@ -88,7 +88,7 @@ export function FeedSocial({ onNavigate, onLogout }) {
         <p style={text(13, MUTED)}>{todayLabel()}</p>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 26, color: TEXT, margin: "4px 0 0" }}>O futebol acontece aqui.</h1>
       </div>
-      <TodayCheckins games={today} onSeeAll={() => onNavigate("estadios")} />
+      <TodayCheckins games={today} onSeeAll={() => onNavigate("buscar")} />
       <div style={{ padding: "8px 16px" }}>
         <div role="tablist" aria-label="Quem aparece no Início" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
           {[["todos", "Todos"], ["seguindo", "Seguindo"]].map(([id, label]) => (

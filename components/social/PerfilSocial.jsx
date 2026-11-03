@@ -141,6 +141,8 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
               <div style={{ margin: "0 16px 14px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18 }}>
                 <MenuRow title="Conquistas" hint={`Football Passport · Nível ${d.stats.level}`} onClick={() => onNavigate("conquistas")} />
                 <MenuRow title="Histórico de jogos" hint={`${plural(d.stats.games, "jogo registrado", "jogos registrados")}`} onClick={() => onNavigate("jogos")} />
+                <MenuRow title="Meu calendário" hint="Os jogos que vêm por aí" onClick={() => onNavigate("calendario")} />
+                <MenuRow title="Meus roteiros" hint="Suas viagens de futebol" onClick={() => onNavigate("roteiros")} />
                 <MenuRow title="Minha assinatura" hint="Plano, pagamento e faturas" onClick={() => onNavigate("assinatura")} last />
               </div>
             )}
