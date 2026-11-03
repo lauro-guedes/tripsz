@@ -14,7 +14,7 @@ const label = { fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 11, color: 
 const dmy = (iso) => (/^\d{4}-\d{2}-\d{2}/.test(iso || "") ? String(iso).slice(0, 10).split("-").reverse().join("/") : "");
 
 /**
- * Nova Publicação: fotos e texto sobre um estádio que a pessoa JÁ visitou (os do Passaporte), com o jogo (opcional)
+ * Nova Publicação (na ordem: estádio, jogo, fotos e texto) sobre um estádio que a pessoa JÁ visitou (os do Passaporte), com o jogo (opcional)
  * e quem pode ver. Quem ainda não tem estádio registrado é levado a registrar um jogo.
  */
 export function NovaPublicacao({ onNavigate, onLogout }) {
@@ -25,6 +25,7 @@ export function NovaPublicacao({ onNavigate, onLogout }) {
   const [gameId, setGameId] = useState(null);
   const [body, setBody] = useState("");
   const [photos, setPhotos] = useState([]);
+  const [uploading, setUploading] = useState(false); // foto ainda subindo: espera antes de publicar
   const [visibility, setVisibility] = useState("public");
   const [choosing, setChoosing] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -42,7 +43,7 @@ export function NovaPublicacao({ onNavigate, onLogout }) {
   useEffect(() => { load(); }, [load]);
 
   const current = (visited || []).find((s) => s.name === stadium) || null;
-  const canPublish = !!current && (body.trim().length > 0 || photos.length > 0) && !publishing;
+  const canPublish = !!current && (body.trim().length > 0 || photos.length > 0) && !publishing && !uploading;
   const publish = async () => {
     if (!canPublish || publishingRef.current) return;
     publishingRef.current = true;
@@ -82,7 +83,6 @@ export function NovaPublicacao({ onNavigate, onLogout }) {
         )}
         {current && (
           <>
-            <PhotoPicker photos={photos} setPhotos={setPhotos} userId={userId} />
             <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
               <p style={{ ...text(14, TEXT, { fontWeight: 600 }), flex: 1 }}>📍 {[current.name, current.city, current.country].filter(Boolean).join(" — ")}</p>
               <p role="button" aria-label="Trocar estádio" onClick={() => setChoosing(true)} style={{ ...text(13, GREEN, { fontWeight: 700 }), cursor: "pointer" }}>Trocar</p>
@@ -94,6 +94,10 @@ export function NovaPublicacao({ onNavigate, onLogout }) {
                 {current.games.map((g) => <Chip key={g.id} on={gameId === g.id} onClick={() => setGameId(g.id)}>{`${g.home} × ${g.away}${g.date ? ` · ${dmy(g.date)}` : ""}`}</Chip>)}
               </div>
             </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <p style={label}>Fotos</p>
+              <PhotoPicker photos={photos} setPhotos={setPhotos} userId={userId} onBusy={setUploading} />
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <textarea aria-label="Texto da publicação" value={body} onChange={(e) => setBody(e.target.value.slice(0, POST_BODY_MAX))} rows={5} placeholder="Conte como foi..." style={field} />
               <p style={{ ...text(12, MUTED), textAlign: "right" }}>{body.length}/{POST_BODY_MAX}</p>
@@ -103,7 +107,7 @@ export function NovaPublicacao({ onNavigate, onLogout }) {
               <VisibilityPicker value={visibility} onChange={setVisibility} />
             </div>
             <Message msg={error} />
-            <PrimaryBtn onClick={publish} disabled={!canPublish}>{publishing ? "Publicando..." : "Publicar"}</PrimaryBtn>
+            <PrimaryBtn onClick={publish} disabled={!canPublish}>{publishing ? "Publicando..." : uploading ? "Enviando fotos..." : "Publicar"}</PrimaryBtn>
           </>
         )}
       </div>

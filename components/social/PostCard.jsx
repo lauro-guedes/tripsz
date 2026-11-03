@@ -21,8 +21,8 @@ export function PhotoGrid({ photos }) {
 /** Uma publicação (post ou check-in) como aparece no feed e no perfil. */
 export function PostCard({ post, onLike, onComments, onMenu, onOpenProfile }) {
   const p = post;
-  // "San Siro · Inter Milan × AC Milan · 27/09/2026"
-  const context = [p.stadium.name, p.game && `${p.game.home} × ${p.game.away}`, p.game && dmy(p.game.date)].filter(Boolean).join(" · ");
+  // rodapé: estádio, jogo e o dia (o do jogo; sem jogo, o dia da publicação)
+  const day = (p.game && dmy(p.game.date)) || dmy(p.createdAt);
   return (
     <article aria-label={`Publicação de @${p.author.username}`} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -37,7 +37,6 @@ export function PostCard({ post, onLike, onComments, onMenu, onOpenProfile }) {
         <div role="button" aria-label="Mais opções da publicação" onClick={() => onMenu(p)} style={{ cursor: "pointer", display: "flex", padding: 4 }}><MoreHorizontal size={20} color={MUTED} /></div>
       </div>
       {p.body && <p style={{ ...text(14, TEXT), whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{p.body}</p>}
-      <p style={text(12, GREEN_DARK, { fontWeight: 600 })}>{context}</p>
       <PhotoGrid photos={p.photos} />
       <div style={{ display: "flex", gap: 22, alignItems: "center" }}>
         <div role="button" aria-pressed={p.likedByMe} aria-label={p.likedByMe ? "Descurtir" : "Curtir"} onClick={() => onLike(p)} style={{ display: "flex", gap: 6, alignItems: "center", cursor: "pointer" }}>
@@ -48,6 +47,10 @@ export function PostCard({ post, onLike, onComments, onMenu, onOpenProfile }) {
           <MessageCircle size={22} color={TEXT} />
           <span style={text(14, TEXT, { fontWeight: 600 })}>{p.comments}</span>
         </div>
+      </div>
+      <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 10, display: "flex", flexDirection: "column", gap: 2 }}>
+        <p style={text(13, GREEN_DARK, { fontWeight: 700 })}>📍 {p.stadium.name}</p>
+        {(p.game || day) && <p style={text(12, MUTED)}>{[p.game && `${p.game.home} × ${p.game.away}`, day].filter(Boolean).join(" · ")}</p>}
       </div>
     </article>
   );

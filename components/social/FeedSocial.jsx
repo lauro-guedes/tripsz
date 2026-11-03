@@ -89,15 +89,13 @@ export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
         <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 26, color: TEXT, margin: "4px 0 0" }}>O futebol acontece aqui.</h1>
       </div>
       {onCreateTrip && (
-        <div style={{ padding: "4px 16px 10px" }}>
-          <div style={{ borderRadius: 18, background: "linear-gradient(135deg,#0f172a,#14532d)", padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.75)", margin: 0, textTransform: "uppercase" }}>Roteiro de viagem</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 22, color: "#fff", margin: 0, lineHeight: 1.2 }}>Monte seu roteiro para ver seu time ao vivo.</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0 }}>Conte o destino, as datas e o orçamento e a gente sugere os jogos, a hospedagem e o ingresso.</p>
-            <div role="button" aria-label="Montar meu roteiro" onClick={onCreateTrip} style={{ background: GREEN, borderRadius: 12, padding: "13px 16px", textAlign: "center", cursor: "pointer" }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 15, color: "#fff", margin: 0 }}>Montar meu roteiro</p>
+        <div style={{ padding: "2px 16px 8px" }}>
+          <div style={{ borderRadius: 14, background: "linear-gradient(135deg,#0f172a,#14532d)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: "#fff", margin: 0, lineHeight: 1.2 }}>Encontre o melhor roteiro de futebol para sua viagem.</p>
+            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.35 }}>Escolha países, datas e times. Nossa plataforma cruza os jogos disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem.</p>
+            <div role="button" aria-label="Montar meu roteiro" onClick={onCreateTrip} style={{ background: GREEN, borderRadius: 10, padding: "9px 14px", textAlign: "center", cursor: "pointer", marginTop: 2 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Montar meu roteiro</p>
             </div>
-            <p role="button" aria-label="Ver meus roteiros" onClick={() => onNavigate("roteiros")} style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, textAlign: "center", textDecoration: "underline", cursor: "pointer" }}>Ver meus roteiros</p>
           </div>
         </div>
       )}

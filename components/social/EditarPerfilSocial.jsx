@@ -7,7 +7,6 @@ import { BIO_MAX, CITY_MAX, DISPLAY_NAME_MAX, PROFILE_KINDS, cleanDisplayName } 
 import { getMyProfile, getProfile, listBlocked, saveMyProfile, unblockUser, updateUsername } from "../../lib/socialClient";
 import { BORDER, FONT_DISPLAY, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import { AvatarPicker } from "./AvatarPicker";
-import { CoverPicker } from "./CoverPicker";
 import { Avatar, Chip, EmptyState, SmallBtn, SocialShell } from "./ui";
 import { useMyId } from "./useMyId";
 
@@ -62,7 +61,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
         const u = await updateUsername(form.username);
         if (!u.ok) return setMsg({ type: "error", text: u.message });
       }
-      const r = await saveMyProfile({ coverUrl: form.coverUrl, avatarUrl: form.avatarUrl, displayName: cleanDisplayName(form.displayName), bio: form.bio, kinds: form.kinds, city: form.city, isPrivate: form.isPrivate });
+      const r = await saveMyProfile({ avatarUrl: form.avatarUrl, displayName: cleanDisplayName(form.displayName), bio: form.bio, kinds: form.kinds, city: form.city, isPrivate: form.isPrivate });
       if (!r.ok) return setMsg({ type: "error", text: r.message });
       setMe(r.profile);
       setMsg({ type: "success", text: "Perfil atualizado." });
@@ -85,8 +84,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
           <div role="button" aria-label="Voltar ao perfil" onClick={() => onNavigate("perfil")} style={{ width: 40, height: 40, borderRadius: 999, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><ArrowLeft size={20} color={TEXT} /></div>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>Editar perfil</h1>
         </div>
-        <Section title="Foto de capa"><CoverPicker value={form.coverUrl} onChange={(coverUrl) => set({ coverUrl })} userId={userId} visited={visited} /></Section>
-        <Section title="Foto de perfil"><AvatarPicker value={form.avatarUrl} name={form.displayName} coverUrl={form.coverUrl} onChange={(avatarUrl) => set({ avatarUrl })} userId={userId} /></Section>
+        <Section title="Foto de perfil"><AvatarPicker value={form.avatarUrl} name={form.displayName} onChange={(avatarUrl) => set({ avatarUrl })} userId={userId} /></Section>
         <Section title="Seu usuário">
           <UsernameEditField value={form.username} original={me.username} onChange={(username) => set({ username })} onValidity={setTaken} fieldStyle={field} />
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
