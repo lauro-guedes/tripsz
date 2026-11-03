@@ -34,6 +34,7 @@ import { StepDestino } from "./wizard/StepDestino";
 import { StepPessoasOrcamento } from "./wizard/StepPessoasOrcamento";
 import { StepPreferencias } from "./wizard/StepPreferencias";
 import { StepTimesFavoritos } from "./wizard/StepTimesFavoritos";
+import { JornadaHeader } from "./jornada/JornadaHeader";
 import { MeusRoteiros } from "./roteiro/MeusRoteiros";
 import { ResultadoRoteiro, RoteiroDetalhe } from "./roteiro/RoteiroView";
 import { fetchPlan, planToTrip, slimPlan } from "../lib/tripPlanClient";
@@ -82,6 +83,8 @@ export default function App() {
   const [screen, setScreen] = useState("landing");
   const [viewUser, setViewUser] = useState(null); // @ do perfil aberto na tela "usuario"
   // Ir pra outra tela; as sociais podem levar um argumento (o @ de quem abrir).
+  // No APP, Ranking, Calendário e Roteiros moram dentro da Jornada (cabeçalho com o cartão "Você" + abas); no SITE continuam telas soltas.
+  const jornadaTab = native === true && ["jornada", "ranking", "calendario", "roteiros"].includes(screen) ? (screen === "jornada" ? "ranking" : screen) : null;
   const goTo = (key, arg) => {
     if (key === "usuario") setViewUser(arg || null);
     setScreen(key);
@@ -494,8 +497,10 @@ export default function App() {
           onHireConsultoria={() => { if (chosenOption) setScreen("checkout"); }}
         />
       )}
+      {jornadaTab && <JornadaHeader tab={jornadaTab} onTab={(key) => setScreen(key)} onNavigate={(key) => setScreen(key)} />}
       {screen === "roteiros" && (
         <MeusRoteiros
+          embedded={!!jornadaTab}
           onNavigate={(key) => setScreen(key)}
           onLogout={handleLogout}
           onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
@@ -535,7 +540,7 @@ export default function App() {
         />
       )}
       {screen === "buscar" && <BuscarJogos onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
-      {screen === "calendario" && <MeuCalendario onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "calendario" && <MeuCalendario embedded={!!jornadaTab} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "registrar-jogo" && (
         <RegistrarJogo
           onNavigate={(key) => setScreen(key)}
@@ -563,7 +568,7 @@ export default function App() {
       {screen === "amigos" && <AmigosSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil-dados" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
-      {screen === "ranking" && <RankingTorcedores onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {(screen === "ranking" || screen === "jornada") && <RankingTorcedores embedded={!!jornadaTab} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {showGlobalLoginModal && (
         <LoginModal
           fullScreen={native === true}

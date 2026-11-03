@@ -320,3 +320,15 @@ Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICAT
 - **Atalhos:** o cartão alto virou UMA linha de botões pequenos (rola de lado se não couber): Histórico de jogos, Meu calendário, Meus roteiros, Minha assinatura. Conquistas saiu da lista (virou aba).
 - **Minha assinatura:** `PassportPaywall` ganhou `hideIntro`; a assinatura passa a ir direto pro "O que você desbloqueia com o Passaporte de Estádios:" (sem "Documento Oficial do Torcedor", o título e o texto).
   A lista antes dizia "com o Passport:" (agora em português, em todas as telas que usam o paywall). Nas outras telas a abertura continua.
+
+## Jornada (Fase 3, etapa 4)
+
+**Sem SQL novo.** A aba 4 da barra do app (antes "Ranking") agora é a **Jornada**, ícone de caminho (`Route`): reúne **Ranking, Calendário e Roteiros**.
+
+- **Topo da Jornada** (`components/jornada/JornadaHeader.jsx`): título, cartão **"Você"** e as abas **Ranking | Calendário | Roteiros**. O cartão mostra a posição no ranking nacional (`GET /api/ranking?scope=nacional`),
+  o nível, o XP e quanto falta pro próximo (faixas de `lib/fanLevels.js`, a mesma escada do Meu nível) e abre o **Meu nível** ao tocar. Sem jogo registrado: "Sem posição ainda" + convite a registrar um jogo.
+  Se o ranking falhar, avisa (não mostra "0 XP" como se fosse verdade).
+- **Cada aba tem o seu endereço** (`/conta/ranking`, `/conta/calendario`, `/conta/roteiros`; `/conta/jornada` abre o Ranking), então o botão voltar e os links diretos funcionam (o "Ver meus roteiros" do Início cai na aba Roteiros).
+- **As três telas continuam as mesmas**, só ganharam a prop `embedded`: sem a barra do topo, sem o rodapé e sem a abertura grande (mantêm o seletor Nacional/Global/Amigos, o "Buscar jogos" e o "Criar Novo Roteiro").
+- **No SITE (fora do app) nada muda**: Ranking, Calendário e Roteiros continuam telas soltas com a navegação do topo (`TripszApp`: `jornadaTab` só existe quando `native === true`).
+- A barra marca Jornada também em Roteiro/Resultado do roteiro e no Meu nível. Perfil: sobraram só os atalhos **Histórico de jogos** e **Minha assinatura** (Calendário e Roteiros saíram, vivem na Jornada).

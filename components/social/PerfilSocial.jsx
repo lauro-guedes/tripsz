@@ -1,5 +1,5 @@
 "use client";
-import { CalendarDays, CreditCard, History, Route, UserPlus } from "lucide-react";
+import { CreditCard, History, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { Message, text } from "../convite/ConviteUi";
@@ -145,7 +145,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
             </div>
             {self && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "2px 16px 14px" }}>
-                {[[History, "Histórico de jogos", "jogos"], [CalendarDays, "Meu calendário", "calendario"], [Route, "Meus roteiros", "roteiros"], [CreditCard, "Minha assinatura", "assinatura"]].map(([Ic, label, to]) => (
+                {[[History, "Histórico de jogos", "jogos"], [CreditCard, "Minha assinatura", "assinatura"]].map(([Ic, label, to]) => (
                   <div key={to} role="button" aria-label={label} onClick={() => onNavigate(to)} style={{ display: "inline-flex", alignItems: "center", gap: 6, border: `1px solid ${BORDER}`, background: "#fff", borderRadius: 999, padding: "9px 14px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                     <Ic size={16} color={GREEN_DARK} />
                     <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: TEXT, margin: 0 }}>{label}</p>

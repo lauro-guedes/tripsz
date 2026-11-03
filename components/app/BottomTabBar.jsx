@@ -1,23 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Award, PanelLeft, Plus } from "lucide-react";
+import { PanelLeft, Plus, Route } from "lucide-react";
 import { supabaseBrowser } from "../../lib/supabase";
 import { BORDER, FONT_DISPLAY, GREEN } from "../../lib/tokens";
 import { initials } from "../../lib/textUtils";
 import { Icon } from "../ui/Icon";
 
 /**
- * Barra de baixo do APP (só depois de logado): Início (o feed) · Estádios · (+) Central · Ranking · Perfil.
+ * Barra de baixo do APP (só depois de logado): Início (o feed) · Estádios · (+) Central · Jornada (ranking, calendário e roteiros) · Perfil.
  * O "+" abre a Central (check-in, jogo passado ou publicação). Conquistas, Histórico de jogos, Assinatura e Amigos ficam dentro do Perfil.
  */
 const HOME = ["feed", "notificacoes", "publicacao", "buscar"]; // "buscar" (Buscar jogos) abre pelo "Ver jogos" do Início
 const STADIUMS = ["estadios", "estadio", "jogo-ao-vivo"];
 const ADD = ["central", "checkin", "post-novo", "registrar-jogo", "jogo-salvo", "acompanhantes"];
-const RANKING = ["ranking"];
-const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "nivel", "jogos", "assinatura", "calendario", "roteiros", "roteiro", "resultado"]; // calendário e roteiros abrem pelo menu do Perfil
+const JORNADA = ["jornada", "ranking", "calendario", "roteiros", "roteiro", "resultado", "nivel"]; // o cartão "Você" abre o Meu nível
+const PROFILE = ["perfil", "usuario", "perfil-editar", "perfil-dados", "amigos", "conquistas", "jogos", "assinatura"];
 
 // Telas que mostram a barra: as da barra e as que continuam existindo no app sem ter aba (roteiros, buscar, calendário...).
-export const TAB_SCREENS = new Set([...HOME, ...STADIUMS, ...ADD, ...RANKING, ...PROFILE, "buscar", "calendario", "roteiros", "roteiro", "resultado", "bem-vindo"]);
+export const TAB_SCREENS = new Set([...HOME, ...STADIUMS, ...ADD, ...JORNADA, ...PROFILE, "buscar", "bem-vindo"]);
 export const TAB_BAR_HEIGHT = 60;
 
 export function BottomTabBar({ screen, onNavigate }) {
@@ -50,7 +50,7 @@ export function BottomTabBar({ screen, onNavigate }) {
           <Plus size={26} color="#fff" strokeWidth={2.6} />
         </div>
       </div>
-      {item(RANKING.includes(screen), "Ranking", "ranking", (c) => <Award size={22} color={c} strokeWidth={2} />)}
+      {item(JORNADA.includes(screen), "Jornada", "jornada", (c) => <Route size={22} color={c} strokeWidth={2} />)}
       {item(PROFILE.includes(screen), "Perfil", "perfil", () => (
         <div style={{ width: 24, height: 24, borderRadius: 12, background: "#0f172a", boxShadow: PROFILE.includes(screen) ? `0 0 0 2px ${GREEN}` : "none", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {me.avatar ? <img src={me.avatar} alt="" width={24} height={24} style={{ width: 24, height: 24, objectFit: "cover" }} /> : <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 9, color: "#fff", margin: 0 }}>{initials(me.name)}</p>}

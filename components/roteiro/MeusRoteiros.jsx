@@ -15,7 +15,7 @@ import { useIsMobile } from "../ui/useIsMobile";
 import { useEffect, useState } from "react";
 
 /* --- Meus Roteiros: lista de verdade, lida do Supabase --- */
-export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNew }) {
+export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onCreateNew, embedded = false }) {
   const isMobile = useIsMobile();
   const [trips, setTrips] = useState(null); // null = carregando
   const [userName, setUserName] = useState("");
@@ -101,8 +101,14 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
 
   return (
     <div style={{ background: BG, width: "100%" }}>
-      <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+      {!embedded && <AuthedNav active="roteiros" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
 
+      {embedded ? (
+        <div style={{ padding: isMobile ? `12px ${px}` : `24px ${px}` }}>
+          <Button onClick={onCreateNew}>Criar Novo Roteiro</Button>
+        </div>
+      ) : (
+      <>
       <div className="app-hero" style={{ position: "relative", display: "flex", flexDirection: "column", gap: isMobile ? 16 : 24, padding: isMobile ? `32px ${px}` : `80px ${px}`, overflow: "hidden" }}>
         <div className="app-hero-bg" style={{ position: "absolute", inset: 0 }}>
           <img src={PHOTO_STADIUM} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -115,6 +121,8 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
           <Button onClick={onCreateNew}>Criar Novo Roteiro</Button>
         </div>
       </div>
+      </>
+      )}
 
       <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: isMobile ? `20px ${px}` : `40px ${px}` }}>
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, width: "100%" }}>
@@ -218,7 +226,7 @@ export function MeusRoteiros({ onNavigate, onLogout, onOpenTrip, onEditTrip, onC
         </div>
       </div>
 
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }

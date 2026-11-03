@@ -13,7 +13,7 @@ import { useIsMobile } from "../ui/useIsMobile";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-export function MeuCalendario({ onNavigate, onLogout }) {
+export function MeuCalendario({ onNavigate, onLogout, embedded = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [user, setUser] = useState({ id: null, name: "", avatar: null });
@@ -84,10 +84,11 @@ export function MeuCalendario({ onNavigate, onLogout }) {
   const goMonth = (delta) => setView((v) => shiftMonth(v.year, v.month, delta));
 
   return (
-    <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
-      <AuthedNav active="calendario" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />
+    <div style={{ background: BG, width: "100%", minHeight: embedded ? undefined : "100vh" }}>
+      {!embedded && <AuthedNav active="calendario" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />}
 
-      <div style={{ background: "linear-gradient(180deg, #e6f5ec 0%, #f8fafc 100%)", padding: isMobile ? `32px ${px}` : `56px ${px}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 24 }}>
+      <div style={{ background: "linear-gradient(180deg, #e6f5ec 0%, #f8fafc 100%)", padding: embedded ? `12px ${px}` : isMobile ? `32px ${px}` : `56px ${px}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 24 }}>
+        {!embedded && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
           <div style={{ background: "#eafbf1", padding: "6px 12px", borderRadius: 4, width: "fit-content" }}>
             <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: "#008a3a", margin: 0 }}>SUA PRÓXIMA ARQUIBANCADA</p>
@@ -95,6 +96,7 @@ export function MeuCalendario({ onNavigate, onLogout }) {
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: isMobile ? 36 : 56, lineHeight: 1.05, color: TEXT, margin: 0 }}>Meu calendário</p>
           <p style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 16 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Os jogos que você quer viver, organizados em um só lugar.</p>
         </div>
+        )}
         <div onClick={() => onNavigate("buscar")} style={{ background: GREEN, borderRadius: 8, padding: "13px 20px", display: "flex", gap: 8, alignItems: "center", cursor: "pointer", flexShrink: 0 }}>
           <Icon name="search" size={18} color="#fff" />
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>Buscar jogos</p>
@@ -195,7 +197,7 @@ export function MeuCalendario({ onNavigate, onLogout }) {
         </div>
       </div>
 
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }

@@ -33,6 +33,7 @@ export const SCREEN_TO_PATH = {
   amigos: "/conta/amigos",
   feed: "/conta/feed",
   central: "/conta/mais",
+  jornada: "/conta/jornada",
   estadios: "/conta/estadios",
   checkin: "/conta/checkin",
   "post-novo": "/conta/post/novo",

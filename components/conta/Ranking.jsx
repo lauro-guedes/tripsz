@@ -98,7 +98,7 @@ export function RankingRow({ entry, highlighted, isMobile }) {
   );
 }
 
-export function RankingTorcedores({ onNavigate, onLogout }) {
+export function RankingTorcedores({ onNavigate, onLogout, embedded = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [userName, setUserName] = useState("");
@@ -131,16 +131,18 @@ export function RankingTorcedores({ onNavigate, onLogout }) {
   const myInTop15 = rest.some((e) => e.userId === myEntry?.userId) || podium.some((e) => e.userId === myEntry?.userId);
 
   return (
-    <div style={{ background: BG, minHeight: "100vh" }}>
-      <AuthedNav active="ranking" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />
+    <div style={{ background: BG, minHeight: embedded ? undefined : "100vh" }}>
+      {!embedded && <AuthedNav active="ranking" userName={userName} userAvatar={userAvatar} onNavigate={onNavigate} onLogout={onLogout} />}
       <div style={{ padding: isMobile ? `24px ${px}` : `64px 120px`, display: "flex", flexDirection: "column", gap: isMobile ? 24 : 48 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 24 }}>
-          <Badge>Comunidade tripsz</Badge>
+          {!embedded && <Badge>Comunidade tripsz</Badge>}
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 16 }}>
+            {!embedded && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: isMobile ? "100%" : 700 }}>
               <p className="app-h1" style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: isMobile ? 28 : 40, color: TEXT, margin: 0 }}>Ranking de Torcedores</p>
               <p className="app-sub" style={{ fontFamily: FONT_BODY, fontSize: isMobile ? 14 : 18, lineHeight: 1.5, color: BODY, margin: 0 }}>Compare seu passaporte com outros viajantes e dispute a liderança no ranking nacional.</p>
             </div>
+            )}
             <div style={{ background: BORDER, padding: 4, borderRadius: 8, display: "flex", width: isMobile ? "100%" : "auto" }}>
               {[["nacional", "Nacional"], ["global", "Global"], ["amigos", "Amigos"]].map(([key, label]) => (
                 <div key={key} onClick={() => setScope(key)} style={{ flex: isMobile ? 1 : "none", background: scope === key ? GREEN : "transparent", padding: "10px 24px", borderRadius: 6, textAlign: "center", cursor: "pointer" }}>
@@ -190,7 +192,7 @@ export function RankingTorcedores({ onNavigate, onLogout }) {
           </>
         )}
       </div>
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }
