@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X, Menu, LogOut, Eye, EyeOff } from "lucide-react";
+import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X, Menu, LogOut, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { useIsMobile } from "@/components/ui/useIsMobile";
 import { supabaseBrowser } from "@/lib/supabase";
 import { authFetch } from "@/lib/authFetch";
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   ["Assinaturas", CreditCard, "subscriptions", true],
   ["Financeiro", Landmark, "finance", true],
   ["Gamificação", Trophy, "gamification", true],
+  ["Moderação", ShieldAlert, "moderation", true],
   ["Configurações", Settings2, "settings", false],
 ];
 
@@ -878,6 +879,91 @@ function TripsView({ email }) {
   );
 }
 
+function ModerationView({ email }) {
+  const [filter, setFilter] = useState("open");
+  const [status, setStatus] = useState("loading");
+  const [reports, setReports] = useState([]);
+  const [busy, setBusy] = useState(null);
+  const [notice, setNotice] = useState(null);
+
+  const load = async (which) => {
+    setStatus("loading");
+    try {
+      const res = await authFetch(`/api/admin/reports?status=${which}&email=${encodeURIComponent(email)}`);
+      if (!res.ok) { setStatus("error"); return; }
+      const data = await res.json();
+      setReports(data.reports || []);
+      setStatus("ready");
+    } catch { setStatus("error"); }
+  };
+  useEffect(() => { load(filter); }, [filter, email]);
+
+  const act = async (r, action) => {
+    if (busy) return;
+    if (action === "remove" && !window.confirm("Tirar este conteúdo do ar? Quem publicou deixa de ver.")) return;
+    setBusy(r.id);
+    setNotice(null);
+    try {
+      const res = await authFetch("/api/admin/reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: r.id, action }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return setNotice(data.error || "Não foi possível concluir agora.");
+      await load(filter);
+    } finally { setBusy(null); }
+  };
+
+  const TYPE = { profile: "Perfil", post: "Publicação", comment: "Comentário" };
+  const btn = (primary, danger) => ({ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 600, borderRadius: 8, padding: "8px 14px", cursor: "pointer", border: `1px solid ${danger ? "#dc2626" : primary ? GREEN : BORDER}`, background: primary ? GREEN : "#fff", color: danger ? "#dc2626" : primary ? "#fff" : TEXT });
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 26, letterSpacing: "-0.5px", color: TEXT, margin: 0 }}>Moderação</p>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: "5px 0 0" }}>Denúncias de perfis, publicações e comentários da rede social</p>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {[["open", "Abertas"], ["done", "Resolvidas"]].map(([id, label]) => (
+          <div key={id} onClick={() => setFilter(id)} style={{ ...btn(filter === id), padding: "8px 18px" }}>{label}</div>
+        ))}
+      </div>
+      {notice && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#dc2626", margin: 0 }}>{notice}</p>}
+      {status === "loading" && <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Carregando...</p>}
+      {status === "error" && <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>Não foi possível carregar as denúncias.</p>}
+      {status === "ready" && reports.length === 0 && <p style={{ fontFamily: "Inter, sans-serif", color: MUTED }}>{filter === "open" ? "Nenhuma denúncia aberta. Tudo em dia." : "Nada resolvido ainda."}</p>}
+      {status === "ready" && reports.map((r) => (
+        <div key={r.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ background: GREEN_BG, color: "#0b6b3a", borderRadius: 999, padding: "3px 10px", fontFamily: "Inter, sans-serif", fontSize: 11, fontWeight: 700 }}>{TYPE[r.type] || r.type}</span>
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 600, color: TEXT }}>{r.reason}</span>
+            {r.openReports > 1 && <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: "#b45309", fontWeight: 700 }}>{r.openReports} denúncias abertas</span>}
+            <span style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED_LIGHT, marginLeft: "auto" }}>{new Date(r.createdAt).toLocaleString("pt-BR")}</span>
+          </div>
+          {r.details && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>“{r.details}”</p>}
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 11, color: MUTED, margin: 0 }}>Denunciado por {r.reporter ? `@${r.reporter}` : "conta removida"}{r.status !== "open" ? ` · ${r.status === "dismissed" ? "descartada" : "analisada"}` : ""}</p>
+          <div style={{ background: BG, borderRadius: 8, padding: 12, display: "flex", gap: 12, alignItems: "flex-start" }}>
+            {r.target && r.target.photo && <img src={r.target.photo} alt="" width={64} height={64} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />}
+            <div style={{ minWidth: 0 }}>
+              {r.target ? (
+                <>
+                  <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 700, color: TEXT, margin: 0 }}>{r.target.author ? `@${r.target.author}` : "—"}{r.target.stadium ? ` · ${r.target.stadium}` : ""}{r.target.removed ? " · já removido" : ""}</p>
+                  {r.target.text && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: "4px 0 0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{r.target.text}</p>}
+                </>
+              ) : (
+                <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>O conteúdo não existe mais ({r.targetId}).</p>
+              )}
+            </div>
+          </div>
+          {r.status === "open" && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {r.type !== "profile" && r.target && !r.target.removed && <div role="button" onClick={() => act(r, "remove")} style={{ ...btn(false, true), opacity: busy === r.id ? 0.6 : 1 }}>Remover conteúdo</div>}
+              <div role="button" onClick={() => act(r, "reviewed")} style={{ ...btn(true), opacity: busy === r.id ? 0.6 : 1 }}>Marcar como analisada</div>
+              <div role="button" onClick={() => act(r, "dismiss")} style={{ ...btn(false), opacity: busy === r.id ? 0.6 : 1 }}>Descartar</div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function GamificationView({ email }) {
   const [status, setStatus] = useState("loading");
   const [data, setData] = useState(null);
@@ -1306,6 +1392,7 @@ export default function AdminPage() {
           {view === "consulting" && <ConsultingView email={userEmail} />}
           {view === "trips" && <TripsView email={userEmail} />}
           {view === "gamification" && <GamificationView email={userEmail} />}
+          {view === "moderation" && <ModerationView email={userEmail} />}
           {view === "finance" && <FinanceView email={userEmail} />}
         </div>
       </div>
