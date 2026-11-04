@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 
 export const BASE_CITY_KEY = "tripsz_base_city";
 
-export function BuscarJogos({ onNavigate, onLogout }) {
+export function BuscarJogos({ onNavigate, onLogout, embedded = false }) {
   const isMobile = useIsMobile();
   const px = isMobile ? "16px" : "80px";
   const [user, setUser] = useState({ id: null, name: "", avatar: null });
@@ -326,7 +326,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
 
   return (
     <div style={{ background: BG, width: "100%", minHeight: "100vh" }}>
-      <AuthedNav active="buscar" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />
+      {!embedded && <AuthedNav active="buscar" userName={user.name} userAvatar={user.avatar} onNavigate={onNavigate} onLogout={onLogout} />}
 
       <div style={{ background: "linear-gradient(180deg, #e6f5ec 0%, #f8fafc 100%)", padding: isMobile ? `32px ${px}` : `56px ${px}`, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: 24 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
@@ -577,7 +577,7 @@ export function BuscarJogos({ onNavigate, onLogout }) {
         )}
       </div>
 
-      <AuthedFooter />
+      {!embedded && <AuthedFooter />}
     </div>
   );
 }

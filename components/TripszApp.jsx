@@ -543,7 +543,8 @@ export default function App() {
           onCompanions={(game) => { saveDraft({ game, tagged: [] }); setScreen("acompanhantes"); }}
         />
       )}
-      {screen === "buscar" && <BuscarJogos onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {native === true && screen === "buscar" && <ScreenHeader title="Buscar jogos" onBack={() => window.history.back()} />}
+      {screen === "buscar" && <BuscarJogos embedded={native === true} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {(screen === "calendario" || screen === "jornada") && <MeuCalendario embedded={!!jornadaTab} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "registrar-jogo" && (
         <RegistrarJogo
