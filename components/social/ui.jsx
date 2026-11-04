@@ -9,6 +9,8 @@ import { AuthedNav } from "../nav/AuthedNav";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Wordmark } from "../ui/Wordmark";
 import { isNativeApp } from "../../lib/nativeApp";
+import { fetchCompanionRequests } from "../../lib/companionsClient";
+import { getSocialNotifications } from "../../lib/socialClient";
 import { text } from "../convite/ConviteUi";
 import { initialsOf } from "../../lib/social";
 import { BG, BORDER, FONT_DISPLAY, GREEN, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
@@ -134,10 +136,23 @@ export function ScreenHeader({ title, onBack, right = null }) {
 
 /** Cabeçalho do Início no APP: a marca "tripsz" e o sino das notificações. */
 export function BrandHeader({ onBell }) {
+  const [count, setCount] = useState(0); // avisos de jogo + curtidas, comentários e seguidores novos
+  useEffect(() => {
+    let alive = true;
+    const load = () => Promise.all([fetchCompanionRequests(), getSocialNotifications()]).then(([c, soc]) => {
+      if (alive) setCount((c && c.ok ? (c.requests || []).length : 0) + (soc && soc.ok ? soc.unread || 0 : 0));
+    }).catch(() => {});
+    load();
+    window.addEventListener("tripsz:notifs", load);
+    return () => { alive = false; window.removeEventListener("tripsz:notifs", load); };
+  }, []);
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", height: 56, boxSizing: "border-box", background: "#fff" }}>
       <Wordmark height={24} />
-      <div role="button" aria-label="Notificações" onClick={onBell} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><Bell size={22} color={TEXT} /></div>
+      <div role="button" aria-label="Notificações" onClick={onBell} style={{ position: "relative", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <Bell size={22} color={TEXT} />
+        {count > 0 && <span style={{ position: "absolute", top: 2, right: 2, background: "#ef4444", color: "#fff", border: "2px solid #fff", borderRadius: 999, minWidth: 18, height: 18, padding: "0 4px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 10, lineHeight: 1 }}>{count > 9 ? "9+" : count}</span>}
+      </div>
     </div>
   );
 }

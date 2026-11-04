@@ -563,7 +563,7 @@ export default function App() {
           onCreateNew={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }}
         />
       )}
-      {screen === "notificacoes" && <Notificacoes onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "notificacoes" && <Notificacoes onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil" && <PerfilSocial onNavigate={goTo} onLogout={handleLogout} onBack={() => setScreen("perfil")} />}
       {screen === "usuario" && <PerfilSocial key={viewUser} username={viewUser} onNavigate={goTo} onLogout={handleLogout} onBack={() => window.history.back()} />}
       {screen === "feed" && <FeedSocial onNavigate={goTo} onLogout={handleLogout} onCreateTrip={() => { setAnswers((a) => ({ userId: a.userId })); setPlan(null); setPlanError(null); setChosenOption(null); setStepOffset(1); setScreen("destino"); }} />}

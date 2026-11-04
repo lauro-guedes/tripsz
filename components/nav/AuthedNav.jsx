@@ -1,6 +1,7 @@
 "use client";
 import { authFetch } from "../../lib/authFetch";
 import { fetchCompanionRequests } from "../../lib/companionsClient";
+import { getSocialNotifications } from "../../lib/socialClient";
 import { supabaseBrowser } from "../../lib/supabase";
 import { initials } from "../../lib/textUtils";
 import { BORDER, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, GREEN_BG, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
@@ -52,7 +53,12 @@ export function AuthedNav({ active, userName, userAvatar, onNavigate, onLogout }
   const [notifCount, setNotifCount] = useState(0);
   useEffect(() => {
     let alive = true;
-    const load = () => fetchCompanionRequests().then((r) => alive && r && r.ok && setNotifCount((r.requests || []).length));
+    const load = () => Promise.all([fetchCompanionRequests(), isNativeApp() ? getSocialNotifications() : null]).then(([c, soc]) => {
+      if (!alive) return;
+      const marks = c && c.ok ? (c.requests || []).length : 0;
+      const social = soc && soc.ok ? soc.unread || 0 : 0; // só no app: curtidas, comentários e seguidores novos
+      setNotifCount(marks + social);
+    }).catch(() => {});
     load();
     window.addEventListener("tripsz:notifs", load);
     return () => {
