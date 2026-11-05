@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X, Menu, LogOut, Eye, EyeOff, ShieldAlert } from "lucide-react";
+import { Tv, LayoutDashboard, Users, Map, CalendarDays, CreditCard, Landmark, Trophy, Settings2, Search, HelpCircle, Bell, Download, Calendar as CalendarIcon, MoreHorizontal, X, Menu, LogOut, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { useIsMobile } from "@/components/ui/useIsMobile";
 import { supabaseBrowser } from "@/lib/supabase";
 import { authFetch } from "@/lib/authFetch";
+import { BroadcastsView } from "@/components/admin/BroadcastsView";
 
 const GREEN = "#00d66f";
 const GREEN_BG = "#ddf9ea";
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   ["Financeiro", Landmark, "finance", true],
   ["Gamificação", Trophy, "gamification", true],
   ["Moderação", ShieldAlert, "moderation", true],
+  ["Transmissões", Tv, "broadcasts", true],
   ["Configurações", Settings2, "settings", false],
 ];
 
@@ -1393,6 +1395,7 @@ export default function AdminPage() {
           {view === "trips" && <TripsView email={userEmail} />}
           {view === "gamification" && <GamificationView email={userEmail} />}
           {view === "moderation" && <ModerationView email={userEmail} />}
+          {view === "broadcasts" && <BroadcastsView email={userEmail} />}
           {view === "finance" && <FinanceView email={userEmail} />}
         </div>
       </div>

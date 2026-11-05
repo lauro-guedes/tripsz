@@ -7,6 +7,7 @@ import { cleanUsername } from "../../lib/social";
 import { isNativeApp } from "../../lib/nativeApp";
 import { getFeed, getTodayCheckins } from "../../lib/socialClient";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import { OndeAssistir } from "../jogos/OndeAssistir";
 import { PostList } from "./PostList";
 import { Avatar, BrandHeader, EmptyState, SmallBtn, SocialShell } from "./ui";
 
@@ -38,6 +39,7 @@ function TodayCheckins({ games, onSeeAll }) {
             <p style={text(11, MUTED)}>{kickoffLabel(g.kickoff)}</p>
             <p style={text(15, TEXT, { fontWeight: 800 })}>{g.home} × {g.away}</p>
             <p style={text(12, MUTED)}>{[g.competition, g.stadium].filter(Boolean).join(" · ")}</p>
+            <OndeAssistir fixtureId={g.fixtureId} kickoff={g.kickoff} home={g.home} away={g.away} />
             <p style={text(12, GREEN_DARK, { fontWeight: 700 })}>📍 {g.count} {g.count === 1 ? "check-in" : "check-ins"}</p>
           </div>
         ))}

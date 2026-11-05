@@ -332,3 +332,15 @@ Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICAT
 - **As três telas continuam as mesmas**, só ganharam a prop `embedded`: sem a barra do topo, sem o rodapé e sem a abertura grande (mantêm o seletor Nacional/Global/Amigos, o "Buscar jogos" e o "Criar Novo Roteiro").
 - **No SITE (fora do app) nada muda**: Ranking, Calendário e Roteiros continuam telas soltas com a navegação do topo (`TripszApp`: `jornadaTab` só existe quando `native === true`).
 - A barra marca Jornada também em Roteiro/Resultado do roteiro e no Meu nível. Perfil: sobraram só os atalhos **Histórico de jogos** e **Minha assinatura** (Calendário e Roteiros saíram, vivem na Jornada).
+
+## Onde assistir (transmissões) — Gemini com busca do Google
+
+**Tem SQL novo:** `supabase-transmissoes.sql` (rodar UMA vez, ANTES de publicar). **Variável da Vercel:** `GEMINI_API_KEY` (secreta, SEM `NEXT_PUBLIC_`); opcionais `GEMINI_MODEL` (padrão `gemini-2.5-flash`) e `BROADCAST_MAX_RUNS_PER_DAY` (padrão 60).
+
+- **Como funciona:** os canais de cada jogo (Brasil) são buscados pelo Gemini com a busca do Google (`lib/broadcastGemini.js`), VALIDADOS (`lib/broadcastRules.js`) e guardados em `fixture_broadcasts`. O app só lê do nosso banco.
+  Faixas: **brasil** (todo o futebol brasileiro do calendário) e **europa** (Premier, La Liga, Serie A, Bundesliga, Ligue 1, Primeira Liga e as copas Champions, Europa League, Libertadores e Sul-Americana).
+- **Atualização sob demanda** (sem cron, igual ao calendário): `GET /api/broadcasts?ids=` lê o que está guardado e diz quais jogos estão velhos; `POST /api/broadcasts/refresh` atualiza UMA leva de até 10 jogos.
+  Validade: 90 min (jogo em até 6 h), 4 h (até 48 h), 12 h (mais longe). Trava de uma consulta por vez, limite por dia, freio de 30 min se as 3 últimas falharam (`broadcast_runs`).
+- **Validação (a IA não é confiada às cegas):** só vale jogo que a gente perguntou (por número), só canal de uma lista conhecida (`ALIASES`), e só se as fontes forem confiáveis (1 de emissora/federação/ge, ou 2 portais diferentes). Sem fonte ou canal conhecido, nada é guardado.
+- **No app:** linha "Onde assistir" (com a observação de região, ex.: "Globo (SP e parte da rede)") nos cartões do Calendário, do Buscar jogos e de "Mais check-ins hoje". Sem dado: "Canal ainda não confirmado" + link de busca (só em liga coberta); nunca inventa canal.
+- **Admin > Transmissões:** botões de teste (Brasil sem salvar / com salvar / Europa) que mostram o pedido, a resposta crua do Gemini, as fontes, o que foi aceito e o motivo de cada recusa. **Rode o teste antes de confiar nos dados.**

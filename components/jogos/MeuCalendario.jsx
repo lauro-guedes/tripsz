@@ -4,6 +4,7 @@ import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
+import { OndeAssistir } from "./OndeAssistir";
 import { GAME_CARD_STYLE, GameDateLine, GameLeagueLine, GameRemoveLink, GameTag } from "./GameCardParts";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
@@ -185,6 +186,7 @@ export function MeuCalendario({ onNavigate, onLogout, embedded = false }) {
                     <TeamBadge name={g.away_team} url={g.away_logo} size={26} resolve />
                   </div>
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{[g.venue_name, g.venue_city].filter(Boolean).join(" • ")}</p>
+                  <OndeAssistir fixtureId={g.fixture_id} kickoff={g.kickoff} home={g.home_team} away={g.away_team} />
                   <GameRemoveLink onClick={() => handleRemove(g)} disabled={!!removingId}>
                     {removingId === g.id ? "Removendo..." : "Remover do calendário"}
                   </GameRemoveLink>

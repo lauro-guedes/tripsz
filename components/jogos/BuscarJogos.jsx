@@ -5,6 +5,7 @@ import { teamLabel } from "../../lib/textUtils";
 import { BG, BG_ALT, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
 import { GAME_CARD_STYLE, GameDateLine, GameLeagueLine, GameRemoveLink, GameTag } from "./GameCardParts";
+import { OndeAssistir } from "./OndeAssistir";
 import { AuthedFooter } from "../nav/AuthedFooter";
 import { AuthedNav } from "../nav/AuthedNav";
 import { Icon } from "../ui/Icon";
@@ -304,6 +305,7 @@ export function BuscarJogos({ onNavigate, onLogout, embedded = false }) {
             <TeamBadge name={g.away} url={g.awayLogo} size={26} resolve />
           </div>
           <p style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: BODY, margin: 0 }}>{[g.venue, g.city].filter(Boolean).join(" • ") || "Estádio a confirmar"}</p>
+          <OndeAssistir fixtureId={g.id} kickoff={g.kickoff} home={g.home} away={g.away} />
           {g.approxLocation && <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: GOLD, margin: 0 }}>Local provável — confirme o estádio</p>}
           {saved ? (
             <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
