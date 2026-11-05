@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { authFetch } from "../../lib/authFetch";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import TeamBadge from "../TeamBadge";
+import { PartidaAoVivo } from "./PartidaAoVivo";
 import { EmptyState } from "./ui";
 
 const REFRESH_MS = 30_000;
@@ -20,9 +21,9 @@ export function groupLive(games) {
   return [...by.values()].sort((a, b) => rank(a.league.id) - rank(b.league.id) || String(a.league.country).localeCompare(String(b.league.country), "pt-BR") || a.league.name.localeCompare(b.league.name, "pt-BR"));
 }
 
-function Row({ g, goal }) {
+function Row({ g, goal, onOpen }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: `1px solid ${BORDER}`, background: goal ? "#ecfdf5" : "#fff", transition: "background .6s" }}>
+    <div role="button" onClick={onOpen} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderTop: `1px solid ${BORDER}`, background: goal ? "#ecfdf5" : "#fff", transition: "background .6s" }}>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
         {[g.home, g.away].map((t, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -47,6 +48,7 @@ export function AoVivo() {
   const [state, setState] = useState({ status: "loading", games: [] });
   const [flash, setFlash] = useState({}); // id -> true (gol recente)
   const prev = useRef(new Map());
+  const [open, setOpen] = useState(null);
 
   useEffect(() => {
     let alive = true, timer = null;
@@ -85,6 +87,7 @@ export function AoVivo() {
   if (groups.length === 0) return <EmptyState title="Nenhum jogo ao vivo agora" body="Quando uma partida começar nas ligas que acompanhamos, ela aparece aqui." />;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {open && <PartidaAoVivo game={open} onClose={() => setOpen(null)} />}
       {groups.map(({ league, games }) => (
         <div key={league.id} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: "#f8fafc" }}>
@@ -95,7 +98,7 @@ export function AoVivo() {
             </div>
             <span style={{ width: 8, height: 8, borderRadius: 999, background: GREEN }} />
           </div>
-          {games.map((g) => <Row key={g.id} g={g} goal={!!flash[g.id]} />)}
+          {games.map((g) => <Row key={g.id} g={g} goal={!!flash[g.id]} onOpen={() => setOpen(g)} />)}
         </div>
       ))}
     </div>
