@@ -67,6 +67,13 @@ export function AbaGols({ details, isMobile }) {
   }
   const t = buildTimeline(details);
   const items = filter === "gols" ? t.items.filter((i) => i.isGoal) : t.items;
+  // O rodapé depende do momento do jogo: intervalo, em andamento ou encerrado.
+  const st = (details.status && details.status.short) || "";
+  const el = details.status && details.status.elapsed;
+  const footer = st === "HT" ? { when: "45'", label: "Fim do 1T" }
+    : st === "BT" ? { when: "", label: "Fim do tempo normal" }
+    : ["1H", "2H", "ET", "P", "LIVE", "SUSP", "INT"].includes(st) ? { when: el != null ? `${el}'` : "", label: "Em andamento" }
+    : { when: t.endLabel, label: "Fim de jogo" };
   const penaltyNote = details.penalty ? ` (${details.penalty.home}–${details.penalty.away} nos pênaltis)` : "";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
@@ -85,9 +92,9 @@ export function AbaGols({ details, isMobile }) {
           {items.length === 0 && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: "8px 0" }}>Nenhum gol neste jogo.</p>}
           {items.map((it) => <Row key={it.key} it={it} isMobile={isMobile} />)}
           <div style={{ display: "flex", gap: 12, paddingTop: 12 }}>
-            <p style={{ fontFamily: FONT_MONO, fontSize: 12, lineHeight: 1.4, color: MUTED, margin: 0 }}>{t.endLabel}</p>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 12, lineHeight: 1.4, color: MUTED, margin: 0 }}>{footer.when}</p>
             <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, lineHeight: 1.4, color: TEXT, margin: 0 }}>
-              Fim de jogo · {t.homeName} {t.finalScore.home} × {t.finalScore.away} {t.awayName}{penaltyNote}
+              {footer.label} · {t.homeName} {t.finalScore.home} × {t.finalScore.away} {t.awayName}{penaltyNote}
             </p>
           </div>
         </div>
