@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Message, PrimaryBtn, SecondaryBtn, text } from "../convite/ConviteUi";
 import { getFeed } from "../../lib/socialClient";
 import { searchKey } from "../../lib/searchKey";
+import { stadiumIdentity } from "../../lib/stadiumAlias";
 import { supabaseBrowser } from "../../lib/supabase";
 import { getVenuePhoto } from "../../lib/venuePhoto";
 import TeamBadge from "../TeamBadge";
@@ -24,9 +25,11 @@ export function dayLabel(value) {
 export function groupByStadium(games) {
   const by = new Map();
   for (const g of games || []) {
-    const key = searchKey(g.stadium);
+    const { key, label } = stadiumIdentity(g.stadium);
     if (!key) continue;
-    if (!by.has(key)) by.set(key, { key, name: g.stadium, city: g.city || null, country: g.country || null, games: [] });
+    // sem apelido conhecido, tira cidade colada no nome: "Estádio X (São Paulo, São Paulo)"
+    const shown = label === g.stadium ? String(g.stadium).replace(/\s*\([^()]*,[^()]*\)\s*$/, "") : label;
+    if (!by.has(key)) by.set(key, { key, name: shown, city: g.city || null, country: g.country || null, games: [] });
     by.get(key).games.push(g);
   }
   const date = (g) => String(g.match_date || "");
