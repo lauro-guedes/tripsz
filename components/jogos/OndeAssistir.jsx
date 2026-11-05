@@ -12,7 +12,7 @@ const BEFORE = 3 * 3600 * 1000, AFTER = 10 * 86400 * 1000; // só jogos que aind
 export function OndeAssistir({ fixtureId, kickoff, home, away }) {
   const t = new Date(kickoff).getTime();
   const near = fixtureId != null && Number.isFinite(t) && t >= Date.now() - BEFORE && t <= Date.now() + AFTER;
-  const { ready, data, covered } = useBroadcast(near ? Number(fixtureId) : null);
+  const { ready, data, covered, likely } = useBroadcast(near ? Number(fixtureId) : null);
   if (!near || !ready) return null;
   const channels = data && Array.isArray(data.channels) ? data.channels : [];
   if (channels.length) {
@@ -23,6 +23,13 @@ export function OndeAssistir({ fixtureId, kickoff, home, away }) {
         </p>
         {data.confirmedAt && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: MUTED, margin: 0 }}>confirmado {timeAgo(data.confirmedAt)}</p>}
       </div>
+    );
+  }
+  if (likely && likely.length) {
+    return (
+      <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: MUTED, margin: 0 }}>
+        <span aria-hidden="true">📺 </span>Canal do jogo ainda não confirmado. A competição costuma passar em: {likely.join(" · ")}
+      </p>
     );
   }
   if (!covered) return null;
