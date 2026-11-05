@@ -335,7 +335,7 @@ Reorganização da navegação do app seguindo o novo desenho do Figma ("APLICAT
 
 ## Onde assistir (transmissões) — Gemini com busca do Google
 
-**Tem SQL novo:** `supabase-transmissoes.sql` (rodar UMA vez, ANTES de publicar). **Variável da Vercel:** `GEMINI_API_KEY` (secreta, SEM `NEXT_PUBLIC_`); opcionais `GEMINI_MODEL` (padrão `gemini-2.5-flash`) e `BROADCAST_MAX_RUNS_PER_DAY` (padrão 60).
+**Tem SQL novo:** `supabase-transmissoes.sql` (rodar UMA vez, ANTES de publicar). **Variável da Vercel:** `GEMINI_API_KEY` (secreta, SEM `NEXT_PUBLIC_`); opcionais `GEMINI_MODEL` (padrão `gemini-3.8-flash`) e `BROADCAST_MAX_RUNS_PER_DAY` (padrão 60).
 
 - **Como funciona:** os canais de cada jogo (Brasil) são buscados pelo Gemini com a busca do Google (`lib/broadcastGemini.js`), VALIDADOS (`lib/broadcastRules.js`) e guardados em `fixture_broadcasts`. O app só lê do nosso banco.
   Faixas: **brasil** (todo o futebol brasileiro do calendário) e **europa** (Premier, La Liga, Serie A, Bundesliga, Ligue 1, Primeira Liga e as copas Champions, Europa League, Libertadores e Sul-Americana).
