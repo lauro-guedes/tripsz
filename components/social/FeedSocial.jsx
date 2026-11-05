@@ -8,6 +8,7 @@ import { isNativeApp } from "../../lib/nativeApp";
 import { getFeed, getTodayCheckins } from "../../lib/socialClient";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
 import { OndeAssistir } from "../jogos/OndeAssistir";
+import { AoVivo } from "./AoVivo";
 import { PostList } from "./PostList";
 import { Avatar, BrandHeader, EmptyState, SmallBtn, SocialShell } from "./ui";
 
@@ -69,7 +70,7 @@ export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
     setPage({ hasMore: r.hasMore, cursor: r.nextCursor });
     setStatus("ready");
   }, []);
-  useEffect(() => { load(scope); }, [scope, load]);
+  useEffect(() => { if (scope !== "aovivo") load(scope); }, [scope, load]);
   useEffect(() => { let alive = true; getTodayCheckins().then((r) => alive && r.ok && setToday(r.games)); return () => { alive = false; }; }, []);
 
   const more = async () => {
@@ -104,13 +105,15 @@ export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
       <TodayCheckins games={today} onSeeAll={() => onNavigate("buscar")} />
       <div style={{ padding: "8px 16px" }}>
         <div role="tablist" aria-label="Quem aparece no Início" style={{ display: "flex", background: "#eef2f6", borderRadius: 12, padding: 4, gap: 4 }}>
-          {[["todos", "Todos"], ["seguindo", "Seguindo"]].map(([id, label]) => (
+          {[["todos", "Todos"], ["seguindo", "Seguindo"], ["aovivo", "Ao vivo"]].map(([id, label]) => (
             <div key={id} role="tab" aria-selected={scope === id} onClick={() => setScope(id)} style={{ flex: 1, textAlign: "center", padding: "9px 0", borderRadius: 9, cursor: "pointer", background: scope === id ? "#fff" : "transparent" }}>
               <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: scope === id ? GREEN_DARK : MUTED, margin: 0 }}>{label}</p>
             </div>
           ))}
         </div>
       </div>
+      {scope === "aovivo" ? <div style={{ padding: "4px 16px 24px" }}><AoVivo /></div> : (
+      <>
       <div style={{ padding: "4px 16px 8px", display: "flex", gap: 10, alignItems: "center" }}>
         <Avatar url={me.avatar} name={me.name} size={40} />
         <div role="button" aria-label="Nova publicação" onClick={() => onNavigate("post-novo")} style={{ flex: 1, background: "#eef2f6", borderRadius: 999, padding: "12px 16px", cursor: "pointer" }}><p style={text(14, MUTED)}>O que você viveu no futebol hoje?</p></div>
@@ -139,6 +142,8 @@ export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
         <PostList posts={posts} setPosts={setPosts} onNavigate={onNavigate} />
         {status === "ready" && page.hasMore && <div style={{ display: "flex", justifyContent: "center" }}><SmallBtn kind="outline" onClick={more}>Ver mais</SmallBtn></div>}
       </div>
+      </>
+      )}
     </SocialShell>
   );
 }
