@@ -46,7 +46,7 @@ export function BroadcastsView({ email }) {
       {err && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#dc2626", margin: 0 }}>{err}</p>}
       {res && res.skipped === "sem_chave" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#b45309", margin: 0 }}>A chave GEMINI_API_KEY não está configurada neste ambiente (ou o deploy ainda não pegou).</p>}
       {res && res.none && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: 0 }}>{res.message || "Nenhum jogo para testar."}</p>}
-      {res && res.ok === false && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#dc2626", margin: 0 }}>O Gemini não respondeu: {BROADCAST_ERRORS[res.kind] || BROADCAST_ERRORS.unknown}.</p>}
+      {res && res.ok === false && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#dc2626", margin: 0 }}>O Gemini não respondeu: {BROADCAST_ERRORS[res.kind] || BROADCAST_ERRORS.unknown}.{res.status ? ` (HTTP ${res.status}${res.detail ? `: ${res.detail}` : ""})` : ""}</p>}
       {d && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: TEXT, margin: 0 }}>
