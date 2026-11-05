@@ -26,7 +26,7 @@ function fmtRaw(iso) {
 }
 
 export async function generateMetadata({ params }) {
-  const s = await stadiumBySlug(params.slug);
+  const s = await stadiumBySlug(params.slug).catch(() => null);
   if (!s) return { title: "Estádio não encontrado", robots: { index: false, follow: false } };
   const where = [s.city, s.country].filter(Boolean).join(", ");
   const title = `${s.name}${where ? ` — ${where}` : ""}: jogos e roteiro`;
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function Page({ params }) {
-  const s = await stadiumBySlug(params.slug);
+  const s = await stadiumBySlug(params.slug).catch(() => null);
   if (!s) notFound();
   // Só lê o que já está guardado: a página nunca espera pela Wikipedia (a foto nova chega pelo navegador).
   const info = await cachedVenueInfo(s.name, s.city).catch(() => null);
