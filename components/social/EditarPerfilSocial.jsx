@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { UsernameEditField } from "../conta/UsernameEditField";
 import { Message, PrimaryBtn, SecondaryBtn, text } from "../convite/ConviteUi";
@@ -7,6 +7,7 @@ import { BIO_MAX, CITY_MAX, DISPLAY_NAME_MAX, PROFILE_KINDS, cleanDisplayName } 
 import { getMyProfile, getProfile, listBlocked, saveMyProfile, unblockUser, updateUsername } from "../../lib/socialClient";
 import { BORDER, FONT_DISPLAY, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import { AvatarPicker } from "./AvatarPicker";
+import { DadosConta } from "./DadosConta";
 import { Avatar, Chip, EmptyState, SmallBtn, SocialShell } from "./ui";
 import { useMyId } from "./useMyId";
 
@@ -84,10 +85,6 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
           <div role="button" aria-label="Voltar ao perfil" onClick={() => onNavigate("perfil")} style={{ width: 40, height: 40, borderRadius: 999, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><ArrowLeft size={20} color={TEXT} /></div>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>Editar perfil</h1>
         </div>
-        <div role="button" aria-label="Dados da conta" onClick={() => onNavigate("perfil-dados")} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-          <div style={{ flex: 1 }}><p style={text(15, TEXT, { fontWeight: 700 })}>Dados da conta</p><p style={text(12, MUTED)}>E-mail, WhatsApp, senha, times favoritos e sair da conta</p></div>
-          <ChevronRight size={20} color={MUTED} />
-        </div>
         <Section title="Foto de perfil"><AvatarPicker value={form.avatarUrl} name={form.displayName} onChange={(avatarUrl) => set({ avatarUrl })} userId={userId} /></Section>
         <Section title="Seu usuário">
           <UsernameEditField value={form.username} original={me.username} onChange={(username) => set({ username })} onValidity={setTaken} fieldStyle={field} />
@@ -115,6 +112,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
         </Section>
         <Message msg={msg} />
         <PrimaryBtn onClick={save} disabled={saving || taken}>{saving ? "Salvando..." : "Salvar alterações"}</PrimaryBtn>
+        <DadosConta />
         <Section title="Perfis bloqueados">
           {blocked.length === 0 ? <p style={text(13, MUTED)}>Você não bloqueou ninguém.</p> : blocked.map((b) => (
             <div key={b.username} style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -125,6 +123,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
           ))}
         </Section>
         <SecondaryBtn onClick={() => onNavigate("perfil")}>Voltar ao perfil</SecondaryBtn>
+        <div role="button" onClick={onLogout} style={{ border: "1px solid #fecaca", background: "#fff", borderRadius: 12, padding: "14px 16px", textAlign: "center", cursor: "pointer" }}><p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#dc2626", margin: 0 }}>Sair da conta</p></div>
       </div>
     </SocialShell>
   );

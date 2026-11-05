@@ -573,7 +573,7 @@ export default function App() {
       {screen === "post-novo" && <NovaPublicacao onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "perfil-editar" && <EditarPerfilSocial onNavigate={goTo} onLogout={handleLogout} />}
       {screen === "amigos" && <AmigosSocial onNavigate={goTo} onLogout={handleLogout} />}
-      {screen === "perfil-dados" && <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
+      {screen === "perfil-dados" && (native ? <EditarPerfilSocial onNavigate={goTo} onLogout={handleLogout} /> : <MeuPerfil onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />)}
       {screen === "assinatura" && <MinhaAssinatura onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {screen === "ranking" && <RankingTorcedores embedded={nativeBack} onNavigate={(key) => setScreen(key)} onLogout={handleLogout} />}
       {showGlobalLoginModal && (
