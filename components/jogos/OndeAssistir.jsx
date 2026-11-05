@@ -3,7 +3,7 @@ import { useBroadcast } from "../../lib/broadcastClient";
 import { timeAgo } from "../../lib/social";
 import { BODY, FONT_DISPLAY, GREEN, MUTED, TEXT } from "../../lib/tokens";
 
-const BEFORE = 3 * 3600 * 1000, AFTER = 10 * 86400 * 1000; // só jogos que ainda vão acontecer (ou começaram há pouco) e estão a até 10 dias
+const BEFORE = 3 * 3600 * 1000, AFTER = 7 * 86400 * 1000; // só jogos que ainda vão acontecer (ou começaram há pouco) e estão a até 7 dias
 
 /**
  * "Onde assistir" de um jogo: os canais confirmados (com a observação de região), ou "Canal ainda não confirmado" com um link pra buscar.
