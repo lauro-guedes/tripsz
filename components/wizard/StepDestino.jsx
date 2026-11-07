@@ -8,9 +8,11 @@ import { Globe } from "lucide-react";
 import { useState } from "react";
 
 export const COUNTRIES_BY_CONTINENT = {
-  eu: ["Inglaterra", "Espanha", "Itália", "Alemanha", "França", "Portugal", "Holanda", "Turquia"],
-  sa: ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia"],
-  as: ["China", "Japão"],
+  eu: ["Inglaterra", "Espanha", "Itália", "Alemanha", "França", "Portugal", "Holanda", "Turquia", "Bélgica", "Escócia", "Suíça", "Áustria", "Grécia", "Dinamarca", "Polônia", "Croácia", "Sérvia", "República Tcheca"],
+  sa: ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia", "Equador", "Paraguai", "Peru", "Bolívia", "Venezuela"],
+  as: ["China", "Japão", "Arábia Saudita", "Coreia do Sul"],
+  oc: ["Austrália"],
+  af: ["Egito", "Marrocos", "África do Sul"],
   na: ["Estados Unidos", "México", "Canadá"],
 };
 
@@ -42,7 +44,7 @@ export function StepDestino({ answers, setAnswers, onNext, onBack, onHome, stepO
         </div>
         {isMobile && <MobileProgress step={2 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 16, justifyContent: "center", width: "100%" }}>
-          {[{ id: "sa", label: "América do Sul" }, { id: "eu", label: "Europa" }, { id: "na", label: "América do Norte" }, { id: "as", label: "Ásia" }].map((c) => {
+          {[{ id: "sa", label: "América do Sul" }, { id: "eu", label: "Europa" }, { id: "na", label: "América do Norte" }, { id: "as", label: "Ásia" }, { id: "oc", label: "Oceania" }, { id: "af", label: "África" }].map((c) => {
             const active = continents.includes(c.id);
             return (
               <div key={c.id} onClick={() => toggleContinent(c.id)} style={{ display: "flex", alignItems: "center", gap: 12, width: isMobile ? "100%" : 180, padding: "16px 20px", borderRadius: 8, background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, cursor: "pointer" }}>

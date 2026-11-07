@@ -50,11 +50,11 @@ export async function POST(request) {
 
     // Jogos reais mais próximos FORA das datas — só buscamos quando a escolha da pessoa ficou sem jogo.
     const outside = {};
-    const continentalIds = leagueIds.filter((id) => LEAGUE_META[id]?.type === "continental");
+    const continentalIds = leagueIds.filter((id) => LEAGUE_META[id]?.type === "continental" || LEAGUE_META[id]?.type === "national");
     if (candidates.games.length === 0) {
       outside.window = await getNearestFor(supabase, { labels: params.labels, from: params.from, to: params.to, modality });
     }
-    if (answers.priority === "international" && !candidates.games.some((g) => g.competition.type === "continental")) {
+    if (answers.priority === "international" && !candidates.games.some((g) => g.competition.type === "continental" || g.competition.type === "national")) {
       outside.international = await getNearestFor(supabase, { labels: params.labels, leagueIds: continentalIds, from: params.from, to: params.to, modality });
     }
     // Favoritos sem jogo no período: busca o mais próximo — pelo ID (lista fixa) ou pelo nome (time vindo da busca).

@@ -233,7 +233,7 @@ export function LandingPage({ onStart, onSubscribe, onLogin }) {
             </div>
             <div style={{ height: 1, background: BORDER }} />
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 18 países", true], ["Passaporte de Estádios (até 20 jogos)", true], ["Categorias, conquistas e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
+              {[["Criação de roteiros ilimitados", true], ["Busca por jogos em 39 países", true], ["Passaporte de Estádios (até 20 jogos)", true], ["Categorias, conquistas e ranking", true], ["Perfil público compartilhável", true], ["Mais de 20 jogos registrados", false], ["Importação em massa (Futbology)", false], ["Desconto em consultorias", false]].map(([label, ok]) => (
                 <div key={label} style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   {ok ? <Check size={16} color={GREEN} /> : <X size={16} color="#9ca3af" />}
                   <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: ok ? TEXT : "#6b7280", margin: 0 }}>{label}</p>

@@ -166,7 +166,7 @@ export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, i
     return (
       <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 8 }}>
         <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Consultoria</p>
-        <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>Ainda não oferecemos consultoria para os destinos deste roteiro (Ásia e América do Norte). O roteiro de jogos continua valendo normalmente.</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>Ainda não oferecemos consultoria para os destinos deste roteiro (fora da Europa e da América do Sul). O roteiro de jogos continua valendo normalmente.</p>
       </div>
     );
   }
