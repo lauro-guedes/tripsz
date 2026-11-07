@@ -46,6 +46,7 @@ export async function POST(request) {
     const supabase = supabaseAdmin();
     const leagueIds = leagueIdsForCountries(params.labels, modality);
     const sync = await ensureCalendar(supabase, leagueIds, { requiredTo: params.to });
+    for (const s of sync) if (s.source === "error") console.error(`[trip/plan] sync falhou: liga ${s.leagueId}/${s.season} — ${s.error}`);
     const candidates = await getCandidates(supabase, { labels: params.labels, from: params.from, to: params.to, modality });
 
     // Jogos reais mais próximos FORA das datas — só buscamos quando a escolha da pessoa ficou sem jogo.
@@ -87,6 +88,7 @@ export async function POST(request) {
           fromCache: sync.filter((s) => s.source === "cache").length,
           stale: sync.filter((s) => s.stale).length,
           failed: sync.filter((s) => s.source === "error").length,
+          errors: sync.filter((s) => s.source === "error").slice(0, 8).map((s) => ({ league: s.leagueId, season: s.season, error: s.error })),
           oldest: sync.map((s) => s.fetchedAt).filter(Boolean).sort()[0] || null,
         },
       },
