@@ -2,6 +2,7 @@
 import { supabaseBrowser } from "../../lib/supabase";
 import { teamLabel } from "../../lib/textUtils";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GOLD, GOLD_BG, GOLD_BORDER, GREEN, GREEN_BG, GREEN_BUTTON2, MUTED, TEXT } from "../../lib/tokens";
+import { consultingAvailable } from "../../lib/calendarCore";
 import { durationRange } from "../../lib/tripOptions";
 import TeamBadge from "../TeamBadge";
 import { AuthedFooter } from "../nav/AuthedFooter";
@@ -160,7 +161,15 @@ export function OptionCard({ opt, chosen, onChoose, isMobile, gamesById }) {
 
 /** Cartão da consultoria (fica na lateral no computador e depois das opções no celular).
  *  O botão só funciona depois de escolher uma das opções A / B. */
-export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, isMobile }) {
+export function ConsultoriaCard({ chosenOpt, needChoice, onHire, onNeedChoice, isMobile, unavailable = false }) {
+  if (unavailable) {
+    return (
+      <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 16, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 8 }}>
+        <p style={{ fontFamily: FONT_MONO, fontWeight: 700, fontSize: 11, color: MUTED, textTransform: "uppercase", margin: 0 }}>Consultoria</p>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.45, color: BODY, margin: 0 }}>Ainda não oferecemos consultoria para os destinos deste roteiro (Ásia e América do Norte). O roteiro de jogos continua valendo normalmente.</p>
+      </div>
+    );
+  }
   const enabled = !!chosenOpt;
   return (
     <div style={{ background: "#fff", border: `1.5px solid ${GREEN}`, borderRadius: 16, padding: isMobile ? 20 : 24, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -288,7 +297,7 @@ export function RoteiroView({ answers, trip, options, chosenOption, onChooseOpti
   };
 
   const consultoria = (
-    <ConsultoriaCard chosenOpt={chosenOpt} needChoice={needChoice} onHire={onHireConsultoria} onNeedChoice={handleNeedChoice} isMobile={isMobile} />
+    <ConsultoriaCard chosenOpt={chosenOpt} needChoice={needChoice} onHire={onHireConsultoria} onNeedChoice={handleNeedChoice} isMobile={isMobile} unavailable={!consultingAvailable(answers.countries)} />
   );
 
   const summary = (

@@ -1,6 +1,7 @@
 "use client";
 import { BG, BODY, BORDER, FONT_BODY, FONT_DISPLAY, FONT_MONO, GREEN, GREEN_BG, TEXT } from "../../lib/tokens";
 import { MobileProgress, WIZARD_TOTAL, WizardBottomBar, WizardTopBar } from "../nav/WizardChrome";
+import { WIZARD_COUNTRIES, consultingAvailable } from "../../lib/calendarCore";
 import { Pill } from "../ui/Pill";
 import { useIsMobile } from "../ui/useIsMobile";
 import { Globe } from "lucide-react";
@@ -9,6 +10,8 @@ import { useState } from "react";
 export const COUNTRIES_BY_CONTINENT = {
   eu: ["Inglaterra", "Espanha", "Itália", "Alemanha", "França", "Portugal", "Holanda", "Turquia"],
   sa: ["Argentina", "Brasil", "Uruguai", "Chile", "Colômbia"],
+  as: ["China", "Japão"],
+  na: ["Estados Unidos", "México", "Canadá"],
 };
 
 export function StepDestino({ answers, setAnswers, onNext, onBack, onHome, stepOffset = 0 }) {
@@ -39,7 +42,7 @@ export function StepDestino({ answers, setAnswers, onNext, onBack, onHome, stepO
         </div>
         {isMobile && <MobileProgress step={2 - stepOffset} total={WIZARD_TOTAL - stepOffset} />}
         <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 12 : 16, justifyContent: "center", width: "100%" }}>
-          {[{ id: "sa", label: "América do Sul" }, { id: "eu", label: "Europa" }].map((c) => {
+          {[{ id: "sa", label: "América do Sul" }, { id: "eu", label: "Europa" }, { id: "na", label: "América do Norte" }, { id: "as", label: "Ásia" }].map((c) => {
             const active = continents.includes(c.id);
             return (
               <div key={c.id} onClick={() => toggleContinent(c.id)} style={{ display: "flex", alignItems: "center", gap: 12, width: isMobile ? "100%" : 180, padding: "16px 20px", borderRadius: 8, background: active ? GREEN_BG : "#fff", border: `1.5px solid ${active ? GREEN : BORDER}`, cursor: "pointer" }}>
@@ -59,6 +62,11 @@ export function StepDestino({ answers, setAnswers, onNext, onBack, onHome, stepO
               </div>
             </div>
           </>
+        )}
+        {!consultingAvailable(countries) && (
+          <p style={{ fontFamily: FONT_BODY, fontSize: 13, color: BODY, margin: 0, textAlign: isMobile ? "left" : "center", width: isMobile ? "100%" : 600 }}>
+            Para {countries.filter((c) => WIZARD_COUNTRIES[c] && WIZARD_COUNTRIES[c].consulting === false).join(", ")} você monta o roteiro de jogos normalmente, mas ainda não oferecemos a consultoria.
+          </p>
         )}
         {error && <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "#dc2626", margin: 0, textAlign: "center" }}>{error}</p>}
       </div>
