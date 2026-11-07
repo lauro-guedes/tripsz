@@ -8,7 +8,7 @@ import { getMyProfile, getProfile, listBlocked, saveMyProfile, unblockUser, upda
 import { BORDER, FONT_DISPLAY, GREEN, MUTED, TEXT } from "../../lib/tokens";
 import { AvatarPicker } from "./AvatarPicker";
 import { DadosConta } from "./DadosConta";
-import { Avatar, Chip, EmptyState, SmallBtn, SocialShell } from "./ui";
+import { Avatar, Chip, EmptyState, SmallBtn, SocialShell, Tabs } from "./ui";
 import { useMyId } from "./useMyId";
 
 const field = { width: "100%", boxSizing: "border-box", border: `1px solid ${BORDER}`, borderRadius: 12, padding: "13px 14px", fontSize: 15, fontFamily: FONT_DISPLAY, color: TEXT, background: "#fff", outline: "none" };
@@ -20,7 +20,7 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-/** Editar perfil: capa, foto, nome, @, bio, perfis, cidade, privacidade, bloqueados e o caminho pros dados da conta. */
+/** Editar perfil em abas: Usuário (foto, @, nome, cidade, bio), Conta (dados e senha), Viagem (times e preferências) e Privacidade (perfil privado e bloqueados). Sem capa. */
 export function EditarPerfilSocial({ onNavigate, onLogout }) {
   const userId = useMyId();
   const [me, setMe] = useState(null);
@@ -31,6 +31,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false); // trava imediata contra toque duplo
   const [msg, setMsg] = useState(null);
+  const [tab, setTab] = useState("usuario");
   const [loadError, setLoadError] = useState(null);
   const set = (patch) => { setForm((f) => ({ ...f, ...patch })); setMsg(null); };
 
@@ -42,7 +43,7 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
       if (!r.ok) return setLoadError(r.message);
       const p = r.profile;
       setMe(p);
-      setForm({ coverUrl: p.coverUrl, avatarUrl: p.avatarUrl, displayName: p.displayName, username: p.username, bio: p.bio || "", kinds: p.kinds, city: p.city || "", isPrivate: p.isPrivate });
+      setForm({ avatarUrl: p.avatarUrl, displayName: p.displayName, username: p.username, bio: p.bio || "", kinds: p.kinds, city: p.city || "", isPrivate: p.isPrivate });
       const [b, full] = await Promise.all([listBlocked(), getProfile(p.username)]);
       if (!alive) return;
       if (b.ok) setBlocked(b.blocked);
@@ -85,6 +86,9 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
           <div role="button" aria-label="Voltar ao perfil" onClick={() => onNavigate("perfil")} style={{ width: 40, height: 40, borderRadius: 999, background: "#fff", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><ArrowLeft size={20} color={TEXT} /></div>
           <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 24, color: TEXT, margin: 0 }}>Editar perfil</h1>
         </div>
+        <Tabs label="Seções do perfil" value={tab} onChange={setTab} tabs={[{ id: "usuario", label: "Usuário" }, { id: "conta", label: "Conta" }, { id: "viagem", label: "Viagem" }, { id: "privacidade", label: "Privacidade" }]} />
+        {tab === "usuario" && (
+          <>
         <Section title="Foto de perfil"><AvatarPicker value={form.avatarUrl} name={form.displayName} onChange={(avatarUrl) => set({ avatarUrl })} userId={userId} /></Section>
         <Section title="Seu usuário">
           <UsernameEditField value={form.username} original={me.username} onChange={(username) => set({ username })} onValidity={setTaken} fieldStyle={field} />
@@ -104,15 +108,16 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
             {PROFILE_KINDS.map((k) => <Chip key={k} on={form.kinds.includes(k)} onClick={() => set({ kinds: form.kinds.includes(k) ? form.kinds.filter((x) => x !== k) : [...form.kinds, k] })}>{k}</Chip>)}
           </div>
         </Section>
+          </>
+        )}
+        {tab === "privacidade" && (
+          <>
         <Section title="Privacidade">
           <div role="switch" aria-checked={form.isPrivate} aria-label="Perfil privado" onClick={() => set({ isPrivate: !form.isPrivate })} style={{ display: "flex", gap: 12, alignItems: "center", cursor: "pointer" }}>
             <div style={{ width: 46, height: 28, borderRadius: 999, background: form.isPrivate ? GREEN : "#cbd5e1", position: "relative", flexShrink: 0 }}><div style={{ position: "absolute", top: 3, left: form.isPrivate ? 21 : 3, width: 22, height: 22, borderRadius: 999, background: "#fff", transition: "left .15s" }} /></div>
             <div><p style={text(15, TEXT, { fontWeight: 700 })}>Perfil privado</p><p style={text(12, MUTED)}>Quem quiser te seguir precisa da sua aprovação. Só quem te segue vê seus jogos e estádios.</p></div>
           </div>
         </Section>
-        <Message msg={msg} />
-        <PrimaryBtn onClick={save} disabled={saving || taken}>{saving ? "Salvando..." : "Salvar alterações"}</PrimaryBtn>
-        <DadosConta />
         <Section title="Perfis bloqueados">
           {blocked.length === 0 ? <p style={text(13, MUTED)}>Você não bloqueou ninguém.</p> : blocked.map((b) => (
             <div key={b.username} style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -122,6 +127,15 @@ export function EditarPerfilSocial({ onNavigate, onLogout }) {
             </div>
           ))}
         </Section>
+          </>
+        )}
+        {(tab === "usuario" || tab === "privacidade") && (
+          <>
+        <Message msg={msg} />
+        <PrimaryBtn onClick={save} disabled={saving || taken}>{saving ? "Salvando..." : "Salvar alterações"}</PrimaryBtn>
+          </>
+        )}
+        <div style={{ display: tab === "conta" || tab === "viagem" ? "flex" : "none", flexDirection: "column", gap: 16 }}><DadosConta tab={tab} /></div>
         <SecondaryBtn onClick={() => onNavigate("perfil")}>Voltar ao perfil</SecondaryBtn>
         <div role="button" onClick={onLogout} style={{ border: "1px solid #fecaca", background: "#fff", borderRadius: 12, padding: "14px 16px", textAlign: "center", cursor: "pointer" }}><p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#dc2626", margin: 0 }}>Sair da conta</p></div>
       </div>

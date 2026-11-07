@@ -26,7 +26,7 @@ const Field = ({ name, children }) => (
 );
 
 /** Dados da conta dentro do Editar perfil (só no app): nome, e-mail, WhatsApp, país, times, preferências e senha. */
-export function DadosConta() {
+export function DadosConta({ tab = "conta" }) {
   const [orig, setOrig] = useState(null);
   const [f, setF] = useState(null);
   const [hasPassword, setHasPassword] = useState(true);
@@ -96,8 +96,10 @@ export function DadosConta() {
     }
   };
 
+  const wrap = (t) => ({ display: tab === t ? "flex" : "none", flexDirection: "column", gap: 16 });
   return (
     <>
+      <div style={wrap("conta")}>
       <Block title="Dados da conta">
         <Field name="Nome completo"><input aria-label="Nome completo" value={f.name} onChange={(e) => set({ name: e.target.value.slice(0, 80) })} style={field} /></Field>
         <Field name="E-mail"><input aria-label="E-mail" type="email" value={f.email} onChange={(e) => set({ email: e.target.value })} style={field} /></Field>
@@ -109,6 +111,13 @@ export function DadosConta() {
           </select>
         </Field>
       </Block>
+      <Block title="Segurança">
+        {hasPassword && <Field name="Senha atual"><input aria-label="Senha atual" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => { setPw({ ...pw, current: e.target.value }); setMsg(null); }} style={field} /></Field>}
+        <Field name="Nova senha"><input aria-label="Nova senha" type="password" autoComplete="new-password" value={pw.next} onChange={(e) => { setPw({ ...pw, next: e.target.value }); setMsg(null); }} placeholder="Mínimo 8 caracteres" style={field} /></Field>
+        <Field name="Confirmar nova senha"><input aria-label="Confirmar nova senha" type="password" autoComplete="new-password" value={pw.confirm} onChange={(e) => { setPw({ ...pw, confirm: e.target.value }); setMsg(null); }} style={field} /></Field>
+      </Block>
+      </div>
+      <div style={wrap("viagem")}>
       <Block title="Times favoritos">
         {f.teams.length > 0 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -130,13 +139,13 @@ export function DadosConta() {
           {PREFS.map(([id, name]) => <Chip key={id} on={f.prefs.includes(id)} onClick={() => set({ prefs: f.prefs.includes(id) ? f.prefs.filter((x) => x !== id) : [...f.prefs, id] })}>{name}</Chip>)}
         </div>
       </Block>
-      <Block title="Segurança">
-        {hasPassword && <Field name="Senha atual"><input aria-label="Senha atual" type="password" autoComplete="current-password" value={pw.current} onChange={(e) => { setPw({ ...pw, current: e.target.value }); setMsg(null); }} style={field} /></Field>}
-        <Field name="Nova senha"><input aria-label="Nova senha" type="password" autoComplete="new-password" value={pw.next} onChange={(e) => { setPw({ ...pw, next: e.target.value }); setMsg(null); }} placeholder="Mínimo 8 caracteres" style={field} /></Field>
-        <Field name="Confirmar nova senha"><input aria-label="Confirmar nova senha" type="password" autoComplete="new-password" value={pw.confirm} onChange={(e) => { setPw({ ...pw, confirm: e.target.value }); setMsg(null); }} style={field} /></Field>
-      </Block>
-      <Message msg={msg} />
-      <PrimaryBtn onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar dados da conta"}</PrimaryBtn>
+      </div>
+      {(tab === "conta" || tab === "viagem") && (
+        <>
+          <Message msg={msg} />
+          <PrimaryBtn onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</PrimaryBtn>
+        </>
+      )}
     </>
   );
 }
