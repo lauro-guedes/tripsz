@@ -1,11 +1,13 @@
 "use client";
-import { ChevronRight, UserPlus } from "lucide-react";
+import { BadgeCheck, ChevronRight, Heart, Share2, UserPlus } from "lucide-react";
 import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { checkPassportAccess } from "../../lib/passportAccess";
 import { Message, text } from "../convite/ConviteUi";
 import { shareProfile } from "../../lib/profileShare";
 import { BORDER, FONT_DISPLAY, GREEN, GREEN_DARK, MUTED, TEXT } from "../../lib/tokens";
+import TeamBadge from "../TeamBadge";
+import { ClubePicker } from "./ClubePicker";
 import { ConquistasTab } from "./ConquistasTab";
 import { ProfileMenu } from "./ProfileMenu";
 import { ProfilePosts } from "./ProfilePosts";
@@ -44,11 +46,20 @@ function PlanCard({ onNavigate }) {
   }, []);
   if (!acc || !acc.userId) return null;
   if (acc.isPaid) {
+    const end = acc.subscription && acc.subscription.current_period_end ? String(acc.subscription.current_period_end).slice(0, 10).split("-").reverse().join("/") : null;
+    const note = acc.legacy ? "Membro fundador" : acc.freeAccess ? "Acesso cortesia" : end ? `Válido até ${end}` : "Assinatura ativa";
     return (
-      <div role="button" aria-label="Minha assinatura" onClick={() => onNavigate("assinatura")} style={{ margin: "4px 16px 10px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-        <span style={{ background: "rgba(0,200,83,0.12)", color: GREEN_DARK, borderRadius: 999, padding: "4px 10px", fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 11 }}>PASSAPORTE ATIVO</span>
-        <p style={{ ...text(13, MUTED), flex: 1 }}>Todas as funcionalidades liberadas.</p>
-        <span style={{ display: "inline-flex", alignItems: "center" }}><span style={text(12, GREEN_DARK, { fontWeight: 700 })}>Minha assinatura</span><ChevronRight size={16} color={GREEN_DARK} /></span>
+      <div role="button" aria-label="Minha assinatura" onClick={() => onNavigate("assinatura")} style={{ margin: "4px 16px 10px", background: "linear-gradient(135deg,#0f172a,#14532d)", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10, cursor: "pointer" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <BadgeCheck size={22} color={GREEN} />
+          <span style={{ background: "rgba(0,200,83,0.2)", color: "#4ade80", borderRadius: 999, padding: "4px 10px", fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 11 }}>PASSAPORTE ATIVO</span>
+          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: "rgba(255,255,255,0.8)", margin: 0, marginLeft: "auto" }}>{note}</p>
+        </div>
+        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 17, color: "#fff", margin: 0, lineHeight: 1.25 }}>Tudo liberado, sem limite de jogos.</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0 }}><b style={{ color: "#fff" }}>{acc.gamesCount}</b> {acc.gamesCount === 1 ? "jogo registrado" : "jogos registrados"}</p>
+          <span style={{ display: "inline-flex", alignItems: "center" }}><span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#4ade80" }}>Minha assinatura</span><ChevronRight size={16} color="#4ade80" /></span>
+        </div>
       </div>
     );
   }
@@ -88,6 +99,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
   const [tab, setTab] = useState("posts");
   const [menu, setMenu] = useState(false);
   const [note, setNote] = useState(null);
+  const [clubOpen, setClubOpen] = useState(false);
   const s = p.state;
 
   if (s.status === "onboarding") return <SocialOnboarding me={s.me} onDone={() => p.reload()} />;
@@ -115,10 +127,19 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
       else if (r === "failed") setNote({ type: "error", text: "Não foi possível compartilhar agora." });
     };
     const shareBtn = <SmallBtn kind="soft" onClick={share} label="Compartilhar perfil">Compartilhar perfil</SmallBtn>;
+    const club = pr.heartClub;
+    const clubBtn = club ? (
+      <div role="button" aria-label="Clube do coração: trocar" onClick={() => setClubOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,200,83,0.1)", borderRadius: 999, padding: "6px 14px 6px 8px", cursor: "pointer" }}>
+        <TeamBadge name={club.name} url={club.logo} size={24} />
+        <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: GREEN_DARK }}>{club.name}</span>
+      </div>
+    ) : (
+      <SmallBtn kind="soft" onClick={() => setClubOpen(true)} label="Adicionar Clube do Coração"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Heart size={14} color={GREEN_DARK} />Add Clube do Coração</span></SmallBtn>
+    );
     const action = self ? (
       <>
         <SmallBtn kind="soft" onClick={() => onNavigate("perfil-editar")}>Editar perfil</SmallBtn>
-        {shareBtn}
+        {clubBtn}
       </>
     ) : rel === "blocked" ? (
       <SmallBtn onClick={p.unblock} disabled={p.busy}>Desbloquear</SmallBtn>
@@ -143,13 +164,16 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
     body = (
       <>
         <ScreenHeader
-          title={self ? "Meu perfil" : pr.displayName}
+          title={self ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>Meu perfil<span role="button" aria-label="Compartilhar perfil" onClick={share} style={{ display: "inline-flex", cursor: "pointer", padding: 4 }}><Share2 size={18} color={GREEN_DARK} /></span></span> : pr.displayName}
           onBack={self ? () => window.history.back() : onBack}
           right={!self ? <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><MoreVertical size={22} color={TEXT} /></div> : null}
         />
         <div style={{ padding: "12px 16px 8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Avatar url={pr.avatarUrl} name={pr.displayName} size={80} />
+            <div style={{ position: "relative", width: 80, height: 80, flexShrink: 0 }}>
+              <Avatar url={pr.avatarUrl} name={pr.displayName} size={80} />
+              {club && <div style={{ position: "absolute", right: -4, bottom: -4, background: "#fff", borderRadius: 999, padding: 2, boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}><TeamBadge name={club.name} url={club.logo} size={26} /></div>}
+            </div>
             <div style={{ flex: 1, display: "flex" }}>
               <Count value={d.counts.posts || 0} label="publicações" />
               <Count value={d.counts.followers} label="seguidores" onClick={openFriends} />
@@ -158,6 +182,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
           </div>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 18, color: TEXT, margin: "12px 0 0" }}>{pr.displayName}</h2>
           <p style={text(13, MUTED)}>@{pr.username}{where ? ` · ${where}` : ""}</p>
+          {club && !self && <p style={{ ...text(12, GREEN_DARK, { marginTop: 4, fontWeight: 700 }), display: "inline-flex", alignItems: "center", gap: 6 }}><Heart size={12} color={GREEN_DARK} fill={GREEN_DARK} />Clube do coração: {club.name}</p>}
           {d.mutualCount > 0 && <p style={text(12, GREEN_DARK, { marginTop: 2, fontWeight: 600 })}>{plural(d.mutualCount, "amigo", "amigos")} em comum</p>}
           {pr.bio && <p style={{ ...text(14, TEXT), marginTop: 8, whiteSpace: "pre-line" }}>{pr.bio}</p>}
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }}>{action}</div>
@@ -171,6 +196,7 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
         <div style={{ padding: "0 16px" }}><Message msg={note} /></div>
         {self && <PlanCard onNavigate={onNavigate} />}
         <Message msg={p.notice} />
+        {clubOpen && self && <ClubePicker current={club} onClose={() => setClubOpen(false)} onSaved={() => { setClubOpen(false); p.reload(); }} />}
         {rel === "blocked" && <Locked title={`Você bloqueou @${pr.username}`} body="Desbloqueie para voltar a ver o perfil e seguir." />}
         {rel !== "blocked" && !d.canSeeContent && <Locked title="Este perfil é privado" body={rel === "requested" ? "Pedido enviado. Quando for aprovado, você verá os jogos e estádios." : "Siga para ver os jogos, estádios e publicações."} />}
         {d.canSeeContent && d.stats && (

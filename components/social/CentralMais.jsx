@@ -16,9 +16,6 @@ export function CentralMais({ onNavigate, onLogout }) {
     <SocialShell onNavigate={onNavigate} onLogout={onLogout}>
       <ScreenHeader title="O que vamos registrar?" onBack={() => window.history.back()} />
       <div style={{ padding: "4px 16px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ height: 150, borderRadius: 16, background: "linear-gradient(135deg,#0f172a,#14532d)", display: "flex", alignItems: "flex-end", padding: 16 }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 13, color: "rgba(255,255,255,0.8)", margin: 0, textTransform: "uppercase" }}>tripsz</p>
-        </div>
         <div>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 26, color: TEXT, margin: 0 }}>Sua história de arquibancada.</h2>
           <p style={{ ...text(14, MUTED), marginTop: 6 }}>Escolha como quer compartilhar este momento.</p>
