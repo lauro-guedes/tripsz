@@ -42,22 +42,13 @@ export function ClubePicker({ current, onClose, onSaved }) {
 
   return (
     <Sheet title="Clube do coração" onClose={onClose}>
-      <p style={text(13, MUTED)}>Escolha o time que mora no seu coração. Ele aparece no seu perfil, com o escudo ao lado da sua foto.</p>
-      {current && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,200,83,0.08)", borderRadius: 14, padding: "10px 12px" }}>
-          <TeamBadge name={current.name} url={current.logo} size={36} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={text(11, GREEN_DARK, { fontWeight: 800 })}>SEU CLUBE DO CORAÇÃO</p>
-            <p style={text(15, TEXT, { fontWeight: 700 })}>{current.name}</p>
-          </div>
-        </div>
-      )}
+      <p style={text(13, MUTED)}>O escudo do seu time aparece no perfil, ao lado da foto.</p>
       <div style={{ background: "#eef2f6", borderRadius: 14, padding: "0 14px", display: "flex", gap: 10, alignItems: "center" }}>
         <Search size={18} color={MUTED} />
-        <input aria-label="Buscar clube" autoFocus value={q} onChange={(e) => setQ(e.target.value.slice(0, 60))} placeholder="Buscar clube (ex.: Palmeiras)" style={{ flex: 1, border: "none", outline: "none", background: "transparent", padding: "14px 0", fontSize: 16, fontFamily: FONT_DISPLAY }} />
+        <input aria-label="Buscar clube" value={q} onChange={(e) => setQ(e.target.value.slice(0, 60))} placeholder="Buscar clube (ex.: Palmeiras)" style={{ flex: 1, border: "none", outline: "none", background: "transparent", padding: "14px 0", fontSize: 16, fontFamily: FONT_DISPLAY }} />
       </div>
       <Message msg={msg} />
-      <div style={{ display: "flex", flexDirection: "column", maxHeight: 280, overflowY: "auto" }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {q.trim().length < 3 && <p style={text(13, MUTED)}>Digite pelo menos 3 letras.</p>}
         {searching && <p style={text(13, MUTED)}>Buscando...</p>}
         {!searching && q.trim().length >= 3 && results.length === 0 && <p style={text(13, MUTED)}>Nenhum clube encontrado.</p>}
@@ -72,6 +63,15 @@ export function ClubePicker({ current, onClose, onSaved }) {
           </div>
         ))}
       </div>
+      {current && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,200,83,0.08)", borderRadius: 14, padding: "10px 12px" }}>
+          <TeamBadge name={current.name} url={current.logo} size={36} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={text(11, GREEN_DARK, { fontWeight: 800 })}>SEU CLUBE DO CORAÇÃO</p>
+            <p style={text(15, TEXT, { fontWeight: 700 })}>{current.name}</p>
+          </div>
+        </div>
+      )}
       {current && <SecondaryBtn onClick={() => save(null)}>Remover clube do coração</SecondaryBtn>}
     </Sheet>
   );

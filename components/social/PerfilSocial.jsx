@@ -56,10 +56,7 @@ function PlanCard({ onNavigate }) {
           <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 600, fontSize: 12, color: "rgba(255,255,255,0.8)", margin: 0, marginLeft: "auto" }}>{note}</p>
         </div>
         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 17, color: "#fff", margin: 0, lineHeight: 1.25 }}>Tudo liberado, sem limite de jogos.</p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0 }}><b style={{ color: "#fff" }}>{acc.gamesCount}</b> {acc.gamesCount === 1 ? "jogo registrado" : "jogos registrados"}</p>
-          <span style={{ display: "inline-flex", alignItems: "center" }}><span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#4ade80" }}>Minha assinatura</span><ChevronRight size={16} color="#4ade80" /></span>
-        </div>
+        <span style={{ display: "inline-flex", alignItems: "center", alignSelf: "flex-end" }}><span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 12, color: "#4ade80" }}>Minha assinatura</span><ChevronRight size={16} color="#4ade80" /></span>
       </div>
     );
   }
@@ -164,9 +161,9 @@ export function PerfilSocial({ username = null, onNavigate, onLogout, onBack }) 
     body = (
       <>
         <ScreenHeader
-          title={self ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>Meu perfil<span role="button" aria-label="Compartilhar perfil" onClick={share} style={{ display: "inline-flex", cursor: "pointer", padding: 4 }}><Share2 size={18} color={GREEN_DARK} /></span></span> : pr.displayName}
+          title={self ? "Meu perfil" : pr.displayName}
           onBack={self ? () => window.history.back() : onBack}
-          right={!self ? <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><MoreVertical size={22} color={TEXT} /></div> : null}
+          right={self ? <div role="button" aria-label="Compartilhar perfil" onClick={share} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><Share2 size={22} color={TEXT} /></div> : <div role="button" aria-label="Mais opções" onClick={() => setMenu(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "pointer" }}><MoreVertical size={22} color={TEXT} /></div>}
         />
         <div style={{ padding: "12px 16px 8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

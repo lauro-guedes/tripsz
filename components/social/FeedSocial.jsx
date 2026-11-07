@@ -93,11 +93,13 @@ export function FeedSocial({ onNavigate, onLogout, onCreateTrip }) {
       </div>
       {onCreateTrip && (
         <div style={{ padding: "2px 16px 8px" }}>
-          <div style={{ borderRadius: 14, background: "linear-gradient(135deg,#0f172a,#14532d)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 16, color: "#fff", margin: 0, lineHeight: 1.2 }}>Encontre o melhor roteiro de futebol para sua viagem.</p>
-            <p style={{ fontFamily: FONT_DISPLAY, fontSize: 12, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.35 }}>Escolha países, datas e times. Nossa plataforma cruza os jogos disponíveis e entrega os jogos possíveis e a melhor sequência de cidades para sua viagem.</p>
-            <div role="button" aria-label="Montar meu roteiro" onClick={onCreateTrip} style={{ background: GREEN, borderRadius: 10, padding: "9px 14px", textAlign: "center", cursor: "pointer", marginTop: 2 }}>
-              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 14, color: "#fff", margin: 0 }}>Montar meu roteiro</p>
+          <div style={{ borderRadius: 14, background: "linear-gradient(135deg,#0f172a,#14532d)", padding: "10px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: 14, color: "#fff", margin: 0, lineHeight: 1.2 }}>Seu roteiro de futebol</p>
+              <p style={{ fontFamily: FONT_DISPLAY, fontSize: 11, color: "rgba(255,255,255,0.8)", margin: "2px 0 0", lineHeight: 1.3 }}>Escolha países, datas e times e veja os melhores jogos.</p>
+            </div>
+            <div role="button" aria-label="Montar meu roteiro" onClick={onCreateTrip} style={{ background: GREEN, borderRadius: 10, padding: "9px 12px", cursor: "pointer", flexShrink: 0 }}>
+              <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: 13, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>Montar roteiro</p>
             </div>
           </div>
         </div>
