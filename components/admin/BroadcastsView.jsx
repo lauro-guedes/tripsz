@@ -15,6 +15,16 @@ export function BroadcastsView({ email }) {
   const busyRef = useRef(false); // trava imediata: dois cliques seguidos não podem gastar duas consultas do Gemini
   const [res, setRes] = useState(null);
   const [err, setErr] = useState(null);
+  const [diag, setDiag] = useState(null);
+  const runDiag = async (league) => {
+    setDiag({ loading: true });
+    try {
+      const to = new Date(Date.now() + 13 * 86400000).toISOString().slice(0, 10);
+      const from = new Date().toISOString().slice(0, 10);
+      const r = await authFetch(`/api/admin/calendar-diag?league=${league}&season=2026&from=${from}&to=${to}`);
+      setDiag({ league, status: r.status, data: await r.json().catch(() => ({})) });
+    } catch { setDiag({ league, error: true }); }
+  };
   const run = async (scope, save) => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -43,6 +53,11 @@ export function BroadcastsView({ email }) {
         <div onClick={() => run("brasil", true)} style={btn(false)}>{busy === "brasils" ? "Salvando..." : "Brasil · testar e salvar"}</div>
         <div onClick={() => run("europa", false)} style={btn(false)}>{busy === "europat" ? "Testando..." : "Europa e Libertadores · testar"}</div>
       </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <p style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: MUTED, margin: 0 }}>Diagnóstico do calendário (API-Football):</p>
+        {[[98, "J1 Japão"], [99, "J2 Japão"], [1, "Copa do Mundo"], [10, "Amistosos"]].map(([id, n]) => <div key={id} onClick={() => runDiag(id)} style={btn(false)}>{n}</div>)}
+      </div>
+      {diag && <pre style={{ fontSize: 11, whiteSpace: "pre-wrap", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: 0 }}>{diag.loading ? "Consultando..." : JSON.stringify(diag, null, 2)}</pre>}
       {err && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#dc2626", margin: 0 }}>{err}</p>}
       {res && res.skipped === "sem_chave" && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "#b45309", margin: 0 }}>A chave GEMINI_API_KEY não está configurada neste ambiente (ou o deploy ainda não pegou).</p>}
       {res && res.none && <p style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: MUTED, margin: 0 }}>{res.message || "Nenhum jogo para testar."}</p>}
